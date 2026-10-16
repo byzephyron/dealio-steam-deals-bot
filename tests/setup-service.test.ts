@@ -9,9 +9,11 @@ import {
 import { UserConfigurationService } from '../src/application/user-configuration-service.js';
 import { UserOperationCoordinator } from '../src/application/user-operation-coordinator.js';
 import type { WishlistItem } from '../src/domain/steam.js';
+import { setupCompleteDetail, setupCompleteStatus } from '../src/discord/setup-view.js';
 import { CheckStateRepository } from '../src/persistence/check-state-repository.js';
 import { createDatabase } from '../src/persistence/database.js';
 import { DiscountThresholdRepository } from '../src/persistence/discount-threshold-repository.js';
+import { PollScheduleRepository } from '../src/persistence/poll-schedule-repository.js';
 import { UserConfigRepository } from '../src/persistence/user-config-repository.js';
 import { WishlistStateRepository } from '../src/persistence/wishlist-state-repository.js';
 
@@ -205,6 +207,36 @@ describe('SetupService', () => {
     expect(result.config.dmDeliveryBlockedAt).toBeTruthy();
     fixture.database.close();
   });
+
+  it('pauses with its own remedy when Discord refuses the DM for lack of a shared server', async () => {
+    const fixture = services();
+    fixture.sender.sendInitialSummary.mockRejectedValueOnce(Object.assign(
+      new Error('Cannot send messages to this user due to having no mutual guilds'),
+      { code: 50_278, status: 403 },
+    ));
+
+    const prepared = await fixture.setupService.prepare('discord-user', '76561198000000000', 'en', 'US');
+    const result = await fixture.setupService.confirm(prepared);
+
+    // Not "a temporary problem, tracking carries on": every later DM would fail the same way.
+    expect(result.summary).toMatchObject({ status: 'dm-blocked', errorCode: 'DISCORD_NO_MUTUAL_GUILD' });
+    expect(result.config).toMatchObject({ enabled: false, dmDeliveryErrorCode: 'DISCORD_NO_MUTUAL_GUILD' });
+    expect(result.config.dmDeliveryBlockedAt).toBeTruthy();
+    fixture.database.close();
+  });
+});
+
+describe('setup completion message', () => {
+  it('names the fix for the reason Discord refused the welcome DM', () => {
+    const noMutualGuild = setupCompleteStatus({ status: 'dm-blocked', saleCount: 0, errorCode: 'DISCORD_NO_MUTUAL_GUILD' });
+    const privacy = setupCompleteStatus({ status: 'dm-blocked', saleCount: 0, errorCode: 'DISCORD_DM_BLOCKED' });
+
+    expect(noMutualGuild).toBe('dm-no-mutual-guild');
+    expect(privacy).toBe('dm-blocked');
+    expect(setupCompleteDetail(noMutualGuild, 'en')).toContain('Add to My Apps');
+    expect(setupCompleteDetail(privacy, 'en')).toContain('privacy settings');
+    expect(setupCompleteStatus({ status: 'dm-transient-failed', saleCount: 0 })).toBe('dm-transient-failed');
+  });
 });
 
 describe('setup profile summary', () => {
@@ -264,6 +296,53 @@ describe('SetupService capacity and account change', () => {
     // The game already on sale in the new list is a baseline, not an alert.
     expect(fixture.wishlistStateRepository.countNotificationCandidates('discord-user', result.config.configVersion)).toBe(0);
     expect(fixture.sender.sendInitialSummary).not.toHaveBeenCalled();
+    fixture.database.close();
+  });
+
+  it('keeps a paused account paused after a Steam account change', async () => {
+    const fixture = services();
+    new PollScheduleRepository(fixture.database).setNextScheduledAt('2026-08-23T01:00:00.000Z');
+    await fixture.setupService.configure('discord-user', '76561198000000000', 'en', 'US');
+    const paused = fixture.userConfigRepository.setEnabled('discord-user', false, '2026-08-23T00:10:00.000Z')!;
+
+    const prepared = await fixture.setupService.prepareAccountChange('discord-user', '76561198000000009', 'en', 'US');
+    const result = await fixture.setupService.changeAccount(prepared);
+
+    expect(result.config).toMatchObject({ steamId64: '76561198000000009', enabled: false, dmOptInAt: paused.dmOptInAt });
+    expect(new CheckStateRepository(fixture.database).findByDiscordUserId('discord-user')?.nextScheduledAt ?? null).toBeNull();
+    fixture.database.close();
+  });
+
+  it('keeps a DM block and its reason after a Steam account change', async () => {
+    const fixture = services();
+    new PollScheduleRepository(fixture.database).setNextScheduledAt('2026-08-23T01:00:00.000Z');
+    await fixture.setupService.configure('discord-user', '76561198000000000', 'en', 'US');
+    const blocked = fixture.userConfigRepository.markDmDeliveryBlocked(
+      'discord-user', 'DISCORD_NO_MUTUAL_GUILD', '2026-08-23T00:10:00.000Z')!;
+
+    const prepared = await fixture.setupService.prepareAccountChange('discord-user', '76561198000000009', 'en', 'US');
+    const result = await fixture.setupService.changeAccount(prepared);
+
+    expect(result.config).toMatchObject({
+      enabled: false,
+      dmOptInAt: blocked.dmOptInAt,
+      dmDeliveryBlockedAt: blocked.dmDeliveryBlockedAt,
+      dmDeliveryErrorCode: 'DISCORD_NO_MUTUAL_GUILD',
+    });
+    fixture.database.close();
+  });
+
+  it('keeps an active account scheduled after a Steam account change', async () => {
+    const fixture = services();
+    new PollScheduleRepository(fixture.database).setNextScheduledAt('2026-08-23T01:00:00.000Z');
+    await fixture.setupService.configure('discord-user', '76561198000000000', 'en', 'US');
+
+    const prepared = await fixture.setupService.prepareAccountChange('discord-user', '76561198000000009', 'en', 'US');
+    const result = await fixture.setupService.changeAccount(prepared);
+
+    expect(result.config.enabled).toBe(true);
+    expect(new CheckStateRepository(fixture.database).findByDiscordUserId('discord-user')?.nextScheduledAt)
+      .toBe('2026-08-23T01:00:00.000Z');
     fixture.database.close();
   });
 

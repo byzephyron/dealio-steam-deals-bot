@@ -1,4 +1,4 @@
-import { isLanguage, isSteamId64, type Language, type UserConfig } from '../domain/user-config.js';
+import { isLanguage, isSteamId64, type DmUnreachableCode, type Language, type UserConfig } from '../domain/user-config.js';
 import type { SteamProfileSummary } from '../domain/steam-identity.js';
 import {
   resolveStoreCountry,
@@ -215,7 +215,7 @@ export class UserConfigurationService {
 
   public markDmDeliveryBlocked(
     discordUserId: string,
-    errorCode = 'DISCORD_DM_BLOCKED',
+    errorCode: DmUnreachableCode = 'DISCORD_DM_BLOCKED',
   ): UserConfig | null {
     return this.repository.markDmDeliveryBlocked(
       discordUserId,

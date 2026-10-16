@@ -17,13 +17,13 @@ import type { PreparedUserConfiguration } from '../application/user-configuratio
 import type { UserConfig } from '../domain/user-config.js';
 import type { StatusDashboardResult } from '../application/status-service.js';
 import type { CheckStatus } from '../domain/check-state.js';
-import { languageLocale, type Language } from '../domain/user-config.js';
+import { languageLocale, needsSharedPlace, type Language } from '../domain/user-config.js';
 import { languageNames, localizer, percentText } from './i18n.js';
 import { dealioBrand } from './ui/brand.js';
 import { assertComponentsV2Limit, dealioFooter } from './ui/components-v2.js';
 import { uiCopy } from './ui/copy.js';
 import { messagesFor } from './messages.js';
-import { countryDisplay, panelHeader, tabAccent, wishlistHidden, wishlistHiddenNotice } from './ui/design.js';
+import { countryDisplay, dmBlockedStatus, panelHeader, tabAccent, wishlistHidden, wishlistHiddenNotice } from './ui/design.js';
 import { buildTabBar } from './ui/tab-bar.js';
 
 type ReadyStatus = Extract<StatusDashboardResult, { status: 'ready' }>;
@@ -70,7 +70,7 @@ function buildSettingsPanel(
     .setCustomId(`${prefix}:${sessionId}:${action}`).setLabel(label).setEmoji(emoji).setStyle(style).setDisabled(disabled);
 
   const tracking = config.dmDeliveryBlockedAt
-    ? '🔴 ' + t({ tr: 'DM’lerin kapalı', en: 'DMs blocked', de: 'DMs blockiert', fr: 'MP bloqués' })
+    ? dmBlockedStatus(config, language)
     : config.enabled ? '✅ ' + t(trackingOn) : '⏸️ ' + t(trackingPaused);
   container.addTextDisplayComponents(new TextDisplayBuilder().setContent(panelHeader('settings', language,
     t({ tr: 'Hesabın ve tercihlerin', en: 'Your account & preferences', de: 'Dein Konto & deine Vorlieben', fr: 'Ton compte et tes préférences' }),
@@ -135,7 +135,12 @@ function buildSettingsPanel(
     })));
   }
   if (config.dmDeliveryBlockedAt) {
-    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(t({
+    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(t(needsSharedPlace(config) ? {
+      tr: '> 🛑 **Discord sana DM atmama izin vermediği için takibi durdurdum:** ortak bir sunucumuz yok. Dealio’yu uygulamalarına (“Uygulamalarıma Ekle”) ya da bulunduğun bir sunucuya ekle, bir Test DM gönder ve ▶️ Takibi sürdür’e bas.',
+      en: '> 🛑 **I paused tracking because Discord won’t let me DM you:** we don’t share a server. Add Dealio to your apps (“Add to My Apps”) or to a server you’re in, send a Test DM, then press ▶️ Resume tracking.',
+      de: '> 🛑 **Ich habe die Überwachung pausiert, weil Discord mich dir keine DMs schicken lässt:** Wir haben keinen gemeinsamen Server. Füg Dealio deinen Apps („Zu meinen Apps hinzufügen“) oder einem Server hinzu, auf dem du bist, schick eine Test-DM und tippe auf ▶️ Überwachung fortsetzen.',
+      fr: '> 🛑 **J’ai mis le suivi en pause car Discord ne me laisse pas t’envoyer de MP :** nous n’avons aucun serveur en commun. Ajoute Dealio à tes applis (« Ajouter à mes applis ») ou à un serveur où tu es, envoie un MP de test, puis appuie sur ▶️ Reprendre le suivi.',
+    } : {
       tr: '> 🛑 **DM’ler engellendiği için takibi durdurdum.** Discord gizlilik ayarını düzelt, bir Test DM gönder ve ▶️ Takibi sürdür’e bas.',
       en: '> 🛑 **I paused tracking because DMs were blocked.** Fix your Discord privacy settings, send a Test DM, then press ▶️ Resume tracking.',
       de: '> 🛑 **Ich habe die Überwachung pausiert, weil DMs blockiert waren.** Pass deine Discord-Privatsphäre-Einstellungen an, schick eine Test-DM und tippe auf ▶️ Überwachung fortsetzen.',
@@ -219,10 +224,10 @@ export function buildAccountChangePanel(
     : new SectionBuilder().addTextDisplayComponents(account).setButtonAccessory(
       new ButtonBuilder().setStyle(ButtonStyle.Link).setURL(profileUrl).setLabel('Steam')));
   container.addTextDisplayComponents(new TextDisplayBuilder().setContent(t({
-    tr: '> ⚠️ Eski hesabındaki oyunlara koyduğun kurallar, hedef fiyatlar ve bekleyen bildirimler yeni hesaba taşınmaz. Genel indirim oranın, bildirim zamanlaman ve dilin aynı kalır.\n> Yeni listende şu an indirimde olan oyunlar için DM atmam; bundan sonra başlayan indirimleri haber veririm.',
-    en: '> ⚠️ Rules, target prices and waiting alerts for your old account’s games don’t carry over. Your default discount, alert timing and language stay the same.\n> I won’t DM you about games already on sale in the new list; I’ll tell you about sales that start from now on.',
-    de: '> ⚠️ Regeln, Wunschpreise und wartende Benachrichtigungen für die Spiele deines alten Kontos werden nicht übernommen. Dein Standardrabatt, deine Benachrichtigungszeiten und deine Sprache bleiben.\n> Für Spiele, die in der neuen Liste schon reduziert sind, schicke ich keine DM; ich melde Angebote, die ab jetzt beginnen.',
-    fr: '> ⚠️ Les règles, prix cibles et alertes en attente des jeux de ton ancien compte ne sont pas repris. Ta réduction par défaut, tes horaires d’alerte et ta langue restent les mêmes.\n> Je ne t’enverrai pas de MP pour les jeux déjà en promo dans la nouvelle liste ; je te signalerai les promos qui commencent à partir de maintenant.',
+    tr: '> ⚠️ Eski hesabındaki oyunlara koyduğun kurallar, hedef fiyatlar ve bekleyen bildirimler yeni hesaba taşınmaz. Genel indirim oranın, bildirim zamanlaman, dilin ve takip durumun aynı kalır.\n> Yeni listende şu an indirimde olan oyunlar için DM atmam; bundan sonra başlayan indirimleri haber veririm.',
+    en: '> ⚠️ Rules, target prices and waiting alerts for your old account’s games don’t carry over. Your default discount, alert timing, language and tracking status stay the same.\n> I won’t DM you about games already on sale in the new list; I’ll tell you about sales that start from now on.',
+    de: '> ⚠️ Regeln, Wunschpreise und wartende Benachrichtigungen für die Spiele deines alten Kontos werden nicht übernommen. Dein Standardrabatt, deine Benachrichtigungszeiten, deine Sprache und der Überwachungsstatus bleiben.\n> Für Spiele, die in der neuen Liste schon reduziert sind, schicke ich keine DM; ich melde Angebote, die ab jetzt beginnen.',
+    fr: '> ⚠️ Les règles, prix cibles et alertes en attente des jeux de ton ancien compte ne sont pas repris. Ta réduction par défaut, tes horaires d’alerte, ta langue et l’état du suivi restent les mêmes.\n> Je ne t’enverrai pas de MP pour les jeux déjà en promo dans la nouvelle liste ; je te signalerai les promos qui commencent à partir de maintenant.',
   })));
   container.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
   container.addActionRowComponents(new ActionRowBuilder<ButtonBuilder>().addComponents(

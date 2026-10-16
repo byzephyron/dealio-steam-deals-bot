@@ -194,7 +194,7 @@ export class AssistantRepository {
   }
 
   history(user:string): HistoryEntry[] {
-    return preparedStatement(this.db,`SELECT app_id,game_name,CASE WHEN status='terminal_failed' AND last_error='DISCORD_DM_BLOCKED' THEN 'blocked' ELSE status END status,reason,created_at,delivered_at,discord_message_id FROM notification_log
+    return preparedStatement(this.db,`SELECT app_id,game_name,CASE WHEN status='terminal_failed' AND last_error IN ('DISCORD_DM_BLOCKED','DISCORD_NO_MUTUAL_GUILD') THEN 'blocked' ELSE status END status,reason,created_at,delivered_at,discord_message_id FROM notification_log
       WHERE discord_user_id=? AND created_at>=? ORDER BY created_at DESC LIMIT 30`)
       .all(user,new Date(Date.now()-30*86400000).toISOString()) as unknown as HistoryEntry[];
   }

@@ -171,6 +171,9 @@ export class UserConfigRepository {
         || countryChanged
         || options.forcePricingReset === true;
 
+      // A new user starts tracking with DM consent given now. An existing user (a
+      // Steam account change) keeps their consent, a pause and a DM block: changing
+      // accounts must not quietly turn alerts back on.
       this.database
         .prepare(
            `INSERT INTO user_config
@@ -189,10 +192,6 @@ export class UserConfigRepository {
               END,
               language = excluded.language,
               store_country_code = excluded.store_country_code,
-              enabled = 1,
-              dm_opt_in_at = excluded.dm_opt_in_at,
-              dm_delivery_blocked_at = NULL,
-              dm_delivery_error_code = NULL,
               updated_at = excluded.updated_at`,
         )
         .run(
@@ -210,15 +209,19 @@ export class UserConfigRepository {
       this.database
         .prepare(
           `INSERT INTO check_state (discord_user_id, next_scheduled_at)
-           VALUES (?, (
-             SELECT next_scheduled_at
-             FROM wishlist_poll_schedule
-             WHERE schedule_name = 'wishlist'
-           ))
+           VALUES (?, CASE
+             WHEN (SELECT enabled FROM user_config WHERE discord_user_id = ?) = 1
+             THEN (
+               SELECT next_scheduled_at
+               FROM wishlist_poll_schedule
+               WHERE schedule_name = 'wishlist'
+             )
+             ELSE NULL
+           END)
            ON CONFLICT(discord_user_id) DO UPDATE SET
              next_scheduled_at = excluded.next_scheduled_at`,
         )
-        .run(discordUserId);
+        .run(discordUserId, discordUserId);
 
       if (pricingContextChanged && existing) {
         this.resetPricingContext(

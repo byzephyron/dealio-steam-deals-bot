@@ -1,6 +1,6 @@
 import { ButtonBuilder, ButtonStyle } from 'discord.js';
 import { storeCountryName, type StoreCountryCode } from '../../domain/store-country.js';
-import { languageLocale, type Language } from '../../domain/user-config.js';
+import { languageLocale, needsSharedPlace, type Language, type UserConfig } from '../../domain/user-config.js';
 import type { CheckState } from '../../domain/check-state.js';
 import type { StoreFacts, UpcomingRelease, WishlistItem, WishlistItemError } from '../../domain/steam.js';
 import { localizer, percentText, type Localized } from '../i18n.js';
@@ -159,6 +159,31 @@ export function wishlistHiddenNotice(language: Language): string {
     en: `I can’t see your wishlist, so I can’t send alerts. In [Steam’s privacy settings](${steamPrivacyUrl}), set your profile and “Game details” to **Public**; I’ll pick up again at the next check.`,
     de: `Ich kann deine Wunschliste nicht sehen und deshalb keine Benachrichtigungen senden. Stell in den [Steam-Privatsphäre-Einstellungen](${steamPrivacyUrl}) dein Profil und „Spieldetails“ auf **Öffentlich**; bei der nächsten Prüfung mache ich weiter.`,
     fr: `Je ne vois pas ta liste de souhaits, donc je ne peux pas t’envoyer d’alertes. Dans les [paramètres de confidentialité Steam](${steamPrivacyUrl}), mets ton profil et « Détails des jeux » en **Public** ; je reprendrai à la prochaine vérification.`,
+  });
+}
+
+/** "🔴 DM’lerin kapalı" or "🔴 DM’lerine ulaşamıyorum": the status line while Discord refuses Dealio’s DMs. */
+export function dmBlockedStatus(config: Pick<UserConfig, 'dmDeliveryErrorCode'>, language: Language): string {
+  return '🔴 ' + localizer(language)(needsSharedPlace(config)
+    ? { tr: 'DM’lerine ulaşamıyorum', en: 'Can’t reach your DMs', de: 'DMs nicht erreichbar', fr: 'MP injoignables' }
+    : { tr: 'DM’lerin kapalı', en: 'DMs blocked', de: 'DMs blockiert', fr: 'MP bloqués' });
+}
+
+/**
+ * The first step to get DMs back, by why Discord refused them: a privacy setting, or
+ * no shared server and no app install (then Discord lets no bot DM the user).
+ */
+export function dmBlockedFix(config: Pick<UserConfig, 'dmDeliveryErrorCode'>, language: Language): string {
+  return localizer(language)(needsSharedPlace(config) ? {
+    tr: 'Dealio’yu uygulamalarına ekle (“Uygulamalarıma Ekle”) ya da bulunduğun bir sunucuya ekle',
+    en: 'Add Dealio to your apps (“Add to My Apps”) or to a server you’re in',
+    de: 'Füg Dealio deinen Apps hinzu („Zu meinen Apps hinzufügen“) oder einem Server, auf dem du bist',
+    fr: 'Ajoute Dealio à tes applis (« Ajouter à mes applis ») ou à un serveur où tu es',
+  } : {
+    tr: 'Discord’da DM’lerini aç',
+    en: 'Allow DMs in Discord',
+    de: 'Erlaube DMs in Discord',
+    fr: 'Autorise les MP dans Discord',
   });
 }
 

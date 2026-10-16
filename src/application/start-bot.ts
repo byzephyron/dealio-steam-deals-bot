@@ -265,7 +265,7 @@ export async function startBot(
       users: () => adminRepository.users(),
       isBlocked: (discordUserId) => adminControlRepository.isUserBlocked(discordUserId),
       sender: new DiscordAnnouncementSender(client),
-      onDmBlocked: (discordUserId) => { userConfigurationService.markDmDeliveryBlocked(discordUserId); },
+      onDmBlocked: (discordUserId, errorCode) => { userConfigurationService.markDmDeliveryBlocked(discordUserId, errorCode); },
     }) : null;
     const adminPanel = environment.adminPanel && broadcastService ? (() => {
       const logs = new LogBuffer();

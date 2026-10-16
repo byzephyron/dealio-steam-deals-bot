@@ -70,7 +70,7 @@ Set a different target for each game, or use one discount threshold across your 
 - 🖥️ **Straight to the store.** Open a game on the Steam website, or directly in the Steam app.
 - 🔔 **Alerts on your schedule.** On detection, with quiet hours, or as a daily digest. Waiting alerts are re-checked before they're sent.
 - 📬 **A record of your alerts.** See pending and sent DMs, and send a test message if delivery isn't working.
-- 👤 **Switch accounts without starting over.** Change your Steam account from ⚙️ Settings; your default discount, alert timing and language stay.
+- 👤 **Switch accounts without starting over.** Change your Steam account from ⚙️ Settings; your default discount, alert timing, language and tracking status stay.
 - 🌍 **Turkish, English, German and French.** Setup, panels and notifications in all four, using Steam's own words for the wishlist in each language.
 
 <a name="latest-updates"></a>
@@ -175,7 +175,7 @@ No. A game that hasn't been released has no price yet, so Dealio shows its relea
 <details>
 <summary><strong>How do I switch to another Steam account?</strong></summary>
 
-Open `/dealio` → ⚙️ Settings → **Change Steam account**. The same profile form as setup opens; Dealio shows the new account and switches only after you confirm. Your default discount, alert timing and language stay. Rules, targets and waiting alerts for the old account's games don't carry over, and games already on sale in the new list don't trigger alerts. You don't need `/delete-data` for this.
+Open `/dealio` → ⚙️ Settings → **Change Steam account**. The same profile form as setup opens; Dealio shows the new account and switches only after you confirm. Your default discount, alert timing and language stay, and paused tracking stays paused. Rules, targets and waiting alerts for the old account's games don't carry over, and games already on sale in the new list don't trigger alerts. You don't need `/delete-data` for this.
 
 </details>
 
