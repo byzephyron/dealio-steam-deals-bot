@@ -70,7 +70,7 @@ Her oyun için ayrı hedef belirleyebilir ya da tüm listene tek bir indirim eş
 - 🖥️ **Doğrudan mağazaya.** Oyunu Steam sitesinde ya da doğrudan Steam uygulamasında aç.
 - 🔔 **Bildirimler senin zamanında.** Tespit edilince, sessiz saatlerle ya da günlük özet olarak. Bekleyen bildirimler gönderilmeden önce yeniden kontrol edilir.
 - 📬 **Bildirimini takip et.** Bekleyen ve gönderilen DM’leri gör; mesaj alamıyorsan test bildirimiyle kontrol et.
-- 👤 **Baştan başlamadan hesap değiştir.** Steam hesabını ⚙️ Ayarlar’dan değiştir; genel indirim oranın, bildirim zamanlaman ve dilin aynı kalır.
+- 👤 **Baştan başlamadan hesap değiştir.** Steam hesabını ⚙️ Ayarlar’dan değiştir; genel indirim oranın, bildirim zamanlaman, dilin ve takip durumun aynı kalır.
 - 🌍 **Türkçe, İngilizce, Almanca ya da Fransızca.** Kurulum, paneller ve bildirimler dört dilde; her dilde Steam’in kendi terimleriyle (ör. istek listesi).
 
 <a name="son-gelismeler"></a>
@@ -175,7 +175,7 @@ Hayır. Henüz çıkmamış bir oyunun fiyatı yoktur; Dealio bunun yerine çık
 <details>
 <summary><strong>Başka bir Steam hesabına nasıl geçerim?</strong></summary>
 
-`/dealio` → ⚙️ Ayarlar → **Steam hesabını değiştir**’e bas. Kurulumdaki profil penceresinin aynısı açılır; Dealio yeni hesabı gösterir ve ancak onaylarsan değiştirir. Genel indirim oranın, bildirim zamanlaman ve dilin aynı kalır. Eski hesabındaki oyunlara koyduğun kurallar, hedefler ve bekleyen bildirimler taşınmaz; yeni listende zaten indirimde olan oyunlar için bildirim gelmez. Bunun için `/delete-data` gerekmez.
+`/dealio` → ⚙️ Ayarlar → **Steam hesabını değiştir**’e bas. Kurulumdaki profil penceresinin aynısı açılır; Dealio yeni hesabı gösterir ve ancak onaylarsan değiştirir. Genel indirim oranın, bildirim zamanlaman ve dilin aynı kalır; duraklattığın takip de duraklatılmış kalır. Eski hesabındaki oyunlara koyduğun kurallar, hedefler ve bekleyen bildirimler taşınmaz; yeni listende zaten indirimde olan oyunlar için bildirim gelmez. Bunun için `/delete-data` gerekmez.
 
 </details>
 

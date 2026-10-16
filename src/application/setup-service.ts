@@ -107,7 +107,7 @@ export class SetupService {
       );
       const summary = await this.initialSummaryService.sendWithinUserOperation(discordUserId);
       if (summary.status === 'dm-blocked') {
-        const blocked = this.userConfigurationService.markDmDeliveryBlocked(discordUserId);
+        const blocked = this.userConfigurationService.markDmDeliveryBlocked(discordUserId, summary.errorCode);
         return { config: blocked ?? config, summary };
       }
       return { config, summary };
@@ -163,6 +163,7 @@ export class SetupService {
       if (summary.status === 'dm-blocked') {
         const blocked = this.userConfigurationService.markDmDeliveryBlocked(
           prepared.discordUserId,
+          summary.errorCode,
         );
         return { config: blocked ?? config, summary };
       }

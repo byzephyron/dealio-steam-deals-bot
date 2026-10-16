@@ -96,7 +96,8 @@ Engellenen hesap Dealio'nun komut ve düğmelerini kullanamaz; yalnız
   `sending` olarak işaretlenir. Teslim en az bir kez garantilidir (yeniden
   başlatmada yarım kalan gönderim tekrar denenir).
 - Hız: 1,5 saniyede bir mesaj. Discord hız sınırı deneme hakkı harcamaz;
-  50007 (DM kapalı) kullanıcının DM engelini işaretler.
+  50007 (DM kapalı) ve 50278 (ortak sunucu ya da uygulama kurulumu yok) kullanıcının DM engelini
+  işaretler; kullanıcı ayrıntısındaki kod (`DISCORD_DM_BLOCKED` / `DISCORD_NO_MUTUAL_GUILD`) nedeni gösterir.
 - Kullanıcı kendi dilini, yoksa İngilizceyi, o da yoksa yazılan başka bir dili görür.
 - Toplu duyuruyu başlatmak için onay kutusuna `GÖNDER` yazılır. Duyuruları
   servisle ilgili ve seyrek tutun; Discord istenmeyen toplu DM'leri spam sayabilir.

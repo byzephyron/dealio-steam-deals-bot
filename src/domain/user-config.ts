@@ -28,6 +28,17 @@ export interface UserConfig {
   readonly updatedAt: string;
 }
 
+/**
+ * Why Discord refuses Dealio's DMs, stored in dmDeliveryErrorCode. Each has its own
+ * remedy: a privacy setting (50007), or no shared server or app install (50278).
+ */
+export type DmUnreachableCode = 'DISCORD_DM_BLOCKED' | 'DISCORD_NO_MUTUAL_GUILD';
+
+/** A stored block whose remedy is adding Dealio to the user's apps or a shared server. */
+export function needsSharedPlace(config: Pick<UserConfig, 'dmDeliveryErrorCode'>): boolean {
+  return config.dmDeliveryErrorCode === 'DISCORD_NO_MUTUAL_GUILD';
+}
+
 export function isMinimumDiscountPercent(value: number): boolean {
   return Number.isSafeInteger(value) && value >= 0 && value <= 100;
 }

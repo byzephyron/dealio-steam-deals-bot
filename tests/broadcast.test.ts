@@ -60,7 +60,7 @@ describe('BroadcastService', () => {
       users: () => adminRepository.users(),
       isBlocked: (id) => controls.isUserBlocked(id),
       sender,
-      onDmBlocked: (id) => dmBlocked.push(id),
+      onDmBlocked: (id, code) => dmBlocked.push(`${id}:${code}`),
       now: () => new Date(now),
       logger: { log: () => undefined, error: () => undefined },
     });
@@ -128,8 +128,18 @@ describe('BroadcastService', () => {
     failWith = Object.assign(new Error('Cannot send messages to this user'), { code: 50007, status: 403 });
     await broadcasts.sendNext();
     expect(repository.recipients(created.broadcastId)[0]).toMatchObject({ status: 'skipped', lastError: 'DISCORD_DM_BLOCKED' });
-    expect(dmBlocked).toEqual(['100000000000000001']);
+    expect(dmBlocked).toEqual(['100000000000000001:DISCORD_DM_BLOCKED']);
     expect(repository.get(created.broadcastId)?.status).toBe('completed');
+  });
+
+  it('stops for a user who shares no server with Dealio and records why', async () => {
+    const broadcasts = service();
+    const created = broadcasts.create(content, { userIds: ['100000000000000001'] });
+    await broadcasts.stop();
+    failWith = Object.assign(new Error('Cannot send messages to this user due to having no mutual guilds'), { code: 50278, status: 403 });
+    await broadcasts.sendNext();
+    expect(repository.recipients(created.broadcastId)[0]).toMatchObject({ status: 'skipped', lastError: 'DISCORD_NO_MUTUAL_GUILD' });
+    expect(dmBlocked).toEqual(['100000000000000001:DISCORD_NO_MUTUAL_GUILD']);
   });
 
   it('sends an interrupted delivery again after a restart (at-least-once)', async () => {

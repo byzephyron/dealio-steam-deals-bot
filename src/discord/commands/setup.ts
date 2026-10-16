@@ -41,6 +41,8 @@ import {
   buildSetupCompletePanel,
   buildSetupConfirmationPanel,
   buildSetupWelcomePanel,
+  setupCompleteDetail,
+  setupCompleteStatus,
 } from '../setup-view.js';
 import {
   buildNoticePanel,
@@ -553,9 +555,10 @@ export async function handleSetup(
           completed = false;
           throw error;
         }
-        completedPanel = { prepared, status: result.summary.status };
+        const status = setupCompleteStatus(result.summary);
+        completedPanel = { prepared, status };
         await editPanel({
-          components: [buildSetupCompletePanel(prepared, result.summary.status, viewOptions, ui.navigate ? interaction.id : undefined)],
+          components: [buildSetupCompletePanel(prepared, status, viewOptions, ui.navigate ? interaction.id : undefined)],
         });
         if (!ui.navigate) collector.stop('completed');
         return;
@@ -654,13 +657,7 @@ async function handleLegacySetup(
       storeCountry,
     );
     const messages = messagesFor(config.language);
-    const summaryMessage = summary.status === 'sent'
-      ? messages.setupSummarySent
-      : summary.status === 'dm-blocked'
-        ? messages.setupWizardDmBlocked
-        : summary.status === 'dm-transient-failed'
-          ? messages.setupWizardDmTransient
-          : messages.setupSummaryUnavailable;
+    const summaryMessage = setupCompleteDetail(setupCompleteStatus(summary), config.language);
     await interaction.editReply({
       flags: dealioV2Flags,
       components: [buildNoticePanel(

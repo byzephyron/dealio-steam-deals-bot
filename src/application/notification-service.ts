@@ -3,7 +3,7 @@ import { redactSecrets, safeLogger } from './safe-logger.js';
 import { deliveryAllowed } from '../domain/notification-preference.js';
 import type { HistoricalLow } from '../domain/price-history.js';
 import type { StoreFacts } from '../domain/steam.js';
-import type { Language } from '../domain/user-config.js';
+import type { DmUnreachableCode, Language } from '../domain/user-config.js';
 import type { StoreCountryCode } from '../domain/store-country.js';
 import type {
   DurableNotificationBatch,
@@ -444,9 +444,10 @@ export class NotificationService {
         return { sentCount: 0, failedCount: batch.notifications.length, cancelled: false };
       }
 
-      const message = isDiscordDmBlocked(error) ? 'DISCORD_DM_BLOCKED' : redactSecrets(error instanceof Error ? error.message : 'Unknown Discord error');
+      const unreachable = dmUnreachableCode(error);
+      const message = unreachable ?? redactSecrets(error instanceof Error ? error.message : 'Unknown Discord error');
       const attemptCount = batch.attemptCount + 1;
-      const permanentlyBlocked = isDiscordDmBlocked(error);
+      const permanentlyBlocked = unreachable !== null;
       const terminal = isPermanentDiscordError(error) || attemptCount >= this.maxAttempts;
       const retryDelayMs = Math.min(
         this.retryBaseDelayMs * (2 ** Math.max(0, attemptCount - 1)),
@@ -461,10 +462,10 @@ export class NotificationService {
         nextAttemptAt,
         terminal,
       );
-      if (permanentlyBlocked) {
+      if (unreachable) {
         this.userConfigRepository.markDmDeliveryBlocked(
           batch.notifications[0].discordUserId,
-          'DISCORD_DM_BLOCKED',
+          unreachable,
           this.now().toISOString(),
         );
       }
@@ -511,7 +512,7 @@ export function isPermanentDiscordError(error: unknown): boolean {
   }
 
   const code = 'code' in error ? Number(error.code) : Number.NaN;
-  if (code === 50_007) {
+  if (code === 50_007 || code === 50_278) {
     return true;
   }
 
@@ -541,8 +542,18 @@ export function discordRateLimitDelayMs(error: unknown): number | null {
   return Math.min(Math.max(requested ?? minimumRateLimitDelayMs, minimumRateLimitDelayMs), maximumRateLimitDelayMs);
 }
 
-/** Only an explicit recipient delivery error establishes a DM privacy block. */
+/**
+ * Only an explicit recipient delivery error establishes that the user cannot get
+ * DMs: a privacy block (50007), or no shared server and no app install (50278).
+ */
+export function dmUnreachableCode(error: unknown): DmUnreachableCode | null {
+  if (typeof error !== 'object' || error === null || !('code' in error)) {
+    return null;
+  }
+  const code = Number(error.code);
+  return code === 50_007 ? 'DISCORD_DM_BLOCKED' : code === 50_278 ? 'DISCORD_NO_MUTUAL_GUILD' : null;
+}
+
 export function isDiscordDmBlocked(error: unknown): boolean {
-  return typeof error === 'object' && error !== null && 'code' in error
-    && Number(error.code) === 50_007;
+  return dmUnreachableCode(error) !== null;
 }

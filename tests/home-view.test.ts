@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
 import { buildHomePanel } from '../src/discord/home-view.js';
+import { buildStatusV2Panel } from '../src/discord/status-view-v2.js';
 import { assertComponentsV2Limit } from '../src/discord/ui/components-v2.js';
 import type { StatusDashboardResult } from '../src/application/status-service.js';
 
@@ -52,4 +53,31 @@ it.each(['tr', 'en'] as const)('fits the complete home panel and disables nested
   expect(serialized).toContain(language === 'tr'
     ? '**2** oyunun hedef fiyatı eski para biriminde'
     : '**2** games have targets in an old currency');
+});
+
+/** Home and Settings name the fix that matches why Discord refused Dealio's DMs. */
+it.each([
+  ['DISCORD_DM_BLOCKED', 'Allow DMs in Discord', 'Fix your Discord privacy settings', 'DMs blocked'],
+  ['DISCORD_NO_MUTUAL_GUILD', 'Add Dealio to your apps', 'we don’t share a server', 'Can’t reach your DMs'],
+] as const)('gives the %s remedy on Home and in Settings', (code, homeFix, settingsFix, status) => {
+  const result: Extract<StatusDashboardResult, {status: 'ready'}> = {
+    status: 'ready', language: 'en',
+    config: {
+      discordUserId: '1', configurationId: 'config', steamId64: '76561198000000000',
+      configVersion: 1, language: 'en', storeCountryCode: 'US', enabled: false,
+      minimumDiscountPercent: 20, dmOptInAt: '2026-09-12T00:00:00Z',
+      dmDeliveryBlockedAt: '2026-09-12T00:00:00Z', dmDeliveryErrorCode: code,
+      createdAt: '2026-09-12T00:00:00Z', updatedAt: '2026-09-12T00:00:00Z',
+    },
+    checkState: null, notificationQueue: {pending: 0, retry: 0, sending: 0, sent: 0, terminalFailed: 1, expired: 0},
+    latestPriceCurrencies: ['USD'], gameDiscountOverrideCount: 0,
+  };
+  const home = JSON.stringify(buildHomePanel(result, 'session', {}).toJSON());
+  const settings = JSON.stringify(buildStatusV2Panel(result, 'session', { mode: 'status' }).toJSON());
+  expect(home).toContain(homeFix);
+  expect(home).toContain(status);
+  expect(settings).toContain(settingsFix);
+  expect(settings).toContain(status);
+  const otherFix = code === 'DISCORD_DM_BLOCKED' ? 'Add Dealio to your apps' : 'Allow DMs in Discord';
+  expect(home + settings).not.toContain(otherFix);
 });
