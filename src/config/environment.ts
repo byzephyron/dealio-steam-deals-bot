@@ -7,8 +7,7 @@ export interface EnvironmentConfig {
   readonly databasePath: string;
   readonly pollIntervalHours: number;
   readonly notificationRetryIntervalSeconds: number;
-  /** Most users who can complete setup; existing users are never removed. */
-  /** Sign-up cap; null means no cap. */
+  /** Sign-up cap; null means no cap. Existing users are never removed. */
   readonly maxUsers: number | null;
   readonly steamWebApiKey?: string;
   readonly isThereAnyDealApiKey?: string;
@@ -162,7 +161,9 @@ export function loadEnvironment(
       throw new Error('Single-host production is restricted to its pinned machine');
     }
   }
-  if (environment.DEALIO_PRODUCTION !== 'true' && environment.DISCORD_CLIENT_ID === (environment.PRODUCTION_DISCORD_CLIENT_ID ?? '1540325119690412172'))
+  // An empty PRODUCTION_DISCORD_CLIENT_ID (as in .env.example) still guards the real app.
+  if (environment.DEALIO_PRODUCTION !== 'true'
+    && environment.DISCORD_CLIENT_ID === (environment.PRODUCTION_DISCORD_CLIENT_ID?.trim() || '1540325119690412172'))
     throw new Error('Development must use a separate Discord application');
   return {
     ...(environment.AZURE_LEASE_CONTAINER_URL ? {azureLeaseContainerUrl:environment.AZURE_LEASE_CONTAINER_URL}:{}),

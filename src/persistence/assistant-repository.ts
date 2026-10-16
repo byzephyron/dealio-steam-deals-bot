@@ -193,10 +193,10 @@ export class AssistantRepository {
       .run(localClock(now,p.timezone).date,user);
   }
 
-  history(user:string): HistoryEntry[] {
+  history(user:string,now=new Date()): HistoryEntry[] {
     return preparedStatement(this.db,`SELECT app_id,game_name,CASE WHEN status='terminal_failed' AND last_error='DISCORD_DM_BLOCKED' THEN 'blocked' ELSE status END status,reason,created_at,delivered_at,discord_message_id FROM notification_log
       WHERE discord_user_id=? AND created_at>=? ORDER BY created_at DESC LIMIT 30`)
-      .all(user,new Date(Date.now()-30*86400000).toISOString()) as unknown as HistoryEntry[];
+      .all(user,new Date(now.getTime()-30*86400000).toISOString()) as unknown as HistoryEntry[];
   }
   prices(appId:number,country:string,currency:string,now=new Date()): PricePoint[] {
     return preparedStatement(this.db,`SELECT final_minor,initial_minor,observed_at FROM price_observation WHERE app_id=? AND country=? AND currency=?
