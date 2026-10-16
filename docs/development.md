@@ -4,7 +4,7 @@
 
 ## Isolated setup
 
-Use Node.js **22.16 or later**. CI checks Node.js 22 and 24. The source repository is private; access to it is separate from installing the hosted bot.
+Use Node.js **22.16 or later**. CI checks Node.js 22 and 24. The source repository is public on GitHub under the MIT license; using the hosted bot does not require it.
 
 Create a **separate Discord application** for development. Enable both **Guild Install** and **User Install** in its installation settings; the command definitions support both. A production token must never be used for local testing.
 
@@ -64,5 +64,5 @@ Useful scripts: `npm run release:check <evidence.json>` (release gate), `npm run
 
 - `.env` and `.env.test` are ignored; commit only example files.
 - Keep databases, runtime files, tokens, and private user data out of the repository.
-- An MIT license file does not make a private repository publicly browsable.
+- The repository is public: never commit tokens, server addresses, Healthchecks URLs, real Discord or Steam IDs, or user data.
 - Docs-only changes need link/content/render checks; runtime changes require the project checks above.
