@@ -4,13 +4,13 @@
   "private": true,
   "description": "Dealio notifies Discord users when Steam wishlist games go on sale.",
   "license": "MIT",
-  "homepage": "https://github.com/blghnboz17-boop/dealio-steam-deals-bot#readme",
+  "homepage": "https://github.com/byzephyron/dealio-steam-deals-bot#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/blghnboz17-boop/dealio-steam-deals-bot.git"
+    "url": "git+https://github.com/byzephyron/dealio-steam-deals-bot.git"
   },
   "bugs": {
-    "url": "https://github.com/blghnboz17-boop/dealio-steam-deals-bot/issues"
+    "url": "https://github.com/byzephyron/dealio-steam-deals-bot/issues"
   },
   "type": "module",
   "engines": {

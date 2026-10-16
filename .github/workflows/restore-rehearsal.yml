@@ -34,7 +34,7 @@ jobs:
           export GIT_SSH_COMMAND="ssh -F /dev/null -i $RUNNER_TEMP/dealio-ssh/repo-key -o IdentityAgent=none -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$RUNNER_TEMP/dealio-ssh/repo-known-hosts"
           git init -q "$RUNNER_TEMP/backup-repo"
           cd "$RUNNER_TEMP/backup-repo"
-          timeout 120 git fetch -q --depth 1 git@github.com:blghnboz17-boop/dealio-backups.git '+refs/heads/daily-*:refs/remotes/backup/daily-*'
+          timeout 120 git fetch -q --depth 1 git@github.com:byzephyron/dealio-backups.git '+refs/heads/daily-*:refs/remotes/backup/daily-*'
           latest=$(git for-each-ref --sort=-committerdate --count=1 --format='%(refname)' refs/remotes/backup/)
           test -n "$latest"
           git show "$latest:wishlist.encrypted.json" > "$RUNNER_TEMP/recovery/wishlist.encrypted.json"

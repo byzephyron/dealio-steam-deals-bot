@@ -49,7 +49,7 @@ jobs:
           cd "$RUNNER_TEMP/backup-repo"
           git add wishlist.encrypted.json
           git -c user.name='Dealio backup' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -q -m "Encrypted backup $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          timeout 120 git push -q --force git@github.com:blghnboz17-boop/dealio-backups.git "HEAD:refs/heads/$slot"
+          timeout 120 git push -q --force git@github.com:byzephyron/dealio-backups.git "HEAD:refs/heads/$slot"
       - name: Confirm offsite storage to independent monitor
         env:
           BACKUP_PING_URL: ${{ secrets.HEALTHCHECKS_BACKUP_PING_URL }}
