@@ -7,6 +7,7 @@ import { UserConfigRepository } from '../src/persistence/user-config-repository.
 import { WishlistStateRepository } from '../src/persistence/wishlist-state-repository.js';
 import { DiscountThresholdRepository } from '../src/persistence/discount-threshold-repository.js';
 import type { SteamClient } from '../src/steam/steam-client.js';
+import { saveGameThreshold } from './helpers/game-rules.js';
 
 function createItem(
   appId: number,
@@ -194,12 +195,7 @@ describe('CheckService sale state', () => {
       20,
       '2026-08-21T00:01:00.000Z',
     )!;
-    services.discountThresholdRepository.setGameOverride(
-      config,
-      10,
-      80,
-      '2026-08-21T00:02:00.000Z',
-    );
+    saveGameThreshold(services.database, config, 10, 80, '2026-08-21T00:02:00.000Z');
 
     await services.checkService.check('discord-user');
     await expect(services.checkService.check('discord-user')).resolves.toMatchObject({

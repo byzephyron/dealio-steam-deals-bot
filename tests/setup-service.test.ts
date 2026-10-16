@@ -14,6 +14,7 @@ import { createDatabase } from '../src/persistence/database.js';
 import { DiscountThresholdRepository } from '../src/persistence/discount-threshold-repository.js';
 import { UserConfigRepository } from '../src/persistence/user-config-repository.js';
 import { WishlistStateRepository } from '../src/persistence/wishlist-state-repository.js';
+import { saveGameThreshold } from './helpers/game-rules.js';
 
 const saleItem: WishlistItem = {
   appId: 10,
@@ -103,12 +104,7 @@ describe('SetupService', () => {
     if (!oldCandidate) {
       throw new Error('Expected old setup candidate');
     }
-    fixture.discountThresholdRepository.setGameOverride(
-      oldConfig,
-      10,
-      40,
-      '2026-08-23T00:02:10.000Z',
-    );
+    saveGameThreshold(fixture.database, oldConfig, 10, 40, '2026-08-23T00:02:10.000Z');
 
     await expect(fixture.setupService.configure(
       'discord-user',
@@ -250,7 +246,7 @@ describe('SetupService capacity and account change', () => {
     const fixture = services();
     await fixture.setupService.configure('discord-user', '76561198000000000', 'en', 'US');
     const before = fixture.userConfigRepository.findByDiscordUserId('discord-user')!;
-    fixture.discountThresholdRepository.setGameOverride(before, 10, 70, '2026-08-23T00:00:00.000Z');
+    saveGameThreshold(fixture.database, before, 10, 70, '2026-08-23T00:00:00.000Z');
     fixture.sender.sendInitialSummary.mockClear();
 
     const prepared = await fixture.setupService.prepareAccountChange('discord-user', '76561198000000009', 'en', 'US');

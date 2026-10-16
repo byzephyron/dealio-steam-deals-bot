@@ -20,6 +20,7 @@ import { UserOperationCoordinator } from '../src/application/user-operation-coor
 import type { SteamClient } from '../src/steam/steam-client.js';
 import { SteamWishlistError } from '../src/domain/steam.js';
 import { SteamIdentityError } from '../src/domain/steam-identity.js';
+import { saveGameThreshold } from './helpers/game-rules.js';
 
 function createServices(
   steamClient: Pick<SteamClient, 'getWishlistWithErrors'> = {
@@ -63,7 +64,6 @@ function createServices(
     discountThresholdRepository,
     discountThresholdService: new DiscountThresholdService(
       userConfigRepository,
-      discountThresholdRepository,
       coordinator,
     ),
     identityResolver,
@@ -289,12 +289,7 @@ describe('user configuration', () => {
       'en',
       'US',
     );
-    services.discountThresholdRepository.setGameOverride(
-      original,
-      10,
-      40,
-      '2026-08-21T00:01:00.000Z',
-    );
+    saveGameThreshold(services.database, original, 10, 40, '2026-08-21T00:01:00.000Z');
     const regular = { ...regionalSale, onSale: false, price: {
       ...regionalSale.price,
       currency: 'USD',
@@ -402,8 +397,7 @@ describe('user configuration', () => {
 
     await expect(services.discountThresholdService.setGlobal('discord-user', 35))
       .resolves.toMatchObject({ minimumDiscountPercent: 35, configVersion: 1 });
-    await expect(services.discountThresholdService.setGame('discord-user', 10, 60))
-      .resolves.toMatchObject({ appId: 10, overridePercent: 60, effectivePercent: 60 });
+    saveGameThreshold(services.database, created, 10, 60, '2026-08-21T00:01:00.000Z');
     expect(services.discountThresholdRepository.findGameOverride(created, 10)).toBe(60);
     expect(services.statusService.getDashboard('discord-user', 'en')).toMatchObject({
       status: 'ready',
@@ -422,19 +416,8 @@ describe('user configuration', () => {
       status: 'ready',
       gameDiscountOverrideCount: 0,
     });
-    await expect(services.discountThresholdService.setGame(
-      'discord-user',
-      20,
-      50,
-      1,
-      created.configurationId,
-    ))
-      .resolves.toBeNull();
-    expect(services.discountThresholdRepository.findGameOverride(changed, 20)).toBeNull();
     expect(services.discountThresholdRepository.findGameOverride(created, 10)).toBe(60);
 
-    await expect(services.discountThresholdService.setGame('discord-user', 10, null))
-      .resolves.toMatchObject({ overridePercent: null, effectivePercent: 35 });
     expect(() => services.discountThresholdService.setGlobal('discord-user', 101))
       .toThrow(InvalidDiscountThresholdError);
     const previousConfigurationId = changed.configurationId;
@@ -533,12 +516,7 @@ describe('user configuration', () => {
       [saleObservation.notificationCandidate],
       '2026-08-21T01:01:00.000Z',
     );
-    services.discountThresholdRepository.setGameOverride(
-      config,
-      10,
-      40,
-      '2026-08-21T01:02:00.000Z',
-    );
+    saveGameThreshold(services.database, config, 10, 40, '2026-08-21T01:02:00.000Z');
 
     await expect(services.userConfigurationService.deleteData('discord-user')).resolves.toBe(true);
 

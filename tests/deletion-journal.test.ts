@@ -65,3 +65,23 @@ it('forgets deletions older than the backup retention and skips damaged lines', 
   expect(kept[0]).toContain(hashDiscordUserId('recent'));
   database.close();
 });
+
+it('keeps the 35-day promise while the bot runs: counts and cleans up without a restart', () => {
+  const path = journalPath();
+  let now = new Date('2026-09-12T00:00:00.000Z');
+  const journal = new DeletionJournal(path, () => now);
+  journal.record('first', '2026-09-01T00:00:00.000Z');
+  journal.record('second', '2026-09-10T00:00:00.000Z');
+  expect(journal.count()).toBe(2);
+  expect(journal.cleanup()).toBe(0);
+
+  // 35 days after the first deletion, the hourly retention job must drop it.
+  now = new Date('2026-10-07T00:00:00.000Z');
+  expect(journal.count()).toBe(1);
+  expect(readFileSync(path, 'utf8').trim().split('\n')).toHaveLength(2);
+  expect(journal.cleanup()).toBe(1);
+  const kept = readFileSync(path, 'utf8').trim().split('\n');
+  expect(kept).toHaveLength(1);
+  expect(kept[0]).toContain(hashDiscordUserId('second'));
+  expect(new DeletionJournal(journalPath()).cleanup()).toBe(0);
+});

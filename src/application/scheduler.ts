@@ -361,7 +361,9 @@ export class WishlistScheduler {
     }
     let priceChangeMs: number;
     try {
-      priceChangeMs = this.options.nextPriceChange(new Date(nowMs)).getTime() + priceChangeScanDelayMs;
+      // A scan ending between the change and its delayed scan must still leave that scan due.
+      priceChangeMs = this.options.nextPriceChange(new Date(nowMs - priceChangeScanDelayMs)).getTime()
+        + priceChangeScanDelayMs;
     } catch (_error: unknown) {
       this.logger.error('Could not compute the next Steam price change.');
       return intervalTargetMs;

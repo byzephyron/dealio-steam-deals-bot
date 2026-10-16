@@ -48,8 +48,14 @@ export class DeletionJournal {
 
   /** Deletions still kept in the journal (the last 35 days), without pruning the file. */
   public count(): number {
-    if (!existsSync(this.path)) return 0;
-    return readFileSync(this.path, 'utf8').split('\n').filter((line) => line.trim() !== '').length;
+    const cutoff = this.cutoff();
+    return this.read().entries.filter((entry) => entry.deletedAt >= cutoff).length;
+  }
+
+  /** Drops entries past the retention period; the bot runs it with its other retention jobs. */
+  public cleanup(): number {
+    const lineCount = this.read().lineCount;
+    return lineCount - this.prune().length;
   }
 
   /** Deletes restored configurations of users who deleted their data later; returns how many. */
@@ -95,8 +101,22 @@ export class DeletionJournal {
   }
 
   private prune(): DeletionEntry[] {
-    if (!existsSync(this.path)) return [];
-    const cutoff = new Date(this.now().getTime() - deletionJournalRetentionMs).toISOString();
+    const { entries, lineCount } = this.read();
+    const cutoff = this.cutoff();
+    const kept = entries.filter((entry) => entry.deletedAt >= cutoff);
+    if (kept.length !== lineCount) {
+      writeFileSync(this.path, kept.map((entry) => JSON.stringify(entry) + '\n').join(''), { encoding: 'utf8', mode: 0o600 });
+    }
+    return kept;
+  }
+
+  private cutoff(): string {
+    return new Date(this.now().getTime() - deletionJournalRetentionMs).toISOString();
+  }
+
+  /** Valid entries, and how many non-empty lines the file has (unreadable lines count too). */
+  private read(): { entries: DeletionEntry[]; lineCount: number } {
+    if (!existsSync(this.path)) return { entries: [], lineCount: 0 };
     const lines = readFileSync(this.path, 'utf8').split('\n').filter((line) => line.trim() !== '');
     const entries = lines.flatMap((line): DeletionEntry[] => {
       try {
@@ -107,10 +127,6 @@ export class DeletionJournal {
         return [];
       }
     });
-    const kept = entries.filter((entry) => entry.deletedAt >= cutoff);
-    if (kept.length !== lines.length) {
-      writeFileSync(this.path, kept.map((entry) => JSON.stringify(entry) + '\n').join(''), { encoding: 'utf8', mode: 0o600 });
-    }
-    return kept;
+    return { entries, lineCount: lines.length };
   }
 }

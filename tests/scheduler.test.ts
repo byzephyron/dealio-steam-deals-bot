@@ -382,6 +382,8 @@ describe('WishlistScheduler', () => {
     ['2026-10-07T16:52:00.000Z', '2026-10-07T17:02:00.000Z', 10],
     // The change is further away than the interval, which stays in charge.
     ['2026-10-07T15:00:00.000Z', '2026-10-07T15:30:00.000Z', 30],
+    // Ending after the change but before its delayed scan still runs that scan.
+    ['2026-10-07T17:01:00.000Z', '2026-10-07T17:02:00.000Z', 1],
     // Just past the aligned scan, the next one is the regular interval.
     ['2026-10-07T17:02:30.000Z', '2026-10-07T17:32:30.000Z', 30],
   ])('after a scan ending %s schedules the next one at %s', async (completedAt, expected, minutes) => {
