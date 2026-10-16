@@ -241,7 +241,7 @@ export async function startBot(
         return {items:[...result.wishlistItems],errors:[...result.failedItems,...result.unavailableItems]};
       },
     );
-    const runRetention=()=>{try{wishlistStateRepository.assistant.cleanup();telemetryRepository.cleanup();adminControlRepository.cleanup();broadcastRepository.cleanup();supportTicketRepository.cleanup();}catch(error){safeLogger.error('Retention cleanup failed',error);}};
+    const runRetention=()=>{try{wishlistStateRepository.assistant.cleanup();telemetryRepository.cleanup();adminControlRepository.cleanup();broadcastRepository.cleanup();supportTicketRepository.cleanup();deletionJournal?.cleanup();}catch(error){safeLogger.error('Retention cleanup failed',error);}};
     // Also once at startup: frequent restarts must not keep postponing the hourly cleanup.
     runRetention();
     const retentionTimer=setInterval(runRetention,3600000);
