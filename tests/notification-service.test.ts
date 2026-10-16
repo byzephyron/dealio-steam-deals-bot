@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
+import { RateLimitError } from 'discord.js';
 import {
   NotificationDeliveryCancelledError,
   discordRateLimitDelayMs,
+  isDiscordRateLimit,
   dmUnreachableCode,
   isPermanentDiscordError,
   NotificationService,
@@ -755,6 +757,18 @@ describe('NotificationService', () => {
     expect(discordRateLimitDelayMs({ name: 'RateLimitError', retryAfter: 3_600_000 })).toBe(900_000);
     expect(discordRateLimitDelayMs(new Error('network'))).toBeNull();
     expect(discordRateLimitDelayMs({ status: 403, code: 50_007 })).toBeNull();
+  });
+
+  it('recognizes the RateLimitError discord.js really throws, named after its route', () => {
+    const error = new RateLimitError({
+      timeToReset: 32_000, limit: 5, method: 'POST', hash: 'Global(POST:/channels/:id/messages)',
+      url: 'https://discord.com/api/v10/channels/1/messages', route: '/channels/:id/messages',
+      majorParameter: '1', global: false, retryAfter: 33_000, sublimitTimeout: 0, scope: 'user',
+    });
+    expect(error.name).toBe('RateLimitError[/channels/:id/messages]');
+    expect(isDiscordRateLimit(error)).toBe(true);
+    expect(discordRateLimitDelayMs(error)).toBe(33_000);
+    expect(isDiscordRateLimit(Object.assign(new Error('x'), { name: 'DiscordAPIError[50007]' }))).toBe(false);
   });
 
   it('claims a candidate so concurrent delivery cannot send two DMs', async () => {

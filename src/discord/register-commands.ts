@@ -6,6 +6,8 @@ import {
   type RESTPostAPIChatInputApplicationCommandsJSONBody,
 } from 'discord.js';
 import type { EnvironmentConfig } from '../config/environment.js';
+import { isDiscordRateLimit } from '../application/notification-service.js';
+import { safeLogger } from '../application/safe-logger.js';
 import { setupCommand } from './commands/setup.js';
 import { deleteDataCommand } from './commands/delete-data.js';
 import { dealioCommand } from './commands/dealio.js';
@@ -123,14 +125,28 @@ export async function registerCommands(
     rejectOnRateLimit: () => true,
   }).setToken(environment.discordToken);
 
-  await registerGlobalCommands(rest, environment.discordClientId, signal, log);
+  try {
+    await registerGlobalCommands(rest, environment.discordClientId, signal, log);
+  } catch (error: unknown) {
+    // Global commands persist on Discord between starts. Quick restarts can hit the
+    // registration rate limit; refusing to start then would turn a restart into an outage.
+    if (!isDiscordRateLimit(error)) throw error;
+    safeLogger.error('Global command registration is rate limited; starting with the commands Discord already has', error);
+  }
 
   if (environment.discordGuildId) {
-    await cleanupLegacyGuildCommands(
-      rest,
-      environment.discordClientId,
-      environment.discordGuildId,
-      signal,
-    );
+    try {
+      await cleanupLegacyGuildCommands(
+        rest,
+        environment.discordClientId,
+        environment.discordGuildId,
+        signal,
+      );
+    } catch (error: unknown) {
+      // An optional migration step: a guild Dealio has left (50001 Missing Access)
+      // must not keep the bot from starting.
+      if (signal?.aborted) throw error;
+      safeLogger.error('Could not clear legacy guild commands; continuing without it', error);
+    }
   }
 }

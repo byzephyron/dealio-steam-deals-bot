@@ -524,19 +524,28 @@ const minimumRateLimitDelayMs = 5_000;
 const maximumRateLimitDelayMs = 15 * 60 * 1000;
 
 /**
+ * Whether Discord refused a request for its rate limit. discord.js names its error
+ * after the route ("RateLimitError[/channels/:id/messages]"); a plain HTTP 429 counts too.
+ */
+export function isDiscordRateLimit(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) {
+    return false;
+  }
+  const record = error as Record<string, unknown>;
+  return (typeof record.name === 'string' && /^RateLimitError(?:\[|$)/.test(record.name))
+    || Number(record.status) === 429;
+}
+
+/**
  * How long Discord asked us to wait, when the error is a rate limit; null otherwise.
  * discord.js raises RateLimitError (retryAfter / timeToReset in ms) because the REST
  * client rejects on rate limits; a plain HTTP 429 is handled the same way.
  */
 export function discordRateLimitDelayMs(error: unknown): number | null {
-  if (typeof error !== 'object' || error === null) {
+  if (!isDiscordRateLimit(error)) {
     return null;
   }
   const record = error as Record<string, unknown>;
-  const isRateLimit = record.name === 'RateLimitError' || Number(record.status) === 429;
-  if (!isRateLimit) {
-    return null;
-  }
   const requested = [record.retryAfter, record.timeToReset]
     .find((value): value is number => typeof value === 'number' && Number.isFinite(value) && value >= 0);
   return Math.min(Math.max(requested ?? minimumRateLimitDelayMs, minimumRateLimitDelayMs), maximumRateLimitDelayMs);
