@@ -316,6 +316,8 @@ export class SteamClient {
     return {
       cache: this.metadataCache,
       ttlMs: this.metadataCacheTtlMs,
+      // A sale that starts at the daily change brings its end time; the alert must show it.
+      validUntil: (requestedAtMs) => nextSteamPriceChange(new Date(requestedAtMs)).getTime(),
       key: (appId) => `${storeCountryCode}:${language}:${appId}`,
       cacheable: () => true,
       fetch: async (appIds) => {

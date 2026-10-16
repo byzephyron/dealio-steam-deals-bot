@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
+import { RateLimitError } from 'discord.js';
 import {
   NotificationDeliveryCancelledError,
   discordRateLimitDelayMs,
+  isDiscordRateLimit,
+  dmUnreachableCode,
+  isPermanentDiscordError,
   NotificationService,
   type NotificationSender,
 } from '../src/application/notification-service.js';
@@ -646,6 +650,42 @@ describe('NotificationService', () => {
     services.database.close();
   });
 
+  it('treats "no mutual guilds" (50278) as unreachable DMs, with its own remedy code', async () => {
+    const noMutualGuild = Object.assign(
+      new Error('Cannot send messages to this user due to having no mutual guilds'),
+      { code: 50_278, status: 403 },
+    );
+    const sender = createSender(vi.fn().mockRejectedValue(noMutualGuild));
+    const services = createService('en', sender);
+    // Twelve alerts make two DMs; the second must not be tried once Discord refused the first.
+    for (let appId = 11; appId <= 21; appId += 1) addCandidate(services, appId);
+
+    const firstResult = await services.service.deliverPending('discord-user');
+    const secondResult = await services.service.deliverPending('discord-user');
+
+    expect(firstResult).toMatchObject({ sentCount: 0, failedCount: 10 });
+    expect(sender.send).toHaveBeenCalledOnce();
+    expect(services.repository.findNotificationStatus(services.candidate)).toBe('terminal_failed');
+    expect(services.userConfigRepository.findByDiscordUserId('discord-user')).toMatchObject({
+      enabled: false,
+      dmDeliveryBlockedAt: expect.any(String),
+      dmDeliveryErrorCode: 'DISCORD_NO_MUTUAL_GUILD',
+    });
+    expect(services.database.prepare(
+      "SELECT COUNT(*) AS count FROM notification_log WHERE last_error = 'DISCORD_NO_MUTUAL_GUILD'",
+    ).get()).toEqual({ count: 10 });
+    expect(secondResult).toEqual({ candidateCount: 0, sentCount: 0, failedCount: 0 });
+    services.database.close();
+  });
+
+  it('names the reason Discord refused a DM, and nothing else', () => {
+    expect(dmUnreachableCode({ code: 50_007, status: 403 })).toBe('DISCORD_DM_BLOCKED');
+    expect(dmUnreachableCode({ code: 50_278, status: 403 })).toBe('DISCORD_NO_MUTUAL_GUILD');
+    expect(dmUnreachableCode({ code: 50_035, status: 400 })).toBeNull();
+    expect(dmUnreachableCode(new Error('network'))).toBeNull();
+    expect(isPermanentDiscordError({ code: 50_278 })).toBe(true);
+  });
+
   it('stops transient DM retries after the maximum attempt count', async () => {
     const sender = createSender(vi.fn().mockRejectedValue(new Error('temporary network failure')));
     const services = createService('en', sender);
@@ -717,6 +757,18 @@ describe('NotificationService', () => {
     expect(discordRateLimitDelayMs({ name: 'RateLimitError', retryAfter: 3_600_000 })).toBe(900_000);
     expect(discordRateLimitDelayMs(new Error('network'))).toBeNull();
     expect(discordRateLimitDelayMs({ status: 403, code: 50_007 })).toBeNull();
+  });
+
+  it('recognizes the RateLimitError discord.js really throws, named after its route', () => {
+    const error = new RateLimitError({
+      timeToReset: 32_000, limit: 5, method: 'POST', hash: 'Global(POST:/channels/:id/messages)',
+      url: 'https://discord.com/api/v10/channels/1/messages', route: '/channels/:id/messages',
+      majorParameter: '1', global: false, retryAfter: 33_000, sublimitTimeout: 0, scope: 'user',
+    });
+    expect(error.name).toBe('RateLimitError[/channels/:id/messages]');
+    expect(isDiscordRateLimit(error)).toBe(true);
+    expect(discordRateLimitDelayMs(error)).toBe(33_000);
+    expect(isDiscordRateLimit(Object.assign(new Error('x'), { name: 'DiscordAPIError[50007]' }))).toBe(false);
   });
 
   it('claims a candidate so concurrent delivery cannot send two DMs', async () => {

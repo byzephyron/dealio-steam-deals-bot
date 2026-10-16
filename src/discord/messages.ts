@@ -42,6 +42,7 @@ interface MessageCatalog {
   readonly setupWizardCancelled: string;
   readonly setupWizardPreparing: string;
   readonly setupWizardDmBlocked: string;
+  readonly setupWizardDmNoMutualGuild: string;
   readonly setupWizardDmTransient: string;
   readonly setupWizardAlreadyCompletedTitle: string;
   readonly setupWizardAlreadyCompletedDescription: string;
@@ -118,6 +119,7 @@ const catalog: Record<Language, MessageCatalog> = {
     setupWizardCancelled: 'Kurulumu iptal ettim, hiçbir şeyi değiştirmedim. Fikrin değişirse /dealio ile yeniden başlayabilirsin.',
     setupWizardPreparing: 'Steam profiline ve istek listene bakıyorum…',
     setupWizardDmBlocked: 'Kurulumu kaydettim ama Discord sana DM atmama izin vermiyor. Bildirimleri şimdilik durdurdum; gizlilik ayarını düzelttikten sonra /dealio → ⚙️ Ayarlar\'dan yeniden açabilirsin.',
+    setupWizardDmNoMutualGuild: 'Kurulumu kaydettim ama ortak bir sunucumuz olmadığı için Discord sana DM atmama izin vermiyor. Bildirimleri şimdilik durdurdum; Dealio\'yu uygulamalarına (“Uygulamalarıma Ekle”) ya da bulunduğun bir sunucuya ekledikten sonra /dealio → ⚙️ Ayarlar\'dan yeniden açabilirsin.',
     setupWizardDmTransient: 'Kurulumu kaydettim ama Discord\'daki geçici bir sorun yüzünden karşılama mesajını gönderemedim. Takip normal şekilde devam ediyor.',
     setupWizardAlreadyCompletedTitle: 'Dealio zaten kurulu',
     setupWizardAlreadyCompletedDescription: 'Bu Discord hesabıyla kurulumu zaten yapmışsın. İstek listeni, bildirimlerini ve ayarlarını Dealio panelinden yönetebilirsin. Başka bir Steam hesabına geçmek için ⚙️ Ayarlar’daki “Steam hesabını değiştir”i kullan; her şeyi silip baştan başlamak istersen `/delete-data` var.',
@@ -210,6 +212,7 @@ const catalog: Record<Language, MessageCatalog> = {
     setupWizardCancelled: 'Setup cancelled, nothing was changed. You can start again any time with /dealio.',
     setupWizardPreparing: 'Looking up your Steam profile and wishlist…',
     setupWizardDmBlocked: 'Your setup is saved, but Discord won’t let me DM you. I’ve paused alerts for now; once you fix your privacy settings, turn them back on in /dealio → ⚙️ Settings.',
+    setupWizardDmNoMutualGuild: 'Your setup is saved, but Discord won’t let me DM you because we don’t share a server. I’ve paused alerts for now; add Dealio to your apps (“Add to My Apps”) or to a server you’re in, then turn them back on in /dealio → ⚙️ Settings.',
     setupWizardDmTransient: 'Your setup is saved, but a temporary Discord problem stopped the welcome message. Tracking carries on as normal.',
     setupWizardAlreadyCompletedTitle: 'Dealio is already set up',
     setupWizardAlreadyCompletedDescription: 'You’ve already set up Dealio on this Discord account. Manage your wishlist, alerts and settings from the Dealio panel. To switch to another Steam account, use “Change Steam account” in ⚙️ Settings; to erase everything and start over, use `/delete-data`.',
@@ -302,6 +305,7 @@ const catalog: Record<Language, MessageCatalog> = {
     setupWizardCancelled: 'Einrichtung abgebrochen, es wurde nichts geändert. Mit /dealio kannst du jederzeit neu starten.',
     setupWizardPreparing: 'Ich schaue mir dein Steam-Profil und deine Wunschliste an …',
     setupWizardDmBlocked: 'Deine Einrichtung ist gespeichert, aber Discord lässt mich dir keine DMs schicken. Ich habe die Benachrichtigungen vorerst pausiert. Sobald du deine Privatsphäre-Einstellungen angepasst hast, schalte sie unter /dealio → ⚙️ Einstellungen wieder ein.',
+    setupWizardDmNoMutualGuild: 'Deine Einrichtung ist gespeichert, aber Discord lässt mich dir keine DMs schicken, weil wir keinen gemeinsamen Server haben. Ich habe die Benachrichtigungen vorerst pausiert. Füg Dealio deinen Apps („Zu meinen Apps hinzufügen“) oder einem Server hinzu, auf dem du bist, und schalte sie dann unter /dealio → ⚙️ Einstellungen wieder ein.',
     setupWizardDmTransient: 'Deine Einrichtung ist gespeichert, aber wegen eines kurzen Discord-Problems kam die Willkommensnachricht nicht an. Alles läuft ganz normal weiter.',
     setupWizardAlreadyCompletedTitle: 'Dealio ist schon eingerichtet',
     setupWizardAlreadyCompletedDescription: 'Du hast Dealio mit diesem Discord-Konto bereits eingerichtet. Wunschliste, Benachrichtigungen und Einstellungen findest du im Dealio-Panel. Für ein anderes Steam-Konto nutzt du „Steam-Konto wechseln“ unter ⚙️ Einstellungen; um alles zu löschen und neu anzufangen, gibt es `/delete-data`.',
@@ -394,6 +398,7 @@ const catalog: Record<Language, MessageCatalog> = {
     setupWizardCancelled: 'Configuration annulée, rien n’a été modifié. Tu peux recommencer quand tu veux avec /dealio.',
     setupWizardPreparing: 'Je regarde ton profil Steam et ta liste de souhaits…',
     setupWizardDmBlocked: 'C’est enregistré, mais Discord ne me laisse pas t’envoyer de MP. J’ai mis les alertes en pause ; une fois tes paramètres de confidentialité corrigés, réactive-les dans /dealio → ⚙️ Réglages.',
+    setupWizardDmNoMutualGuild: 'C’est enregistré, mais Discord ne me laisse pas t’envoyer de MP car nous n’avons aucun serveur en commun. J’ai mis les alertes en pause ; ajoute Dealio à tes applis (« Ajouter à mes applis ») ou à un serveur où tu es, puis réactive-les dans /dealio → ⚙️ Réglages.',
     setupWizardDmTransient: 'C’est enregistré, mais un souci passager côté Discord a bloqué le message de bienvenue. Le suivi continue normalement.',
     setupWizardAlreadyCompletedTitle: 'Dealio est déjà configuré',
     setupWizardAlreadyCompletedDescription: 'Tu as déjà configuré Dealio sur ce compte Discord. Gère ta liste de souhaits, tes alertes et tes réglages depuis le panneau Dealio. Pour passer à un autre compte Steam, utilise « Changer de compte Steam » dans ⚙️ Réglages ; pour tout effacer et repartir de zéro, utilise `/delete-data`.',

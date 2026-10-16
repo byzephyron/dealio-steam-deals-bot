@@ -163,7 +163,6 @@ export async function startBot(
     const isBlocked = (discordUserId: string): boolean => adminControlRepository.isUserBlocked(discordUserId);
     const discountThresholdService = new DiscountThresholdService(
       userConfigRepository,
-      discountThresholdRepository,
       userOperationCoordinator,
       undefined,
       isBlocked,
@@ -241,7 +240,7 @@ export async function startBot(
         return {items:[...result.wishlistItems],errors:[...result.failedItems,...result.unavailableItems]};
       },
     );
-    const runRetention=()=>{try{wishlistStateRepository.assistant.cleanup();telemetryRepository.cleanup();adminControlRepository.cleanup();broadcastRepository.cleanup();supportTicketRepository.cleanup();}catch(error){safeLogger.error('Retention cleanup failed',error);}};
+    const runRetention=()=>{try{wishlistStateRepository.assistant.cleanup();telemetryRepository.cleanup();adminControlRepository.cleanup();broadcastRepository.cleanup();supportTicketRepository.cleanup();deletionJournal?.cleanup();}catch(error){safeLogger.error('Retention cleanup failed',error);}};
     // Also once at startup: frequent restarts must not keep postponing the hourly cleanup.
     runRetention();
     const retentionTimer=setInterval(runRetention,3600000);
@@ -265,7 +264,7 @@ export async function startBot(
       users: () => adminRepository.users(),
       isBlocked: (discordUserId) => adminControlRepository.isUserBlocked(discordUserId),
       sender: new DiscordAnnouncementSender(client),
-      onDmBlocked: (discordUserId) => { userConfigurationService.markDmDeliveryBlocked(discordUserId); },
+      onDmBlocked: (discordUserId, errorCode) => { userConfigurationService.markDmDeliveryBlocked(discordUserId, errorCode); },
     }) : null;
     const adminPanel = environment.adminPanel && broadcastService ? (() => {
       const logs = new LogBuffer();

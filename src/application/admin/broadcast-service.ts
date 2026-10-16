@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto';
-import { isLanguage, languages, type Language } from '../../domain/user-config.js';
+import { isLanguage, languages, type DmUnreachableCode, type Language } from '../../domain/user-config.js';
 import type { AdminUserRow } from '../../persistence/admin-repository.js';
 import type {
   AnnouncementContent, BroadcastAudience, BroadcastRepository, BroadcastSummary,
 } from '../../persistence/broadcast-repository.js';
-import { discordRateLimitDelayMs, isDiscordDmBlocked, isPermanentDiscordError } from '../notification-service.js';
+import { discordRateLimitDelayMs, dmUnreachableCode, isPermanentDiscordError } from '../notification-service.js';
 import { redactSecrets, safeLogger } from '../safe-logger.js';
 
 export interface AnnouncementSender {
@@ -55,7 +55,7 @@ export interface BroadcastServiceOptions {
   readonly users: () => readonly AdminUserRow[];
   readonly isBlocked: (discordUserId: string) => boolean;
   readonly sender: AnnouncementSender;
-  readonly onDmBlocked: (discordUserId: string) => void;
+  readonly onDmBlocked: (discordUserId: string, errorCode: DmUnreachableCode) => void;
   readonly now?: () => Date;
   /** One message per interval keeps well under Discord's DM limits. */
   readonly intervalMs?: number;
@@ -150,14 +150,14 @@ export class BroadcastService {
           new Date(now.getTime() + rateLimitMs).toISOString(), now.toISOString());
         return true;
       }
-      const blocked = isDiscordDmBlocked(error);
-      const terminal = blocked || isPermanentDiscordError(error) || recipient.attemptCount >= this.maxAttempts;
-      const message = blocked ? 'DISCORD_DM_BLOCKED' : redactSecrets(error instanceof Error ? error.message : 'Unknown error');
+      const blocked = dmUnreachableCode(error);
+      const terminal = blocked !== null || isPermanentDiscordError(error) || recipient.attemptCount >= this.maxAttempts;
+      const message = blocked ?? redactSecrets(error instanceof Error ? error.message : 'Unknown error');
       this.options.repository.markFailed(recipient.broadcastId, recipient.discordUserId, message,
         terminal ? null : new Date(now.getTime() + this.retryDelayMs * recipient.attemptCount).toISOString(), now.toISOString());
       if (blocked) {
         try {
-          this.options.onDmBlocked(recipient.discordUserId);
+          this.options.onDmBlocked(recipient.discordUserId, blocked);
         } catch (markError: unknown) {
           this.logger.error('Could not record a DM block after an announcement', markError);
         }

@@ -8,7 +8,7 @@ import type { StatusV2Options } from './status-view-v2.js';
 import { sanitizeGameName } from './notification-messages.js';
 import { assertComponentsV2Limit, dealioFooter } from './ui/components-v2.js';
 import { dealioBrand } from './ui/brand.js';
-import { countryDisplay, helpButton, hotPrefix, supportButton, noPriceText, panelHeader, priceFetched, priceLine, savingsLine, tabAccent, wishlistHidden, wishlistHiddenNotice } from './ui/design.js';
+import { countryDisplay, dmBlockedFix, dmBlockedStatus, helpButton, hotPrefix, supportButton, noPriceText, panelHeader, priceFetched, priceLine, savingsLine, tabAccent, wishlistHidden, wishlistHiddenNotice } from './ui/design.js';
 import { buildTabBar } from './ui/tab-bar.js';
 import { localizer } from './i18n.js';
 import { staleTargetsNotice } from './assistant-view.js';
@@ -43,7 +43,7 @@ export function buildHomePanel(result: ReadyStatus, sessionId: string, options: 
     ? '🌙 ' + clock(pref.quietStart) + '–' + clock(pref.quietEnd)
     : pref?.mode === 'digest' ? '📬 ' + t({ tr: 'Günlük özet ', en: 'Daily digest ', de: 'Tägliche Zusammenfassung ', fr: 'Résumé quotidien ' }) + clock(pref.digestMinute)
     : '⚡ ' + t({ tr: 'Anında bildirim', en: 'Instant alerts', de: 'Sofort benachrichtigen', fr: 'Alertes immédiates' });
-  const tracking = blocked ? '🔴 ' + t({ tr: 'DM’lerin kapalı', en: 'DMs blocked', de: 'DMs blockiert', fr: 'MP bloqués' })
+  const tracking = blocked ? dmBlockedStatus(config, language)
     : config.enabled ? '✅ ' + t({ tr: 'Takip açık', en: 'Tracking on', de: 'Überwachung aktiv', fr: 'Suivi actif' })
     : '⏸️ ' + t({ tr: 'Takip duraklatıldı', en: 'Tracking paused', de: 'Überwachung pausiert', fr: 'Suivi en pause' });
   root.addTextDisplayComponents(display(
@@ -113,12 +113,15 @@ export function buildHomePanel(result: ReadyStatus, sessionId: string, options: 
         fr: 'Il me manque le prix de ' + partial + (partial === 1 ? ' jeu.' : ' jeux.'),
       }))));
   if (options.staleTargetCount) root.addTextDisplayComponents(display('> ' + staleTargetsNotice(options.staleTargetCount, language)));
-  if (blocked) root.addTextDisplayComponents(display('> 🔴 ' + t({
-    tr: 'Discord’da DM’lerini aç, sonra ⚙️ Ayarlar’dan bir Test DM gönder.',
-    en: 'Allow DMs in Discord, then send a Test DM from ⚙️ Settings.',
-    de: 'Erlaube DMs in Discord und schick dann unter ⚙️ Einstellungen eine Test-DM.',
-    fr: 'Autorise les MP dans Discord, puis envoie un MP de test depuis ⚙️ Réglages.',
-  })));
+  if (blocked) {
+    const fix = dmBlockedFix(config, language);
+    root.addTextDisplayComponents(display('> 🔴 ' + t({
+      tr: `${fix}, sonra ⚙️ Ayarlar’dan bir Test DM gönder.`,
+      en: `${fix}, then send a Test DM from ⚙️ Settings.`,
+      de: `${fix} und schick dann unter ⚙️ Einstellungen eine Test-DM.`,
+      fr: `${fix}, puis envoie un MP de test depuis ⚙️ Réglages.`,
+    })));
+  }
   // The matching deals from the last check, one tap away; a fresh Steam check is the other action.
   const dealCount = options.eligibleDealCount;
   const deals = dealCount === undefined ? null : dealCount > 0

@@ -1,8 +1,8 @@
 import type { StoreFacts, WishlistItemError } from '../domain/steam.js';
 import type { StoreCountryCode } from '../domain/store-country.js';
-import type { Language } from '../domain/user-config.js';
+import type { DmUnreachableCode, Language } from '../domain/user-config.js';
 import type { CheckService } from './check-service.js';
-import { isDiscordDmBlocked } from './notification-service.js';
+import { dmUnreachableCode } from './notification-service.js';
 
 export interface InitialWishlistSale {
   readonly headerImageUrl?: string;
@@ -41,7 +41,7 @@ export type InitialWishlistSummaryResult =
   | { readonly status: 'steam-unavailable' }
   | { readonly status: 'persistence-error' }
   | { readonly status: 'dm-transient-failed'; readonly saleCount: number }
-  | { readonly status: 'dm-blocked'; readonly saleCount: number };
+  | { readonly status: 'dm-blocked'; readonly saleCount: number; readonly errorCode: DmUnreachableCode };
 
 export class InitialWishlistSummaryService {
   public constructor(
@@ -128,10 +128,10 @@ export class InitialWishlistSummaryService {
       });
       return { status: 'sent', saleCount: sales.length };
     } catch (error: unknown) {
-      return {
-        status: isDiscordDmBlocked(error) ? 'dm-blocked' : 'dm-transient-failed',
-        saleCount: sales.length,
-      };
+      const unreachable = dmUnreachableCode(error);
+      return unreachable
+        ? { status: 'dm-blocked', saleCount: sales.length, errorCode: unreachable }
+        : { status: 'dm-transient-failed', saleCount: sales.length };
     }
 }
 

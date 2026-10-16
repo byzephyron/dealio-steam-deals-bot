@@ -14,7 +14,6 @@ import { AdminControlRepository } from '../src/persistence/admin-control-reposit
 import { CheckStateRepository } from '../src/persistence/check-state-repository.js';
 import { createDatabase } from '../src/persistence/database.js';
 import { DeletionJournal } from '../src/persistence/deletion-journal.js';
-import { DiscountThresholdRepository } from '../src/persistence/discount-threshold-repository.js';
 import { TelemetryRepository } from '../src/persistence/telemetry-repository.js';
 import { UserConfigRepository } from '../src/persistence/user-config-repository.js';
 import { WishlistStateRepository } from '../src/persistence/wishlist-state-repository.js';
@@ -38,8 +37,7 @@ function fixture(journalPath?: string) {
     coordinator, { isBlocked });
   const sendTest = vi.fn().mockResolvedValue(undefined);
   const assistant = new AssistantService(states.assistant, users, coordinator, sendTest, undefined, undefined, isBlocked);
-  const thresholds = new DiscountThresholdService(users, new DiscountThresholdRepository(database), coordinator,
-    undefined, isBlocked);
+  const thresholds = new DiscountThresholdService(users, coordinator, undefined, isBlocked);
   const block = (discordUserId: string): void => controls.blockUser(discordUserId, null, new Date().toISOString());
   return { database, users, states, configuration, setup, assistant, thresholds, sendTest, block };
 }
@@ -86,7 +84,6 @@ describe('owner block enforced by the services', () => {
       await expect(f.assistant.retryDm('u', config.configurationId, config.configVersion))
         .rejects.toBeInstanceOf(AccountBlockedError);
       await expect(f.thresholds.setGlobal('u', 40)).rejects.toBeInstanceOf(AccountBlockedError);
-      await expect(f.thresholds.setGame('u', 1, 40)).rejects.toBeInstanceOf(AccountBlockedError);
 
       expect(f.sendTest).not.toHaveBeenCalled();
       expect(f.states.assistant.rule(config, 1)).toBeFalsy();

@@ -7,6 +7,7 @@ import { createDatabase } from '../src/persistence/database.js';
 import { DiscountThresholdRepository } from '../src/persistence/discount-threshold-repository.js';
 import { UserConfigRepository } from '../src/persistence/user-config-repository.js';
 import { WishlistStateRepository } from '../src/persistence/wishlist-state-repository.js';
+import { saveGameThreshold } from './helpers/game-rules.js';
 
 function item(appId: number, discountPercent: number): WishlistItem {
   return {
@@ -74,12 +75,7 @@ describe('InitialWishlistSummaryService', () => {
       90,
       '2026-08-23T00:00:10.000Z',
     );
-    services.discountThresholdRepository.setGameOverride(
-      services.config,
-      20,
-      100,
-      '2026-08-23T00:00:20.000Z',
-    );
+    saveGameThreshold(services.database, services.config, 20, 100, '2026-08-23T00:00:20.000Z');
 
     await expect(services.service.send('discord-user')).resolves.toEqual({
       status: 'sent',

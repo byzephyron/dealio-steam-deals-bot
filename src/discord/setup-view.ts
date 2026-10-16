@@ -14,6 +14,7 @@ import {
   ThumbnailBuilder,
   escapeMarkdown,
 } from 'discord.js';
+import type { InitialWishlistSummaryResult } from '../application/initial-wishlist-summary-service.js';
 import type { PreparedUserConfiguration } from '../application/user-configuration-service.js';
 import {
   storeCountryName,
@@ -148,24 +149,41 @@ export function buildSetupConfirmationPanel(
   return container;
 }
 
+export type SetupCompleteStatus = Exclude<InitialWishlistSummaryResult['status'], 'dm-blocked'>
+  | 'dm-blocked' | 'dm-no-mutual-guild';
+
+/** How setup ended for the welcome DM; a refused DM keeps its reason, which decides the fix shown. */
+export function setupCompleteStatus(summary: InitialWishlistSummaryResult): SetupCompleteStatus {
+  return summary.status === 'dm-blocked' && summary.errorCode === 'DISCORD_NO_MUTUAL_GUILD'
+    ? 'dm-no-mutual-guild' : summary.status;
+}
+
+/** The sentence under "You’re all set!" for each way setup can end. */
+export function setupCompleteDetail(status: SetupCompleteStatus, language: Language): string {
+  const messages = messagesFor(language);
+  return status === 'sent'
+    ? messages.setupSummarySent
+    : status === 'dm-blocked'
+      ? messages.setupWizardDmBlocked
+      : status === 'dm-no-mutual-guild'
+        ? messages.setupWizardDmNoMutualGuild
+        : status === 'dm-transient-failed'
+          ? messages.setupWizardDmTransient
+          : messages.setupSummaryUnavailable;
+}
+
 export function buildSetupCompletePanel(
   prepared: PreparedUserConfiguration,
-  status: 'sent' | 'dm-blocked' | 'dm-transient-failed' | 'steam-unavailable' | 'persistence-error',
+  status: SetupCompleteStatus,
   options: SetupPresentationOptions = {},
   /** Offers "Open the Dealio panel" in this message while the session lasts. */
   openPanelSessionId?: string,
 ): ContainerBuilder {
   const messages = messagesFor(prepared.language);
-  const detail = status === 'sent'
-    ? messages.setupSummarySent
-    : status === 'dm-blocked'
-      ? messages.setupWizardDmBlocked
-      : status === 'dm-transient-failed'
-        ? messages.setupWizardDmTransient
-        : messages.setupSummaryUnavailable;
+  const detail = setupCompleteDetail(status, prepared.language);
   const container = new ContainerBuilder().setAccentColor(
     status === 'sent' ? dealioBrand.colors.success
-      : status === 'dm-blocked' ? dealioBrand.colors.danger : dealioBrand.colors.warning,
+      : status === 'dm-blocked' || status === 'dm-no-mutual-guild' ? dealioBrand.colors.danger : dealioBrand.colors.warning,
   );
   addSetupVisual(container, options);
   container.addTextDisplayComponents(

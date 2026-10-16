@@ -1,6 +1,8 @@
 import { it, expect } from 'vitest';
 import { SteamClient } from '../src/steam/steam-client.js';
-import { isRoute, jsonResponse, priceOverview, routeSteam, wishlistResponse } from './helpers/steam-fakes.js';
+import {
+  isRoute, jsonResponse, priceOverview, routeSteam, storeItem, storeItemsResponse, wishlistResponse,
+} from './helpers/steam-fakes.js';
 
 function fixture() {
   let now = Date.parse('2026-09-12T00:00:00Z'), fail = false;
@@ -66,6 +68,32 @@ it('never serves a price cached before Steam\'s daily price change after it', as
   const afterChange = await client.getWishlist('76561198000000000', 'TR', 'en');
   expect(prices()).toBe(2);
   expect(afterChange[0]).toMatchObject({ onSale: true, price: { discountPercent: 50 } });
+});
+
+it('reads Store facts again after the daily change, so a new sale shows its end time', async () => {
+  let now = Date.parse('2026-10-07T12:00:00Z');
+  let saleEnd: number | undefined;
+  const fetch = routeSteam({
+    wishlist: () => wishlistResponse([10]),
+    items: (ids) => storeItemsResponse(ids.map((appId) => storeItem(appId, saleEnd === undefined ? {} : {
+      best_purchase_option: { active_discounts: [{ discount_end_date: saleEnd }] },
+    }))),
+    prices: () => jsonResponse({ '10': priceOverview('USD', 1000, saleEnd === undefined ? 1000 : 500, saleEnd === undefined ? 0 : 50) }),
+  });
+  const client = new SteamClient({ fetchImpl: fetch, now: () => now, maxRetries: 0 });
+  const metadata = () => fetch.mock.calls.filter(call => isRoute(call, 'GetItems')).length;
+
+  expect((await client.getWishlist('76561198000000000', 'TR', 'en'))[0].storeFacts?.saleEndsAt).toBeUndefined();
+  now = Date.parse('2026-10-07T16:59:00Z');
+  await client.getWishlist('76561198000000000', 'TR', 'en');
+  expect(metadata()).toBe(1);
+
+  // 10:00 Pacific, five hours into the six-hour metadata TTL.
+  saleEnd = Date.parse('2026-10-14T17:00:00Z') / 1000;
+  now = Date.parse('2026-10-07T17:02:00Z');
+  const afterChange = await client.getWishlist('76561198000000000', 'TR', 'en');
+  expect(metadata()).toBe(2);
+  expect(afterChange[0].storeFacts?.saleEndsAt).toBe('2026-10-14T17:00:00.000Z');
 });
 
 it('does not keep a price requested before the daily change that arrives after it', async () => {

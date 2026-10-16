@@ -1,5 +1,6 @@
-import { ApplicationIntegrationType, InteractionContextType, Routes } from 'discord.js';
+import { ApplicationIntegrationType, InteractionContextType, RateLimitError, Routes } from 'discord.js';
 import { describe, expect, it, vi } from 'vitest';
+import { safeLogger } from '../src/application/safe-logger.js';
 import type { EnvironmentConfig } from '../src/config/environment.js';
 import {
   cleanupLegacyGuildCommands,
@@ -168,5 +169,42 @@ describe('Discord command registration', () => {
       Routes.applicationCommands(environment.discordClientId),
       expect.objectContaining({ body: expect.any(Array) }),
     );
+  });
+
+  // 16 October 2026: a guild Dealio had left (50001) and then the registration rate
+  // limit kept every restart from starting, so a deploy became a four-minute outage.
+  it('starts anyway when the legacy guild is no longer reachable', async () => {
+    const logged = vi.spyOn(safeLogger, 'error').mockImplementation(() => undefined);
+    const missingAccess = Object.assign(new Error('Missing Access'), { code: 50_001, status: 403 });
+    const put = vi.fn().mockResolvedValueOnce(discordCommands).mockRejectedValueOnce(missingAccess);
+    const get = vi.fn().mockResolvedValue(discordCommands);
+
+    await expect(registerCommands({ ...environment, discordGuildId: '987654321098765432' }, undefined,
+      { get, put } as never, vi.fn())).resolves.toBeUndefined();
+    expect(put).toHaveBeenCalledTimes(2);
+    expect(logged).toHaveBeenCalledWith(expect.stringContaining('legacy guild commands'), missingAccess);
+    logged.mockRestore();
+  });
+
+  it('keeps the commands Discord already has when registration is rate limited', async () => {
+    const logged = vi.spyOn(safeLogger, 'error').mockImplementation(() => undefined);
+    const rateLimited = new RateLimitError({
+      timeToReset: 32_000, limit: 2, method: 'PUT', hash: 'Global(PUT:/applications/:id/commands)',
+      url: 'https://discord.com/api/v10/applications/1/commands', route: '/applications/:id/commands',
+      majorParameter: 'global', global: false, retryAfter: 33_000, sublimitTimeout: 0, scope: 'user',
+    });
+    const put = vi.fn().mockRejectedValue(rateLimited);
+
+    await expect(registerCommands(environment, undefined, { get: vi.fn(), put } as never, vi.fn()))
+      .resolves.toBeUndefined();
+    expect(logged).toHaveBeenCalledWith(expect.stringContaining('rate limited'), rateLimited);
+    logged.mockRestore();
+  });
+
+  it('still refuses to start when registration fails for another reason', async () => {
+    const put = vi.fn().mockRejectedValue(Object.assign(new Error('Unauthorized'), { status: 401 }));
+
+    await expect(registerCommands(environment, undefined, { get: vi.fn(), put } as never, vi.fn()))
+      .rejects.toThrow('Unauthorized');
   });
 });

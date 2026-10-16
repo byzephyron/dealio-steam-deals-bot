@@ -1,4 +1,5 @@
 import type { Client, Guild, User } from 'discord.js';
+import { isDiscordRateLimit } from '../application/notification-service.js';
 
 /** Live Discord facts for the admin panel. Nothing here is written to the database. */
 
@@ -161,7 +162,7 @@ export class DiscordClientDirectory implements DiscordDirectory {
           this.profiles.set(id, { user, expiresAt: this.now() + profileTtlMs });
           result.set(id, user);
         } catch (error: unknown) {
-          if (error instanceof Error && error.name === 'RateLimitError') stopped = true;
+          if (isDiscordRateLimit(error)) stopped = true;
           else this.profiles.set(id, { user: null, expiresAt: this.now() + failedProfileTtlMs });
           result.set(id, null);
         }
