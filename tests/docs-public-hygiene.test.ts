@@ -60,6 +60,7 @@ describe('public site hygiene', () => {
     expect(read('docs/privacy.html')).not.toContain('repository remains private');
     expect(read('docs/privacy-tr.html')).not.toContain('repo özel kalır');
     expect(read('docs/development.md')).not.toContain('repository is private');
+    expect(read('deploy/azure/README.tr.md')).not.toContain('repo özel kalır');
   });
 
   it('links the renamed GitHub account, whose old Pages URLs return 404', () => {
