@@ -265,12 +265,13 @@ export function buildAssistantView(data:AssistantViewData,view:AssistantView,ses
         new ButtonBuilder().setStyle(ButtonStyle.Link).setURL(steamAppUrl(item.appId)).setEmoji('🖥️').setLabel(steamAppLabel[lang])));
     }
   } else if(view.screen==='history'){
+    // The history holds at most the 30 newest alerts of those 30 days (AssistantRepository.history).
     add(panelHeader('alerts',lang,t({tr:'Bildirim geçmişin',en:'Your alert history',de:'Dein Benachrichtigungsverlauf',fr:'Ton historique d’alertes'}),
       '-# '+t({
-        tr:'Son 30 gün. “Discord’a iletildi”, mesajın okunduğu anlamına gelmez.',
-        en:'Last 30 days. “Delivered to Discord” doesn’t mean it was read.',
-        de:'Letzte 30 Tage. „An Discord zugestellt“ heißt nicht, dass sie gelesen wurde.',
-        fr:'30 derniers jours. « Remis à Discord » ne veut pas dire lu.',
+        tr:'Son 30 günden en fazla 30 bildirim. “Discord’a iletildi”, mesajın okunduğu anlamına gelmez.',
+        en:'Up to 30 latest alerts from the last 30 days. “Delivered to Discord” doesn’t mean it was read.',
+        de:'Bis zu 30 neueste Benachrichtigungen der letzten 30 Tage. „An Discord zugestellt“ heißt nicht, dass sie gelesen wurde.',
+        fr:'Jusqu’à 30 alertes récentes des 30 derniers jours. « Remis à Discord » ne veut pas dire lu.',
       })));
     notice();
     divider();
