@@ -52,8 +52,24 @@ describe('public site hygiene', () => {
   it('keeps the Turkish and English privacy policies in the same shape and date', () => {
     const sections = (text: string): number => (text.match(/<h2>/g) ?? []).length;
     expect(sections(read('docs/privacy-tr.html'))).toBe(sections(read('docs/privacy.html')));
-    expect(read('docs/privacy-tr.html')).toContain('Son güncelleme: 9 Ekim 2026');
-    expect(read('docs/privacy.html')).toContain('Last updated: October 9, 2026');
+    expect(read('docs/privacy-tr.html')).toContain('Son güncelleme: 16 Ekim 2026');
+    expect(read('docs/privacy.html')).toContain('Last updated: October 16, 2026');
+  });
+
+  it('describes the source repository as public, as it has been since v1.0.0', () => {
+    expect(read('docs/privacy.html')).not.toContain('repository remains private');
+    expect(read('docs/privacy-tr.html')).not.toContain('repo özel kalır');
+    expect(read('docs/development.md')).not.toContain('repository is private');
+    expect(read('deploy/azure/README.tr.md')).not.toContain('repo özel kalır');
+  });
+
+  it('links the renamed GitHub account, whose old Pages URLs return 404', () => {
+    for (const file of ['README.md', 'README.tr.md', 'package.json', 'src/discord/ui/design.ts',
+      'src/discord/support/support-view.ts', 'scripts/support-server/blueprint.ts',
+      '.github/workflows/public-site.yml', '.github/workflows/offsite-backup.yml',
+      '.github/workflows/restore-rehearsal.yml']) {
+      expect(read(file), file).not.toContain('blghnboz17-boop');
+    }
   });
 
   it('names the services Dealio is not affiliated with', () => {

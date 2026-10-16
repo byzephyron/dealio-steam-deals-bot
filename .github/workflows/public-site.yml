@@ -30,7 +30,7 @@ jobs:
           printf '%s\n' "$PUBLIC_PAGES_SSH_KEY" > "$RUNNER_TEMP/pages-key"
           printf '%s\n' "$PUBLIC_PAGES_KNOWN_HOSTS" > "$RUNNER_TEMP/pages-known-hosts"
           export GIT_SSH_COMMAND="ssh -F /dev/null -i $RUNNER_TEMP/pages-key -o IdentityAgent=none -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$RUNNER_TEMP/pages-known-hosts"
-          git clone --depth 1 git@github.com:blghnboz17-boop/dealio-public-pages.git "$RUNNER_TEMP/public-pages"
+          git clone --depth 1 git@github.com:byzephyron/dealio-public-pages.git "$RUNNER_TEMP/public-pages"
           cp .runtime/public-site/* "$RUNNER_TEMP/public-pages/"
           touch "$RUNNER_TEMP/public-pages/.nojekyll"
           cd "$RUNNER_TEMP/public-pages"

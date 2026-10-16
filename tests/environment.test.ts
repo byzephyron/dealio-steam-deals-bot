@@ -130,6 +130,10 @@ describe('production host boundary', () => {
       .toMatchObject({ production: true, azureLeaseContainerUrl: 'https://example.blob.core.windows.net/locks' });
     expect(() => loadEnvironment({ ...validEnvironment, DISCORD_CLIENT_ID: '1540325119690412172' }))
       .toThrow('Development must use a separate Discord application');
+    // .env.example leaves the variable empty; that must not switch the guard off.
+    expect(() => loadEnvironment({
+      ...validEnvironment, DISCORD_CLIENT_ID: '1540325119690412172', PRODUCTION_DISCORD_CLIENT_ID: '',
+    })).toThrow('Development must use a separate Discord application');
   });
 
   it('enables the admin panel only with a long enough token', () => {

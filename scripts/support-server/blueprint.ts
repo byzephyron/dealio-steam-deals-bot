@@ -25,13 +25,13 @@ import { buildSupportPanel, supportHelpUrl } from '../../src/discord/support/sup
 const P = PermissionFlagsBits;
 const bits = (...flags: bigint[]): string => flags.reduce((all, flag) => all | flag, 0n).toString();
 
-export const publicSiteUrl = 'https://blghnboz17-boop.github.io/dealio-public-pages';
+export const publicSiteUrl = 'https://byzephyron.github.io/dealio-public-pages';
 export const links = {
   website: `${publicSiteUrl}/index-en.html`,
   help: supportHelpUrl,
   privacy: `${publicSiteUrl}/privacy.html`,
   terms: `${publicSiteUrl}/terms.html`,
-  github: 'https://github.com/blghnboz17-boop/dealio-steam-deals-bot',
+  github: 'https://github.com/byzephyron/dealio-steam-deals-bot',
   discordGuidelines: 'https://discord.com/guidelines',
   discordTerms: 'https://discord.com/terms',
   invite: (clientId: string) => `https://discord.com/oauth2/authorize?client_id=${clientId}`,

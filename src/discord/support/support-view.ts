@@ -32,7 +32,7 @@ const descriptionFieldId = 'description';
 const screenshotsFieldId = 'screenshots';
 export const supportModalFields = { topic: topicFieldId, description: descriptionFieldId, screenshots: screenshotsFieldId } as const;
 
-export const supportHelpUrl = 'https://blghnboz17-boop.github.io/dealio-public-pages/help.html';
+export const supportHelpUrl = 'https://byzephyron.github.io/dealio-public-pages/help.html';
 
 export const supportTopicNames: Record<SupportTopic, { readonly emoji: string; readonly label: Localized }> = {
   setup: { emoji: '⚙️', label: { tr: 'Kurulum ve Steam profili', en: 'Setup & Steam profile', de: 'Einrichtung & Steam-Profil', fr: 'Configuration et profil Steam' } },

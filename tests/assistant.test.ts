@@ -37,7 +37,7 @@ describe('personal assistant durable rules',()=>{
    f.observe(900);f.observe(600);
    expect((await f.notification.deliverPending('u')).sentCount).toBe(1);
    expect(f.send).toHaveBeenCalledTimes(2);
-   expect(f.states.assistant.history('u')[0]).toMatchObject({discord_message_id:'123',reason:'target:700:USD'});
+   expect(f.states.assistant.history('u',f.clock())[0]).toMatchObject({discord_message_id:'123',reason:'target:700:USD'});
   }finally{f.db.close();}
  });
  it('does not send an initial DM for an already matching price or an unknown baseline',async()=>{
@@ -72,7 +72,7 @@ describe('personal assistant durable rules',()=>{
  it('invalidates pending targets on a currency change',async()=>{
   const f=fixture();try{f.observe(1000);f.target();f.observe(600);f.observe(500,'EUR');
    expect((await f.notification.deliverPending('u')).sentCount).toBe(0);
-   expect(f.states.assistant.history('u')[0]?.status).toBe('expired');
+   expect(f.states.assistant.history('u',f.clock())[0]?.status).toBe('expired');
   }finally{f.db.close();}
  });
  it('target replaces global discount including a regular price drop',async()=>{
@@ -209,14 +209,14 @@ describe('delivery and rule acceptance',()=>{
    const n=new NotificationService(f.users,f.states,{send:f.send,plan:items=>items.map(i=>({notifications:[i]}))},
      {revalidate:async()=>{f.observe(900);return true;}});
    expect((await n.deliverPending('u')).sentCount).toBe(0);
-   expect(f.states.assistant.history('u')[0].status).toBe('expired');
+   expect(f.states.assistant.history('u',f.clock())[0].status).toBe('expired');
   }finally{f.db.close();}
  });
  it('distinguishes a Discord privacy block from an unrelated delivery failure',async()=>{
   const f=fixture();try{
    f.observe(1000);f.target();f.observe(600);f.send.mockRejectedValueOnce(Object.assign(new Error('DM denied'),{code:50007,status:403}));
    await f.notification.deliverPending('u');
-   expect(f.states.assistant.history('u')[0].status).toBe('blocked');
+   expect(f.states.assistant.history('u',f.clock())[0].status).toBe('blocked');
   }finally{f.db.close();}
  });
 });

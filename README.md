@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/blghnboz17-boop/dealio-steam-deals-bot/releases/latest"><img src="https://img.shields.io/badge/Release-v1.0.0-8B5CF6?style=flat-square" alt="Release v1.0.0"></a>
+  <a href="https://github.com/byzephyron/dealio-steam-deals-bot/releases/latest"><img src="https://img.shields.io/badge/Release-v1.0.0-8B5CF6?style=flat-square" alt="Release v1.0.0"></a>
   <a href="#whats-inside"><img src="https://img.shields.io/badge/Languages-TR_%C2%B7_EN_%C2%B7_DE_%C2%B7_FR-2980B9?style=flat-square" alt="Languages: Turkish, English, German, French"></a>
   <a href="#start-in-discord"><img src="https://img.shields.io/badge/Setup-no_Steam_password-238636?style=flat-square" alt="Setup: no Steam password"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-2980B9?style=flat-square" alt="MIT license"></a>
@@ -83,7 +83,7 @@ Set a different target for each game, or use one discount threshold across your 
 
 > **6 October 2026 · v0.2.0: one panel, richer alerts**
 >
-> Everything now lives in one `/dealio` panel with Home, Wishlist, Alerts and Settings tabs. Sale alerts and game details show Steam's review score, Steam Deck status, platforms and when the sale ends, next to the historical low. You can set a target at the lowest price in one tap, open a game straight in the Steam app, and see upcoming games with their release date. Setup now starts with a language choice and shows your Steam name and avatar before you confirm. [Read the v0.2.0 notes →](https://github.com/blghnboz17-boop/dealio-steam-deals-bot/releases/tag/v0.2.0)
+> Everything now lives in one `/dealio` panel with Home, Wishlist, Alerts and Settings tabs. Sale alerts and game details show Steam's review score, Steam Deck status, platforms and when the sale ends, next to the historical low. You can set a target at the lowest price in one tap, open a game straight in the Steam app, and see upcoming games with their release date. Setup now starts with a language choice and shows your Steam name and avatar before you confirm. [Read the v0.2.0 notes →](https://github.com/byzephyron/dealio-steam-deals-bot/releases/tag/v0.2.0)
 
 > **4 October 2026 · Account switch and steadier alerts**
 >
@@ -127,7 +127,7 @@ Dealio stores your account identifiers, preferences, game rules, observed wishli
 
 Notification history displays the last **30 days**; price observations are retained for **90 days**. Active deliveries and ongoing-offer deduplication records may be kept longer. `/delete-data` removes active account records. Existing backup copies are not rewritten, but a separate deletion record (a one-way hash of your Discord ID, kept for 35 days) makes sure a restore from backup can't bring your data back.
 
-[Privacy](https://blghnboz17-boop.github.io/dealio-public-pages/privacy.html) · [Terms](https://blghnboz17-boop.github.io/dealio-public-pages/terms.html) · [Help](https://blghnboz17-boop.github.io/dealio-public-pages/help.html) · [Support server](https://dsc.gg/dealiosupport)
+[Privacy](https://byzephyron.github.io/dealio-public-pages/privacy.html) · [Terms](https://byzephyron.github.io/dealio-public-pages/terms.html) · [Help](https://byzephyron.github.io/dealio-public-pages/help.html) · [Support server](https://dsc.gg/dealiosupport)
 
 ## ❓ A few useful answers
 
@@ -201,7 +201,7 @@ TypeScript · discord.js Components V2 · `node:sqlite` · IsThereAnyDeal API ·
 - [Architecture](docs/architecture.md) — pricing, rules, delivery, and persistence
 - [Current operations setup, TR](deploy/FREE-OPERATIONS.tr.md) — free backups, alerts, and recovery
 - [Admin panel, TR](docs/admin-panel.tr.md) — the owner's private web panel, reached only over an SSH tunnel
-- [CI runs](https://github.com/blghnboz17-boop/dealio-steam-deals-bot/actions/workflows/ci.yml) — current verification
+- [CI runs](https://github.com/byzephyron/dealio-steam-deals-bot/actions/workflows/ci.yml) — current verification
 
 Dealio stays focused on Steam wishlists. Payments, a user-facing web dashboard, other stores, and estimated currency conversion are outside its scope.
 
@@ -228,6 +228,6 @@ Prices stay in Steam's reported currency, with no estimated exchange-rate conver
 ---
 
 <p align="center">
-  Made by <a href="https://github.com/blghnboz17-boop">Bilgehan</a>. Issues and ideas are welcome. 💙 · <a href="LICENSE">MIT license</a><br>
+  Made by <a href="https://github.com/byzephyron">Bilgehan</a>. Issues and ideas are welcome. 💙 · <a href="LICENSE">MIT license</a><br>
   <sub>Dealio is an independent project, not affiliated with Valve, Discord or IsThereAnyDeal.</sub>
 </p>

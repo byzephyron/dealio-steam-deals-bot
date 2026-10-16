@@ -217,7 +217,7 @@ export function freeToKeepLine(price: { readonly finalMinor: number; readonly in
  * page on Dealio's public site forwards to steam://store/<appId>.
  */
 export function steamAppUrl(appId: number): string {
-  return `https://blghnboz17-boop.github.io/dealio-public-pages/open.html?app=${appId}`;
+  return `https://byzephyron.github.io/dealio-public-pages/open.html?app=${appId}`;
 }
 
 export const steamAppLabel: Localized = {

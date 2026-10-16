@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/blghnboz17-boop/dealio-steam-deals-bot/releases/latest"><img src="https://img.shields.io/badge/S%C3%BCr%C3%BCm-v1.0.0-8B5CF6?style=flat-square" alt="Sürüm v1.0.0"></a>
+  <a href="https://github.com/byzephyron/dealio-steam-deals-bot/releases/latest"><img src="https://img.shields.io/badge/S%C3%BCr%C3%BCm-v1.0.0-8B5CF6?style=flat-square" alt="Sürüm v1.0.0"></a>
   <a href="#icerikte-neler-var"><img src="https://img.shields.io/badge/Diller-TR_%C2%B7_EN_%C2%B7_DE_%C2%B7_FR-2980B9?style=flat-square" alt="Diller: Türkçe, İngilizce, Almanca, Fransızca"></a>
   <a href="#discordda-basla"><img src="https://img.shields.io/badge/Kurulum-Steam_%C5%9Fifresi_gerekmez-238636?style=flat-square" alt="Kurulum: Steam şifresi gerekmez"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/Lisans-MIT-2980B9?style=flat-square" alt="MIT lisansı"></a>
@@ -83,7 +83,7 @@ Her oyun için ayrı hedef belirleyebilir ya da tüm listene tek bir indirim eş
 
 > **6 Ekim 2026 · v0.2.0: tek panel, daha zengin bildirimler**
 >
-> Her şey artık Ana sayfa, İstek listem, Bildirimler ve Ayarlar sekmeleriyle tek bir `/dealio` panelinde. İndirim bildirimleri ve oyun detayı, en düşük fiyatın yanında Steam inceleme puanını, Steam Deck durumunu, platformları ve indirimin ne zaman bittiğini gösteriyor. En düşük fiyatı tek dokunuşla hedef yapabilir, oyunu doğrudan Steam uygulamasında açabilir ve yakında çıkacak oyunları çıkış tarihleriyle görebilirsin. Kurulum artık dil seçimiyle başlıyor ve onaylamadan önce Steam adını ve avatarını gösteriyor. [v0.2.0 sürüm notları →](https://github.com/blghnboz17-boop/dealio-steam-deals-bot/releases/tag/v0.2.0)
+> Her şey artık Ana sayfa, İstek listem, Bildirimler ve Ayarlar sekmeleriyle tek bir `/dealio` panelinde. İndirim bildirimleri ve oyun detayı, en düşük fiyatın yanında Steam inceleme puanını, Steam Deck durumunu, platformları ve indirimin ne zaman bittiğini gösteriyor. En düşük fiyatı tek dokunuşla hedef yapabilir, oyunu doğrudan Steam uygulamasında açabilir ve yakında çıkacak oyunları çıkış tarihleriyle görebilirsin. Kurulum artık dil seçimiyle başlıyor ve onaylamadan önce Steam adını ve avatarını gösteriyor. [v0.2.0 sürüm notları →](https://github.com/byzephyron/dealio-steam-deals-bot/releases/tag/v0.2.0)
 
 > **4 Ekim 2026 · Hesap değiştirme ve daha sağlam bildirimler**
 >
@@ -127,7 +127,7 @@ Dealio hesap kimliklerini, tercihlerini, oyun kurallarını, gözlemlenen wishli
 
 Bildirim geçmişi son **30 günü** gösterir; fiyat gözlemleri **90 gün** tutulur. Aktif teslimat ve devam eden tekliflerin tekrarını önleyen kayıtlar daha uzun kalabilir. `/delete-data` aktif hesap kayıtlarını siler. Mevcut yedek kopyaları yeniden yazılmaz; ancak ayrı tutulan bir silme kaydı (Discord kimliğinin tek yönlü özeti, 35 gün saklanır) yedekten geri dönülse bile verilerinin geri gelmemesini sağlar.
 
-[Gizlilik](https://blghnboz17-boop.github.io/dealio-public-pages/privacy-tr.html) · [Kullanım koşulları](https://blghnboz17-boop.github.io/dealio-public-pages/terms-tr.html) · [Yardım](https://blghnboz17-boop.github.io/dealio-public-pages/help-tr.html) · [Destek sunucusu](https://dsc.gg/dealiosupport)
+[Gizlilik](https://byzephyron.github.io/dealio-public-pages/privacy-tr.html) · [Kullanım koşulları](https://byzephyron.github.io/dealio-public-pages/terms-tr.html) · [Yardım](https://byzephyron.github.io/dealio-public-pages/help-tr.html) · [Destek sunucusu](https://dsc.gg/dealiosupport)
 
 ## ❓ Sık sorulanlar
 
@@ -201,7 +201,7 @@ TypeScript · discord.js Components V2 · `node:sqlite` · IsThereAnyDeal API ·
 - [Mimari](docs/architecture.md) — fiyatlar, kurallar, teslimat ve veri
 - [Mevcut işletim düzeni](deploy/FREE-OPERATIONS.tr.md) — ücretsiz yedek, alarm ve kurtarma
 - [Yönetim paneli](docs/admin-panel.tr.md) — yalnızca SSH tüneliyle erişilen, sahibine özel web paneli
-- [GitHub kontrolleri](https://github.com/blghnboz17-boop/dealio-steam-deals-bot/actions/workflows/ci.yml) — güncel doğrulamalar
+- [GitHub kontrolleri](https://github.com/byzephyron/dealio-steam-deals-bot/actions/workflows/ci.yml) — güncel doğrulamalar
 
 Dealio Steam wishlist’lerine odaklanır. Ödeme sistemi, kullanıcılara açık bir web paneli, diğer mağazalar ve tahmini para birimi dönüşümü kapsam dışındadır.
 
@@ -228,6 +228,6 @@ Fiyatlar Steam’in bildirdiği para biriminde kalır; tahmini kur dönüşümü
 ---
 
 <p align="center">
-  <a href="https://github.com/blghnboz17-boop">Bilgehan</a> tarafından geliştiriliyor. 💙 · <a href="LICENSE">MIT lisansı</a><br>
+  <a href="https://github.com/byzephyron">Bilgehan</a> tarafından geliştiriliyor. 💙 · <a href="LICENSE">MIT lisansı</a><br>
   <sub>Dealio bağımsız bir projedir; Valve, Discord veya IsThereAnyDeal ile bağlantılı değildir.</sub>
 </p>

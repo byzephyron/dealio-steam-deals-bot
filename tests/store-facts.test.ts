@@ -40,9 +40,9 @@ describe('Steam store facts', () => {
     expect(platformText(facts)).toBe('💻 Windows · Linux');
     expect(saleEndLine(facts, 'tr', 0)).toBe('⏳ İndirim <t:1791478800:R> bitiyor');
     expect(saleEndLine(facts, 'en', 1791478800 * 1000 + 1)).toBeNull();
-    expect(steamAppUrl(620)).toBe('https://blghnboz17-boop.github.io/dealio-public-pages/open.html?app=620');
+    expect(steamAppUrl(620)).toBe('https://byzephyron.github.io/dealio-public-pages/open.html?app=620');
     // Discord shows a masked link whose label holds an emoji as raw text, so the emoji stays outside.
-    expect(steamAppLink(620, 'en')).toBe('🖥️ [Open in the Steam app](https://blghnboz17-boop.github.io/dealio-public-pages/open.html?app=620)');
+    expect(steamAppLink(620, 'en')).toBe('🖥️ [Open in the Steam app](https://byzephyron.github.io/dealio-public-pages/open.html?app=620)');
   });
 });
 
