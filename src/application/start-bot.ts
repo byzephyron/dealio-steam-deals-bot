@@ -163,7 +163,6 @@ export async function startBot(
     const isBlocked = (discordUserId: string): boolean => adminControlRepository.isUserBlocked(discordUserId);
     const discountThresholdService = new DiscountThresholdService(
       userConfigRepository,
-      discountThresholdRepository,
       userOperationCoordinator,
       undefined,
       isBlocked,

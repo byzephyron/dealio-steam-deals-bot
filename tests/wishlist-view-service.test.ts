@@ -6,6 +6,7 @@ import { UserConfigRepository } from '../src/persistence/user-config-repository.
 import { WishlistStateRepository } from '../src/persistence/wishlist-state-repository.js';
 import { DiscountThresholdRepository } from '../src/persistence/discount-threshold-repository.js';
 import { UserOperationCoordinator } from '../src/application/user-operation-coordinator.js';
+import { saveGameThreshold } from './helpers/game-rules.js';
 
 const item: WishlistItem = {
   appId: 10,
@@ -268,12 +269,7 @@ describe('WishlistViewService', () => {
       saleKey: null,
       observedAt: '2026-08-22T00:01:00.000Z',
     });
-    thresholdRepository.setGameOverride(
-      config,
-      item.appId,
-      40,
-      '2026-08-22T00:02:00.000Z',
-    );
+    saveGameThreshold(database, config, item.appId, 40, '2026-08-22T00:02:00.000Z');
     const tables = [
       'user_config',
       'check_state',
@@ -282,6 +278,7 @@ describe('WishlistViewService', () => {
       'notification_batch',
       'notification_batch_item',
       'game_discount_threshold',
+      'game_rule',
     ] as const;
     const before = new Map(tables.map((table) => [
       table,
