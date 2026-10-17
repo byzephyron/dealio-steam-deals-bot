@@ -14,7 +14,9 @@ for (const file of readdirSync(join(root, 'admin-ui'))) {
 }
 copyFileSync(join(root, 'node_modules', 'htm', 'preact', 'standalone.module.js'), join(target, 'vendor', 'preact-htm.js'));
 // Latin and Latin Extended cover Turkish, German and French (SIL Open Font License).
+// Archivo's "standard" files carry both the weight and the width axis.
 for (const subset of ['latin', 'latin-ext']) {
-  const file = `inter-${subset}-wght-normal.woff2`;
-  copyFileSync(join(root, 'node_modules', '@fontsource-variable', 'inter', 'files', file), join(target, 'fonts', file));
+  for (const [family, file] of [['inter', `inter-${subset}-wght-normal.woff2`], ['archivo', `archivo-${subset}-standard-normal.woff2`]]) {
+    copyFileSync(join(root, 'node_modules', '@fontsource-variable', family, 'files', file), join(target, 'fonts', file));
+  }
 }
