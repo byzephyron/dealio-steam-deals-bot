@@ -81,7 +81,11 @@ describe.skipIf(bash === null)('deploy/switch-release.sh', () => {
 
   function run(argument: string, env: Record<string, string> = {}): Run {
     const script = resolve('deploy/switch-release.sh');
+    // Git for Windows' bash started directly has no /usr/bin on PATH, so cygpath must be
+    // found there first; otherwise "C:/…" stays in PATH, splits at the colon, and the
+    // real git runs instead of the stub.
     const result = spawnSync(bash!, ['-c', `
+      export PATH="/usr/bin:/bin:$PATH"
       if command -v cygpath >/dev/null; then HOME=$(cygpath -u "$HOME"); STUBS=$(cygpath -u "$STUBS"); NODE_DIR=$(cygpath -u "$NODE_DIR"); fi
       export HOME PATH="$STUBS:$NODE_DIR:/usr/bin:/bin:$PATH"
       exec bash "$0" "$1"`, slash(script), argument], {
