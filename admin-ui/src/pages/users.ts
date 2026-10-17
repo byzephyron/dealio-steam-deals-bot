@@ -3,7 +3,7 @@ import { api } from '../api.js';
 import {
   checkStatusNames, country, dateTime, day, displayName, flag, languageNames, notificationModeNames, num, trackingNote,
 } from '../format.js';
-import { checkErrorInfo, checkFixNames } from '../explain.js';
+import { checkErrorInfo, checkFixNames, deliveryErrorInfo, type CheckErrorInfo } from '../explain.js';
 import { useProfiles } from '../profiles.js';
 import { navigate } from '../router.js';
 import type { Profile, UserRow } from '../types.js';
@@ -25,15 +25,50 @@ export function checkBadge(status: string | null, errorCode: string | null): VNo
   return Badge({ tone, label: checkStatusNames[status] ?? status, ...(reason ? { title: `${reason.title}: ${reason.detail}` } : {}) });
 }
 
-/** Why the last check failed and who can fix it; the stored code is in the tooltip. */
-export function CheckReason(props: { code: string }): VNode {
-  const info = checkErrorInfo(props.code);
+function Reason(props: { info: CheckErrorInfo; code: string }): VNode {
+  const { info } = props;
   return html`<span class="reason">
     <strong title=${props.code}>${info.title}</strong>
     <span class="muted small">${info.detail}</span>
     <span class="reason-meta">${Badge({ tone: info.fix === 'owner' ? 'bad' : info.fix === 'user' ? 'warn' : 'neutral',
       label: checkFixNames[info.fix] })}</span>
   </span>`;
+}
+
+/** Why the last check failed and who can fix it; the stored code is in the tooltip. */
+export function CheckReason(props: { code: string }): VNode {
+  return Reason({ info: checkErrorInfo(props.code), code: props.code });
+}
+
+/** Why Discord refuses this user's alert DMs. */
+export function DeliveryReason(props: { error: string | null }): VNode {
+  return Reason({ info: deliveryErrorInfo(props.error), code: props.error ?? '' });
+}
+
+/**
+ * Whether alerts reach the user: a recorded DM block first, then the latest
+ * finished alert. A successful wishlist check says nothing about delivery.
+ */
+function deliveryCell(row: UserRow): VNode {
+  if (row.dmDeliveryBlockedAt) {
+    const info = deliveryErrorInfo(row.dmDeliveryErrorCode);
+    return html`${Badge({ tone: 'bad', label: 'Ulaşılamıyor', title: `${info.title}: ${info.detail}` })}
+      <small class="muted block">${info.title}</small>`;
+  }
+  const last = row.lastDelivery;
+  if (!last) return html`<span class="muted">Henüz yok</span>`;
+  if (last.status === 'terminal_failed') {
+    const info = deliveryErrorInfo(last.error);
+    return html`${Badge({ tone: 'bad', label: 'Teslim edilemedi', title: `${info.title}: ${info.detail}` })}
+      <small class="muted block">${info.title} · ${When({ at: last.at })}</small>`;
+  }
+  return html`${Badge({ tone: 'good', label: 'Teslim edildi' })}<small class="muted block">${When({ at: last.at })}</small>`;
+}
+
+function deliveryText(row: UserRow): string {
+  if (row.dmDeliveryBlockedAt) return `Ulaşılamıyor: ${deliveryErrorInfo(row.dmDeliveryErrorCode).title}`;
+  if (!row.lastDelivery) return '';
+  return row.lastDelivery.status === 'sent' ? 'Teslim edildi' : `Teslim edilemedi: ${deliveryErrorInfo(row.lastDelivery.error).title}`;
 }
 
 export function UserCell(props: { id: string; profile: Profile | null | undefined }): VNode {
@@ -45,7 +80,7 @@ export function UserCell(props: { id: string; profile: Profile | null | undefine
   </span>`;
 }
 
-type StatusFilter = 'all' | 'active' | 'paused' | 'blocked' | 'banned';
+type StatusFilter = 'all' | 'active' | 'paused' | 'blocked' | 'banned' | 'undelivered';
 type CheckFilter = 'all' | 'problem' | 'success' | 'unavailable' | 'failed';
 const checkFilters: readonly CheckFilter[] = ['all', 'problem', 'success', 'unavailable', 'failed'];
 
@@ -72,6 +107,7 @@ export function UsersPage(props: { search?: string }): VNode {
     if (status === 'paused' && label !== 'Duraklatıldı') return false;
     if (status === 'blocked' && label !== 'DM engelli') return false;
     if (status === 'banned' && label !== 'Engellendi') return false;
+    if (status === 'undelivered' && !user.dmDeliveryBlockedAt && user.lastDelivery?.status !== 'terminal_failed') return false;
     if (check === 'problem' && user.lastCheckStatus !== 'unavailable' && user.lastCheckStatus !== 'failed') return false;
     if (check !== 'all' && check !== 'problem' && user.lastCheckStatus !== check) return false;
     if (countryFilter && user.storeCountryCode !== countryFilter) return false;
@@ -111,11 +147,14 @@ export function UsersPage(props: { search?: string }): VNode {
       sort: (row) => row.lastCheckCompletedAt, csv: (row) => row.lastCheckStatus },
     { key: 'checkReason', label: 'Kontrol hatası', render: () => null,
       csv: (row) => row.lastCheckErrorCode && row.lastCheckStatus !== 'success' ? checkErrorInfo(row.lastCheckErrorCode).title : '' },
+    // Next to the check on purpose: a successful wishlist read says nothing about whether alerts arrive.
+    { key: 'delivery', label: 'Son bildirim', render: deliveryCell,
+      sort: (row) => (row.dmDeliveryBlockedAt ? 0 : row.lastDelivery?.status === 'terminal_failed' ? 1 : row.lastDelivery ? 2 : 3),
+      csv: deliveryText },
     { key: 'alerts', label: 'Uyarı', align: 'end', render: (row) => html`${num(row.alertsSent)}
       ${row.pendingAlerts > 0 ? html`<small class="muted block">${num(row.pendingAlerts)} bekliyor</small>` : null}`,
       sort: (row) => row.alertsSent, csv: (row) => row.alertsSent },
-    { key: 'lastAlert', label: 'Son uyarı', render: (row) => When({ at: row.lastAlertAt, empty: 'Hiç' }), sort: (row) => row.lastAlertAt,
-      csv: (row) => row.lastAlertAt, hideOnMobile: true },
+    { key: 'lastAlert', label: 'Son uyarı', render: () => null, csv: (row) => row.lastAlertAt },
     // Usage tracking is newer than some users: without a record the source is unknown, not "DM".
     { key: 'source', label: 'İlk kullandığı sunucu', render: (row) => row.sourceGuildId
       ? html`<a href=${`#/guilds/${row.sourceGuildId}`} onClick=${(event: Event) => event.stopPropagation()}>${row.sourceGuildName ?? 'Ayrılmış sunucu'}</a>`
@@ -128,7 +167,7 @@ export function UsersPage(props: { search?: string }): VNode {
     { key: 'created', label: 'Katıldı', render: (row) => html`<span title=${dateTime(row.createdAt)}>${day(row.createdAt)}</span>`,
       sort: (row) => row.createdAt, csv: (row) => row.createdAt },
   ];
-  const visibleColumns = columns.filter((column) => !['id', 'username', 'steam', 'checkReason'].includes(column.key));
+  const visibleColumns = columns.filter((column) => !['id', 'username', 'steam', 'checkReason', 'lastAlert'].includes(column.key));
   const exportColumns = columns;
 
   const toolbar = html`
@@ -136,7 +175,7 @@ export function UsersPage(props: { search?: string }): VNode {
       aria-label="Durum">
       <option value="all">Tüm durumlar</option><option value="active">Aktif</option>
       <option value="paused">Duraklatıldı</option><option value="blocked">DM engelli</option>
-      <option value="banned">Engellendi</option>
+      <option value="banned">Engellendi</option><option value="undelivered">Bildirimi gitmeyenler</option>
     </select>
     <select class="input" value=${check} onChange=${(event: Event) => setCheck((event.target as HTMLSelectElement).value as CheckFilter)}
       aria-label="Son kontrol">

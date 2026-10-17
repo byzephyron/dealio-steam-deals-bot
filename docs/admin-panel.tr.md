@@ -70,7 +70,7 @@ Veri sayfaları sekme açıkken 30 saniyede bir kendini sessizce yeniler (başl�
 |---|---|
 | Genel bakış | Eğilim çizgili sunucu/kullanıcı/aktif kullanıcı/uyarı kartları (önceki 7 güne göre değişim), **bot kontrolü** (aşağıda), sekmeli etkinlik grafiği (uyarı, aktif kullanıcı, kayıt, sunucu), kontrol durumu halkası ve başarısız kontrollerin nedeni (açıklama, kimin düzeltmesi gerektiği, sorunlu kullanıcılara bağlantı), kapasite ve uyarı kuyruğu, bot ve tarayıcı, dağılımlar |
 | Sunucular | Botun olduğu sunucular (canlı), sahipleri, Dealio kullanan kişi sayısı; olay geçmişi, ayrılan ve engellenen sunucular. Detayda o sunucudan gelen kullanıcılar, **sunucudan çık** ve **engelle** |
-| Kullanıcılar | Arama, durum ve son kontrol filtresi (`#/users?check=problem`), CSV; geldiği sunucu, son görülme, başarısız kontrolün nedeni. Detayda wishlist, kurallar, bildirim geçmişi, kullanım zaman çizelgesi ve işlemler |
+| Kullanıcılar | Arama, durum (“Bildirimi gitmeyenler” dahil) ve son kontrol filtresi (`#/users?check=problem`), CSV; geldiği sunucu, son görülme, başarısız kontrolün nedeni. “Son kontrol” Steam wishlist'inin okunmasıdır; uyarıların ulaşıp ulaşmadığı ayrı “Son bildirim” sütunundadır (teslim edildi / teslim edilemedi / ulaşılamıyor ve nedeni). Detayda wishlist, kurallar, bildirim geçmişi, kullanım zaman çizelgesi ve işlemler |
 | Oyunlar | En çok istenen, şu an indirimde, en çok uyarı ve kural konan oyunlar |
 | Kullanım | Günlük aktif kullanıcı, eylemler (“Wishlist sekmesine geçti” gibi düz cümlelerle; kayıtlı kod ipucunda ve CSV'de), kurulum hunisi ve başarısızlık sebepleri, kurulum türü, kaynak sunucular |
 | Duyurular | Dört dilde duyuru yazma, Discord önizlemesi, hedef kitle, gönderim takibi, duraklat/sürdür/iptal |

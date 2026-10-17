@@ -30,6 +30,12 @@ export interface AdminUserRow {
   readonly alertsSent: number;
   readonly lastAlertAt: string | null;
   readonly pendingAlerts: number;
+  /** The latest finished delivery: an alert that reached the user, or one that finally failed. */
+  readonly lastDelivery: {
+    readonly status: 'sent' | 'terminal_failed';
+    readonly at: string;
+    readonly error: string | null;
+  } | null;
 }
 
 export interface CountRow { readonly key: string; readonly count: number }
@@ -106,6 +112,13 @@ function int(value: SQLOutputValue): number {
 }
 function intOrNull(value: SQLOutputValue): number | null {
   return value === null || value === undefined ? null : int(value);
+}
+/** `[status, at, error]` from json_array in users(). */
+function lastDelivery(value: SQLOutputValue): AdminUserRow['lastDelivery'] {
+  if (typeof value !== 'string') return null;
+  const [status, at, error] = JSON.parse(value) as [unknown, unknown, unknown];
+  if ((status !== 'sent' && status !== 'terminal_failed') || typeof at !== 'string') return null;
+  return { status, at, error: typeof error === 'string' ? error : null };
 }
 
 /** Names come from each user's latest wishlist snapshot (Steam's localized title). */
@@ -268,7 +281,15 @@ export class AdminRepository {
              (SELECT COUNT(*) FROM notification_log AS notification
                WHERE notification.discord_user_id = config.discord_user_id
                  AND notification.config_version = config.config_version
-                 AND notification.status IN ('candidate', 'failed', 'sending')) AS pending_alerts
+                 AND notification.status IN ('candidate', 'failed', 'sending')) AS pending_alerts,
+             (SELECT json_array(notification.status,
+                       COALESCE(notification.delivered_at, notification.last_attempt_at, notification.created_at),
+                       notification.last_error)
+               FROM notification_log AS notification
+               WHERE notification.discord_user_id = config.discord_user_id
+                 AND notification.status IN ('sent', 'terminal_failed')
+               ORDER BY COALESCE(notification.delivered_at, notification.last_attempt_at, notification.created_at) DESC
+               LIMIT 1) AS last_delivery
       FROM user_config AS config
       LEFT JOIN check_state AS state ON state.discord_user_id = config.discord_user_id
       ORDER BY config.created_at DESC`).all() as Row[]).map((row) => ({
@@ -294,6 +315,7 @@ export class AdminRepository {
       alertsSent: int(row.alerts_sent),
       lastAlertAt: textOrNull(row.last_alert_at),
       pendingAlerts: int(row.pending_alerts),
+      lastDelivery: lastDelivery(row.last_delivery),
     }));
   }
 

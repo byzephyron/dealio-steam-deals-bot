@@ -100,7 +100,7 @@ describe('upgrading to alert levels', () => {
         migrated.close();
       }
       const check = new DatabaseSync(path);
-      expect((check.prepare('PRAGMA user_version').get() as { user_version: number }).user_version).toBe(14);
+      expect((check.prepare('PRAGMA user_version').get() as { user_version: number }).user_version).toBe(15);
       check.close();
     } finally {
       rmSync(directory, { recursive: true, force: true });
