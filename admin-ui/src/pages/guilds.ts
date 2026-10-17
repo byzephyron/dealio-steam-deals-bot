@@ -97,7 +97,7 @@ export function GuildsPage(): VNode {
           ${Stat({ label: 'Sunucu', icon: 'server', value: num(guilds.length), sub: `${num(withUsers)} sunucuda Dealio kullanan var` })}
           ${Stat({ label: 'Toplam üye', icon: 'users', value: compact(members), sub: 'Sunucular arasında tekrar edenler dahil' })}
           ${Stat({ label: 'Ayrılan sunucu', icon: 'logout', value: num(data.departed.length), sub: 'Botu çıkaran sunucular' })}
-          ${Stat({ label: 'En yeni', icon: 'zap', value: newest ? newest.name : '—', sub: newest ? relative(newest.joinedAt) : undefined })}
+          ${Stat({ label: 'En yeni', icon: 'zap', value: newest ? html`<span class="stat-text" title=${newest.name}>${newest.name}</span>` : '—', sub: newest ? relative(newest.joinedAt) : undefined })}
         </div>
         <div><div class="tabs" role="tablist">${tabs.map(([key, label, count]) => html`
           <button role="tab" aria-selected=${tab === key} class=${`tab ${tab === key ? 'active' : ''}`} onClick=${() => setTab(key)}>
