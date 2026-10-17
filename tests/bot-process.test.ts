@@ -1,6 +1,6 @@
 import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
-import { runBotProcess } from '../src/application/bot-process.js';
+import { ownerRestartExitCode, runBotProcess } from '../src/application/bot-process.js';
 import { BotStartupCancelledError } from '../src/application/start-bot.js';
 
 interface ProcessHarnessOptions {
@@ -43,12 +43,17 @@ function processHarness(options: ProcessHarnessOptions = {}) {
     maxUsers: 200,
   };
   let startupSignal: AbortSignal | undefined;
+  let requestExit: ((mode: 'stop' | 'restart') => void) | undefined;
   let resolveStart = (): void => undefined;
   const pendingStart = new Promise<typeof runtime>((resolve) => {
     resolveStart = () => resolve(runtime);
   });
-  const start = vi.fn(async (_environment: typeof environment, startupOptions: { readonly signal?: AbortSignal }) => {
+  const start = vi.fn(async (_environment: typeof environment, startupOptions: {
+    readonly signal?: AbortSignal;
+    readonly requestExit?: (mode: 'stop' | 'restart') => void;
+  }) => {
     startupSignal = startupOptions.signal;
+    requestExit = startupOptions.requestExit;
     if (options.startFailure) {
       if (startupOptions.signal?.aborted) throw new BotStartupCancelledError();
       throw new Error('startup failed');
@@ -92,7 +97,7 @@ function processHarness(options: ProcessHarnessOptions = {}) {
   return {
     control, events, files, handlers, healthPath, host, mkdir, nodePidPath,
     logger, poll: () => poll(), resolveStart, resolveStop, runtime, setPolling, shutdownRequestPath, start,
-    startupSignal: () => startupSignal, timer,
+    startupSignal: () => startupSignal, requestExit: () => requestExit, timer,
   };
 }
 
@@ -168,6 +173,29 @@ describe('process lifecycle', () => {
     harness.resolveStop();
     await harness.control.completion;
     expect(completionSettled).toHaveBeenCalledOnce();
+  });
+
+  it('exits with the restart code after an owner restart, so systemd starts the bot again', async () => {
+    const harness = processHarness();
+    await vi.waitFor(() => expect(harness.start).toHaveBeenCalledOnce());
+
+    harness.requestExit()?.('restart');
+    harness.requestExit()?.('stop');
+    await harness.control.completion;
+
+    expect(harness.runtime.stop).toHaveBeenCalledOnce();
+    expect(harness.host.exitCode).toBe(ownerRestartExitCode);
+  });
+
+  it('exits cleanly after an owner stop, so the bot stays down', async () => {
+    const harness = processHarness();
+    await vi.waitFor(() => expect(harness.start).toHaveBeenCalledOnce());
+
+    harness.requestExit()?.('stop');
+    await harness.control.completion;
+
+    expect(harness.runtime.stop).toHaveBeenCalledOnce();
+    expect(harness.host.exitCode).toBeUndefined();
   });
 
   it('reports requested runtime shutdown failure and sets a nonzero exit code', async () => {

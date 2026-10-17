@@ -37,8 +37,15 @@ export interface AdminActionDependencies {
   readonly guilds: AdminGuildControl;
   readonly applyPresence: (text: string | null) => void;
   readonly telemetry: { deleteUser(discordUserId: string): number };
+  /** Ends the bot process (see StartBotOptions.requestExit); absent outside the real process. */
+  readonly requestExit?: (mode: 'stop' | 'restart') => void;
+  /** Delays the exit so the panel's answer reaches the browser first. */
+  readonly defer?: (work: () => void, delayMs: number) => void;
   readonly now?: () => Date;
 }
+
+/** Long enough for the HTTP answer to leave before the admin server closes. */
+const exitDelayMs = 750;
 
 /**
  * Every owner action from the admin panel. User changes go through the same
@@ -183,12 +190,30 @@ export class AdminActionService {
     return this.audited('system.retry-now', null, null, async () => this.dependencies.retryScheduler.runOnce());
   }
 
+  /** Shuts down gracefully and lets systemd start the bot again (about 5 seconds later). */
+  public restartBot(): Promise<unknown> {
+    return this.audited('system.restart', null, null, async () => this.exit('restart'));
+  }
+
+  /** Shuts down gracefully and stays down: the panel goes with it, so starting again needs SSH. */
+  public stopBot(): Promise<unknown> {
+    return this.audited('system.stop', null, null, async () => this.exit('stop'));
+  }
+
   public updateSettings(update: RuntimeSettingsUpdate): Promise<RuntimeSettingsSnapshot> {
     return this.audited('system.settings', null, JSON.stringify(update), async () => {
       const snapshot = this.dependencies.settings.update(update);
       if (update.presenceText !== undefined) this.dependencies.applyPresence(snapshot.presenceText);
       return snapshot;
     });
+  }
+
+  private exit(mode: 'stop' | 'restart'): { readonly accepted: true; readonly mode: 'stop' | 'restart' } {
+    const requestExit = this.dependencies.requestExit;
+    if (!requestExit) throw new AdminActionError(409, 'This process cannot be stopped from the panel');
+    const defer = this.dependencies.defer ?? ((work, delayMs) => { setTimeout(work, delayMs); });
+    defer(() => requestExit(mode), exitDelayMs);
+    return { accepted: true, mode };
   }
 
   private requireUser<T>(config: T | null): T {

@@ -3,6 +3,7 @@ import { api } from '../api.js';
 import {
   checkStatusNames, country, dateTime, day, displayName, flag, languageNames, notificationModeNames, num, trackingNote,
 } from '../format.js';
+import { checkErrorInfo, checkFixNames } from '../explain.js';
 import { useProfiles } from '../profiles.js';
 import { navigate } from '../router.js';
 import type { Profile, UserRow } from '../types.js';
@@ -20,7 +21,19 @@ export function userStatus(row: { enabled: boolean; dmDeliveryBlockedAt: string 
 export function checkBadge(status: string | null, errorCode: string | null): VNode {
   if (!status) return Badge({ tone: 'neutral', label: 'Hiç' });
   const tone: Tone = status === 'success' ? 'good' : status === 'pending' ? 'info' : status === 'unavailable' ? 'warn' : 'bad';
-  return Badge({ tone, label: checkStatusNames[status] ?? status, ...(errorCode ? { title: errorCode } : {}) });
+  const reason = errorCode && status !== 'success' ? checkErrorInfo(errorCode) : null;
+  return Badge({ tone, label: checkStatusNames[status] ?? status, ...(reason ? { title: `${reason.title}: ${reason.detail}` } : {}) });
+}
+
+/** Why the last check failed and who can fix it; the stored code is in the tooltip. */
+export function CheckReason(props: { code: string }): VNode {
+  const info = checkErrorInfo(props.code);
+  return html`<span class="reason">
+    <strong title=${props.code}>${info.title}</strong>
+    <span class="muted small">${info.detail}</span>
+    <span class="reason-meta">${Badge({ tone: info.fix === 'owner' ? 'bad' : info.fix === 'user' ? 'warn' : 'neutral',
+      label: checkFixNames[info.fix] })}</span>
+  </span>`;
 }
 
 export function UserCell(props: { id: string; profile: Profile | null | undefined }): VNode {
@@ -33,13 +46,22 @@ export function UserCell(props: { id: string; profile: Profile | null | undefine
 }
 
 type StatusFilter = 'all' | 'active' | 'paused' | 'blocked' | 'banned';
+type CheckFilter = 'all' | 'problem' | 'success' | 'unavailable' | 'failed';
+const checkFilters: readonly CheckFilter[] = ['all', 'problem', 'success', 'unavailable', 'failed'];
 
-export function UsersPage(): VNode {
+/** `#/users?check=problem` opens the list filtered, e.g. from the overview's check card. */
+function initialCheckFilter(search: string): CheckFilter {
+  const value = new URLSearchParams(search).get('check');
+  return checkFilters.includes(value as CheckFilter) ? value as CheckFilter : 'all';
+}
+
+export function UsersPage(props: { search?: string }): VNode {
   const state = useAsync(() => api.get<{ users: UserRow[]; telemetrySince?: string | null }>('/api/users'), [], live);
   const users = state.data?.users ?? [];
   const telemetrySince = state.data?.telemetrySince ?? null;
   const profiles = useProfiles(users.map((user) => user.discordUserId));
   const [status, setStatus] = useState<StatusFilter>('all');
+  const [check, setCheck] = useState<CheckFilter>(() => initialCheckFilter(props.search ?? ''));
   const [countryFilter, setCountry] = useState('');
   const [language, setLanguage] = useState('');
 
@@ -50,10 +72,12 @@ export function UsersPage(): VNode {
     if (status === 'paused' && label !== 'Duraklatıldı') return false;
     if (status === 'blocked' && label !== 'DM engelli') return false;
     if (status === 'banned' && label !== 'Engellendi') return false;
+    if (check === 'problem' && user.lastCheckStatus !== 'unavailable' && user.lastCheckStatus !== 'failed') return false;
+    if (check !== 'all' && check !== 'problem' && user.lastCheckStatus !== check) return false;
     if (countryFilter && user.storeCountryCode !== countryFilter) return false;
     if (language && user.language !== language) return false;
     return true;
-  }), [users, status, countryFilter, language]);
+  }), [users, status, check, countryFilter, language]);
 
   const nameOf = (row: UserRow): string => {
     const profile = profiles.get(row.discordUserId);
@@ -82,8 +106,11 @@ export function UsersPage(): VNode {
     { key: 'mode', label: 'Zamanlama', render: (row) => notificationModeNames[row.notificationMode] ?? row.notificationMode,
       sort: (row) => row.notificationMode, csv: (row) => row.notificationMode, hideOnMobile: true },
     { key: 'check', label: 'Son kontrol', render: (row) => html`${checkBadge(row.lastCheckStatus, row.lastCheckErrorCode)}
-      <small class="muted block">${When({ at: row.lastCheckCompletedAt })}</small>`,
+      <small class="muted block">${row.lastCheckErrorCode && row.lastCheckStatus !== 'success'
+        ? checkErrorInfo(row.lastCheckErrorCode).title : When({ at: row.lastCheckCompletedAt })}</small>`,
       sort: (row) => row.lastCheckCompletedAt, csv: (row) => row.lastCheckStatus },
+    { key: 'checkReason', label: 'Kontrol hatası', render: () => null,
+      csv: (row) => row.lastCheckErrorCode && row.lastCheckStatus !== 'success' ? checkErrorInfo(row.lastCheckErrorCode).title : '' },
     { key: 'alerts', label: 'Uyarı', align: 'end', render: (row) => html`${num(row.alertsSent)}
       ${row.pendingAlerts > 0 ? html`<small class="muted block">${num(row.pendingAlerts)} bekliyor</small>` : null}`,
       sort: (row) => row.alertsSent, csv: (row) => row.alertsSent },
@@ -101,7 +128,7 @@ export function UsersPage(): VNode {
     { key: 'created', label: 'Katıldı', render: (row) => html`<span title=${dateTime(row.createdAt)}>${day(row.createdAt)}</span>`,
       sort: (row) => row.createdAt, csv: (row) => row.createdAt },
   ];
-  const visibleColumns = columns.filter((column) => !['id', 'username', 'steam'].includes(column.key));
+  const visibleColumns = columns.filter((column) => !['id', 'username', 'steam', 'checkReason'].includes(column.key));
   const exportColumns = columns;
 
   const toolbar = html`
@@ -110,6 +137,11 @@ export function UsersPage(): VNode {
       <option value="all">Tüm durumlar</option><option value="active">Aktif</option>
       <option value="paused">Duraklatıldı</option><option value="blocked">DM engelli</option>
       <option value="banned">Engellendi</option>
+    </select>
+    <select class="input" value=${check} onChange=${(event: Event) => setCheck((event.target as HTMLSelectElement).value as CheckFilter)}
+      aria-label="Son kontrol">
+      <option value="all">Tüm kontroller</option><option value="problem">Sorunlu kontroller</option>
+      <option value="success">Başarılı</option><option value="unavailable">Erişilemedi</option><option value="failed">Hatalı</option>
     </select>
     <select class="input" value=${countryFilter} onChange=${(event: Event) => setCountry((event.target as HTMLSelectElement).value)}
       aria-label="Bölge">

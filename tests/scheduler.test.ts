@@ -255,6 +255,67 @@ describe('WishlistScheduler', () => {
     await scheduler.stop();
   });
 
+  it('skips automatic scans while the owner paused them, keeps scheduling, and still scans on request', async () => {
+    const checkService = { check: vi.fn().mockResolvedValue(successResult()) };
+    const clock = createClock();
+    const scheduleRepository = createScheduleRepository();
+    let paused = true;
+    const logger = createLogger();
+    const scheduler = new WishlistScheduler({
+      intervalHours: 6,
+      userConfigRepository: { findEnabled: () => [user('user-a')] },
+      checkService,
+      notificationService: createNotificationService(),
+      scheduleRepository,
+      clock: clock.clock,
+      now: () => new Date('2026-08-22T00:00:00.000Z'),
+      logger,
+      isPaused: () => paused,
+    });
+    const settle = async (): Promise<void> => {
+      await new Promise<void>((resolve) => setImmediate(resolve));
+      await new Promise<void>((resolve) => setImmediate(resolve));
+    };
+
+    scheduler.start();
+    await settle();
+    expect(checkService.check).not.toHaveBeenCalled();
+    expect(scheduler.status().paused).toBe(true);
+    expect(scheduleRepository.setNextScheduledAt).toHaveBeenLastCalledWith('2026-08-22T06:00:00.000Z');
+    expect(logger.info).toHaveBeenCalledWith('Automatic scan skipped: paused by the owner.');
+
+    expect(scheduler.runNow()).toBe(true);
+    await settle();
+    expect(checkService.check).toHaveBeenCalledTimes(1);
+
+    paused = false;
+    clock.trigger();
+    await settle();
+    expect(checkService.check).toHaveBeenCalledTimes(2);
+    expect(scheduler.status().paused).toBe(false);
+    await scheduler.stop();
+  });
+
+  it('keeps scanning when the pause setting cannot be read', async () => {
+    const checkService = { check: vi.fn().mockResolvedValue(successResult()) };
+    const scheduler = new WishlistScheduler({
+      intervalHours: 6,
+      userConfigRepository: { findEnabled: () => [user('user-a')] },
+      checkService,
+      notificationService: createNotificationService(),
+      scheduleRepository: createScheduleRepository(),
+      clock: createClock().clock,
+      now: () => new Date('2026-08-22T00:00:00.000Z'),
+      logger: createLogger(),
+      isPaused: () => { throw new Error('settings table missing'); },
+    });
+    scheduler.start();
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    expect(checkService.check).toHaveBeenCalledTimes(1);
+    await scheduler.stop();
+  });
+
   it('waits for the active run and blocks new runs during shutdown', async () => {
     let resolveCheck: (() => void) | undefined;
     const checkService = {

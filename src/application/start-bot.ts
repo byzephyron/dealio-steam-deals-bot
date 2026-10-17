@@ -67,6 +67,12 @@ export interface StartBotOptions {
   readonly nodePidPath?: string;
   readonly healthPath?: string;
   readonly health?: RuntimeHealth;
+  /**
+   * Ends the process gracefully on the owner's request from the admin panel:
+   * `restart` exits with a failure code so systemd (Restart=on-failure) starts it
+   * again; `stop` exits cleanly and the bot stays down.
+   */
+  readonly requestExit?: (mode: 'stop' | 'restart') => void;
 }
 
 export class BotStartupCancelledError extends Error {
@@ -252,6 +258,7 @@ export async function startBot(
       notificationService,
       scheduleRepository: pollScheduleRepository,
       nextPriceChange: nextSteamPriceChange,
+      isPaused: () => runtimeSettings.scansPaused(),
     });
     const notificationRetryScheduler = new NotificationRetryScheduler({
       intervalSeconds: environment.notificationRetryIntervalSeconds,
@@ -303,6 +310,7 @@ export async function startBot(
         settings: runtimeSettings,
         telemetry: telemetryRepository,
         applyPresence: (text) => applyPresence(client, text),
+        ...(options.requestExit ? { requestExit: options.requestExit } : {}),
         guilds: {
           name: (guildId) => client.guilds.cache.get(guildId)?.name ?? null,
           leave: async (guildId) => {

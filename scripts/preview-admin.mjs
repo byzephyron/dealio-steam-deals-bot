@@ -114,8 +114,9 @@ const directory = {
 const telemetry = new TelemetryRepository(database);
 const controls = new AdminControlRepository(database);
 const broadcasts = new BroadcastRepository(database);
-const actionsList = ['/dealio', '/dealio', '/dealio', 'dealio:tab:wishlist', 'assistant:page:#', 'assistant:game', 'dealio:tab:alerts',
-  'dealio-open:home', 'status-v2:threshold', '/setup', 'setup:confirm'];
+// Action codes as the bot records them (src/discord/interaction-telemetry.ts).
+const actionsList = ['/dealio', '/dealio', '/dealio', 'assistant:tab-games', 'assistant:next', 'assistant:game', 'dealio:tab-alerts',
+  'dealio-open:home', 'status-v2:minimum-discount', '/setup', 'setup:confirm', 'dealio:check', 'dealio:deals', 'assistant:target'];
 for (const [index, user] of users.entries()) {
   const guild = index % 4 === 3 ? null : guilds[index % guilds.length];
   for (let event = 0; event < 4 + Math.floor(random() * 30); event += 1) {
@@ -168,7 +169,7 @@ const query = new AdminQueryService({
   assistant: wishlistState.assistant,
   pollSchedule: new PollScheduleRepository(database),
   directory,
-  schedulerStatus: () => ({ intervalMs: 1_800_000, running: false, runStartedAt: null, lastRun: {
+  schedulerStatus: () => ({ intervalMs: 1_800_000, running: false, runStartedAt: null, paused: settings.scansPaused(), lastRun: {
     userCount: 40, completedCount: 40, errorCount: 2, startedAt: iso(19 * 60_000), completedAt: iso(18 * 60_000), durationMs: 64_000,
     checkedGames: 3120, steamItemErrors: 3, unknownPrices: 1, unavailable: 1, dmSent: 4, dmFailed: 0 } }),
   telemetry,
@@ -191,6 +192,8 @@ const actions = new AdminActionService({
   settings,
   telemetry,
   applyPresence: () => undefined,
+  // Preview only: the process keeps running, so the panel's restart screen returns at once.
+  requestExit: (mode) => console.log(`${new Date().toISOString()} [preview] Owner ${mode} requested; the preview keeps running.`),
   guilds: { name: (id) => guilds.find((guild) => guild.id === id)?.name ?? null, leave: async (id) => guilds.some((guild) => guild.id === id) },
 });
 const server = new AdminServer({

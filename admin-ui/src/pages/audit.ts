@@ -27,6 +27,8 @@ export const auditActionNames: Readonly<Record<string, string>> = {
   'system.scan-now': 'Tarama başlatıldı',
   'system.retry-now': 'Yeniden deneme çalıştı',
   'system.settings': 'Ayarlar değişti',
+  'system.restart': 'Bot yeniden başlatıldı',
+  'system.stop': 'Bot durduruldu',
 };
 
 function targetLink(entry: AuditEntry): VNode | string {

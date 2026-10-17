@@ -5,6 +5,8 @@ import {
   checkStatusNames, compact, country, day, duration, flag, bytes, languageNames, notificationModeNames, num, relative,
 } from '../format.js';
 import { Icon } from '../icons.js';
+import { BotControls } from '../bot-controls.js';
+import { checkErrorInfo, checkFixNames } from '../explain.js';
 import type { Overview } from '../types.js';
 import {
   Badge, BarList, Card, ErrorBox, Facts, Loading, Meter, Page, Stat, When, useAsync, useTicker, RefreshButton, live, periodTrend,
@@ -17,8 +19,10 @@ export function SchedulerFacts(props: { scheduler: Overview['scheduler'] }): VNo
   return Facts({ rows: [
     ['Durum', scheduler.running
       ? Badge({ tone: 'info', label: `Tarıyor (${relative(scheduler.runStartedAt)} başladı)` })
-      : Badge({ tone: 'neutral', label: 'Beklemede' })],
-    ['Sonraki tarama', When({ at: scheduler.nextScheduledAt })],
+      : scheduler.paused ? Badge({ tone: 'warn', label: 'Otomatik tarama duraklatıldı' })
+        : Badge({ tone: 'neutral', label: 'Beklemede' })],
+    ['Sonraki tarama', scheduler.paused ? html`<span class="muted">Duraklatıldı (sürdürünce ${When({ at: scheduler.nextScheduledAt })})</span>`
+      : When({ at: scheduler.nextScheduledAt })],
     ['Aralık', duration(scheduler.intervalMs)],
     ['Son tarama', last ? html`${When({ at: last.completedAt })} · ${duration(last.durationMs)}` : 'Bu açılıştan beri yok'],
     ['Son taramada', last
@@ -127,14 +131,24 @@ export function OverviewPage(): VNode {
           spark: Sparkline({ values: alerts, label: 'Son 30 günde günlük uyarı' }) })}
       </div>
 
+      <${BotControls} data=${data} onChanged=${state.reload} />
+
       <div class="grid-main">
         <${ActivityCard} charts=${charts} />
         ${Card({ title: 'Kontrol durumu', subtitle: 'Kullanıcıların son wishlist kontrolü', children: html`
           ${Donut({ unit: 'kullanıcı', slices: data.distributions.checkStatuses.map((row) => ({
             key: row.key, label: checkStatusNames[row.key] ?? row.key, value: row.count, tone: checkTones[row.key] ?? 'neutral' })) })}
-          ${data.distributions.checkErrors.length > 0 ? html`<h3 class="sub-head">Hata kodları</h3>
-            ${BarList({ rows: data.distributions.checkErrors.map((row) => ({
-              key: row.key, label: html`<code>${row.key}</code>`, value: row.count, title: row.key })) })}` : null}
+          ${data.distributions.checkErrors.length > 0 ? html`<h3 class="sub-head">Neden başarısız?</h3>
+            <ul class="reasons">${data.distributions.checkErrors.map((row) => {
+              const info = checkErrorInfo(row.key);
+              return html`<li key=${row.key}>
+                <div class="reasons-head"><strong title=${row.key}>${info.title}</strong>
+                  <span class="reasons-count">${num(row.count)} kullanıcı</span></div>
+                <p class="muted small">${info.detail}</p>
+                <div class="reason-meta">${Badge({ tone: info.fix === 'owner' ? 'bad' : info.fix === 'user' ? 'warn' : 'neutral',
+                  label: checkFixNames[info.fix] })}<a class="small" href="#/users?check=problem">Kullanıcıları gör</a></div>
+              </li>`;
+            })}</ul>` : null}
           ${checkTotal === 0 ? html`<p class="empty">Henüz kontrol yok.</p>` : null}` })}
       </div>
 

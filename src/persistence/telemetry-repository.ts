@@ -180,7 +180,7 @@ export class TelemetryRepository {
       WHERE discord_user_id = ? AND guild_id IS NOT NULL GROUP BY guild_id ORDER BY last_seen DESC`).all(discordUserId) as Row[])
       .map((row) => ({ guildId: text(row.guild_id), count: int(row.n), lastSeenAt: text(row.last_seen) }));
     const recent = (this.database.prepare(`SELECT kind, action, context, guild_id, occurred_at FROM interaction_event
-      WHERE discord_user_id = ? ORDER BY id DESC LIMIT 100`).all(discordUserId) as Row[])
+      WHERE discord_user_id = ? ORDER BY occurred_at DESC, id DESC LIMIT 100`).all(discordUserId) as Row[])
       .map((row) => ({
         kind: text(row.kind), action: text(row.action), context: text(row.context),
         guildId: row.guild_id === null ? null : text(row.guild_id), occurredAt: text(row.occurred_at),
