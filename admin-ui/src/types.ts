@@ -33,6 +33,8 @@ export interface SchedulerInfo {
   readonly runStartedAt: string | null;
   readonly lastRun: SchedulerRunReport | null;
   readonly nextScheduledAt: string | null;
+  /** Automatic scans are paused by the owner. */
+  readonly paused?: boolean;
 }
 
 export interface ProcessInfo {
@@ -317,6 +319,7 @@ export interface RuntimeSettings {
   readonly defaultMaxUsers: number | null;
   readonly signupsOpen: boolean;
   readonly presenceText: string | null;
+  readonly scansPaused?: boolean;
 }
 
 export interface AuditEntry {

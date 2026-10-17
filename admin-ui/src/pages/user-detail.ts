@@ -10,7 +10,8 @@ import type { NotificationRow, SnapshotItem, UserDetail } from '../types.js';
 import {
   Avatar, BackLink, Badge, Card, CopyText, DataTable, ErrorBox, Facts, Loading, Page, When, useAsync, type Column, type Tone, RefreshButton, live,
 } from '../ui.js';
-import { checkBadge, userStatus } from './users.js';
+import { actionLabel } from '../explain.js';
+import { CheckReason, checkBadge, userStatus } from './users.js';
 import { UserActions } from './user-actions.js';
 import { AuditTable } from './audit.js';
 import { BroadcastStatusBadge } from './announcements.js';
@@ -169,7 +170,8 @@ export function UserDetailPage(props: { id: string }): VNode {
         ] }) })}
         ${Card({ title: 'Kontrol', subtitle: 'Son wishlist okuması', children: checkState ? Facts({ rows: [
           ['Son durum', checkBadge(checkState.lastStatus, checkState.lastErrorCode)],
-          ['Hata kodu', checkState.lastErrorCode ? html`<code>${checkState.lastErrorCode}</code>` : '—'],
+          ['Neden', checkState.lastErrorCode && checkState.lastStatus !== 'success'
+            ? CheckReason({ code: checkState.lastErrorCode }) : '—'],
           ['Son kontrol', When({ at: checkState.lastCompletedAt })],
           ['Son başarılı', When({ at: checkState.lastSuccessCompletedAt })],
           ['Kontrol edilen', num(checkState.lastSuccessCheckedCount)],
@@ -215,10 +217,14 @@ export function UserDetailPage(props: { id: string }): VNode {
           ] })}
           <h3 class="sub-head">Son etkileşimler</h3>
           ${data.usage.recent.length === 0 ? html`<p class="empty">Kayıt yok.</p>` : html`<ol class="timeline">
-            ${data.usage.recent.slice(0, 25).map((event) => html`<li>
-              <time title=${dateTime(event.occurredAt)}>${relative(event.occurredAt)}</time>
-              <code>${event.action}</code>
-              <small class="muted">${contextNames[event.context] ?? event.context}</small></li>`)}
+            ${data.usage.recent.slice(0, 25).map((event) => {
+              const what = actionLabel(event.action, event.kind);
+              return html`<li>
+                <time title=${dateTime(event.occurredAt)}>${relative(event.occurredAt)}</time>
+                <span title=${event.action}>${what.label}</span>
+                <small class="muted">${event.context === 'unknown' ? what.area
+                  : `${what.area} · ${contextNames[event.context] ?? event.context}`}</small></li>`;
+            })}
           </ol>`}` })}
         <div class="stack">
           ${Card({ title: 'Gönderdiğin mesajlar', children: data.messages.length === 0

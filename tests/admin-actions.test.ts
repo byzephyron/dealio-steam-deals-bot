@@ -22,7 +22,7 @@ describe('AdminActionService', () => {
   const runNow = vi.fn(() => true);
   const check = vi.fn(async () => ({ status: 'success', checkedCount: 3 }) as never);
 
-  function actions(): AdminActionService {
+  function actions(extra: Partial<ConstructorParameters<typeof AdminActionService>[0]> = {}): AdminActionService {
     const adminRepository = new AdminRepository(database);
     const broadcasts = new BroadcastService({
       repository: new BroadcastRepository(database),
@@ -57,6 +57,7 @@ describe('AdminActionService', () => {
           return true;
         },
       },
+      ...extra,
     });
   }
 
@@ -131,9 +132,41 @@ describe('AdminActionService', () => {
     await expect(actions().scanNow()).rejects.toMatchObject({ status: 409 });
   });
 
+  it('pauses and resumes automatic scans as a stored setting', async () => {
+    expect(settings.scansPaused()).toBe(false);
+    await expect(actions().updateSettings({ scansPaused: true })).resolves.toMatchObject({ scansPaused: true });
+    expect(new RuntimeSettings(controls, 200).scansPaused()).toBe(true);
+    await actions().updateSettings({ scansPaused: false });
+    expect(settings.scansPaused()).toBe(false);
+  });
+
+  it('restarts or stops the process only after answering, and audits it', async () => {
+    const requestExit = vi.fn();
+    const deferred: Array<{ work: () => void; delayMs: number }> = [];
+    const service = actions({ requestExit, defer: (work, delayMs) => deferred.push({ work, delayMs }) });
+    await expect(service.restartBot()).resolves.toEqual({ accepted: true, mode: 'restart' });
+    expect(requestExit).not.toHaveBeenCalled();
+    expect(deferred[0]?.delayMs).toBeGreaterThan(0);
+    deferred[0]!.work();
+    expect(requestExit).toHaveBeenCalledWith('restart');
+    await service.stopBot();
+    deferred[1]!.work();
+    expect(requestExit).toHaveBeenLastCalledWith('stop');
+    expect(controls.auditEntries(10).map((entry) => [entry.action, entry.outcome])).toEqual([
+      ['system.stop', 'ok'], ['system.restart', 'ok'],
+    ]);
+  });
+
+  it('refuses a restart where the process cannot be controlled', async () => {
+    await expect(actions().restartBot()).rejects.toMatchObject({ status: 409 });
+    expect(controls.auditEntries(1)[0]).toMatchObject({ action: 'system.restart', outcome: 'failed' });
+  });
+
   it('updates runtime settings and applies the presence', async () => {
     const snapshot = await actions().updateSettings({ maxUsers: 300, signupsOpen: false, presenceText: '  Sale watch ' });
-    expect(snapshot).toEqual({ maxUsers: 300, maxUsersOverride: 300, defaultMaxUsers: 200, signupsOpen: false, presenceText: 'Sale watch' });
+    expect(snapshot).toEqual({
+      maxUsers: 300, maxUsersOverride: 300, defaultMaxUsers: 200, signupsOpen: false, presenceText: 'Sale watch', scansPaused: false,
+    });
     expect(presence).toEqual(['Sale watch']);
     await expect(actions().updateSettings({ maxUsers: 0 })).rejects.toBeInstanceOf(InvalidSettingError);
     expect((await actions().updateSettings({ maxUsers: null, signupsOpen: true, presenceText: '' })))

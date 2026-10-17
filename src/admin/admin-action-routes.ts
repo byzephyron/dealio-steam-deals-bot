@@ -134,6 +134,22 @@ export function actionRoutes({ actions, query, broadcasts }: AdminActionRouteDep
     { method: 'POST', path: '/api/system/retry-now', handler: () => run(() => actions.retryNow()) },
     {
       method: 'POST',
+      path: '/api/system/restart',
+      handler: (request) => run(() => {
+        requireConfirmation(request, 'restart');
+        return actions.restartBot();
+      }),
+    },
+    {
+      method: 'POST',
+      path: '/api/system/stop',
+      handler: (request) => run(() => {
+        requireConfirmation(request, 'DURDUR');
+        return actions.stopBot();
+      }),
+    },
+    {
+      method: 'POST',
       path: '/api/settings',
       handler: (request) => run(() => {
         const input = body(request);
@@ -141,6 +157,7 @@ export function actionRoutes({ actions, query, broadcasts }: AdminActionRouteDep
           ...(input.maxUsers === null || typeof input.maxUsers === 'number' ? { maxUsers: input.maxUsers } : {}),
           ...(typeof input.signupsOpen === 'boolean' ? { signupsOpen: input.signupsOpen } : {}),
           ...(input.presenceText === null || typeof input.presenceText === 'string' ? { presenceText: input.presenceText } : {}),
+          ...(typeof input.scansPaused === 'boolean' ? { scansPaused: input.scansPaused } : {}),
         });
       }),
     },

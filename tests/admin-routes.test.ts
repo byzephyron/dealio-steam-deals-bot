@@ -41,6 +41,33 @@ describe('admin routes', () => {
     expect(setBroadcastStatus).toHaveBeenCalledWith(id, 'paused');
   });
 
+  it('restarts or stops the bot only with the typed confirmation', async () => {
+    const restartBot = vi.fn(async () => ({ accepted: true }));
+    const stopBot = vi.fn(async () => ({ accepted: true }));
+    const routes = actionRoutes({
+      actions: { restartBot, stopBot } as never,
+      query: {} as never,
+      broadcasts: { preview: () => ({}) } as never,
+    });
+    const restart = route(routes, 'POST', '/api/system/restart');
+    const stop = route(routes, 'POST', '/api/system/stop');
+    await expect(restart.handler!(request({ method: 'POST', body: {} }))).rejects.toMatchObject({ status: 400 });
+    await expect(stop.handler!(request({ method: 'POST', body: { confirm: 'durdur' } }))).rejects.toMatchObject({ status: 400 });
+    expect(restartBot).not.toHaveBeenCalled();
+    expect(stopBot).not.toHaveBeenCalled();
+    await restart.handler!(request({ method: 'POST', body: { confirm: 'restart' } }));
+    await stop.handler!(request({ method: 'POST', body: { confirm: 'DURDUR' } }));
+    expect(restartBot).toHaveBeenCalledOnce();
+    expect(stopBot).toHaveBeenCalledOnce();
+  });
+
+  it('accepts the scan pause switch in the settings update', async () => {
+    const updateSettings = vi.fn(async (update: unknown) => update);
+    const routes = actionRoutes({ actions: { updateSettings } as never, query: {} as never, broadcasts: { preview: () => ({}) } as never });
+    await route(routes, 'POST', '/api/settings').handler!(request({ method: 'POST', body: { scansPaused: true, junk: 1 } }));
+    expect(updateSettings).toHaveBeenCalledWith({ scansPaused: true });
+  });
+
   it('looks up at most one chunk of distinct, valid profile IDs per request', async () => {
     const profiles = vi.fn(async (ids: readonly string[]) => Object.fromEntries(ids.map((id) => [id, null])));
     const routes = readRoutes({ query: { profiles } as never, logs: new LogBuffer() });

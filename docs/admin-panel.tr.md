@@ -64,19 +64,29 @@ Veri sayfaları sekme açıkken 30 saniyede bir kendini sessizce yeniler (başl�
 
 Üst çubuktaki arama kutusu (veya **Ctrl+K**) kullanıcıyı adıyla, @kullanıcı adıyla, Discord ID'si veya SteamID64 ile; sunucuyu adıyla veya ID'siyle bulur ve sayfalara atlar. Ok tuşları seçer, Enter açar, Esc kapatır.
 
-Üst çubuktaki güneş/ay düğmesi açık ve koyu tema arasında geçer; seçim bu tarayıcıda hatırlanır, seçim yoksa sistem teması izlenir. Yazı tipi (Inter) panelle birlikte gelir; dışarıdan hiçbir şey yüklenmez.
+Üst çubuktaki güneş/ay düğmesi açık ve koyu tema arasında geçer; seçim bu tarayıcıda hatırlanır, seçim yoksa sistem teması izlenir. Yazı tipleri (Inter ve Archivo) panelle birlikte gelir; dışarıdan hiçbir şey yüklenmez.
 
 | Sayfa | İçerik |
 |---|---|
-| Genel bakış | Eğilim çizgili sunucu/kullanıcı/aktif kullanıcı/uyarı kartları (önceki 7 güne göre değişim), sekmeli etkinlik grafiği (uyarı, aktif kullanıcı, kayıt, sunucu), kontrol durumu halkası, kapasite ve uyarı kuyruğu, bot ve tarayıcı, dağılımlar |
+| Genel bakış | Eğilim çizgili sunucu/kullanıcı/aktif kullanıcı/uyarı kartları (önceki 7 güne göre değişim), **bot kontrolü** (aşağıda), sekmeli etkinlik grafiği (uyarı, aktif kullanıcı, kayıt, sunucu), kontrol durumu halkası ve başarısız kontrollerin nedeni (açıklama, kimin düzeltmesi gerektiği, sorunlu kullanıcılara bağlantı), kapasite ve uyarı kuyruğu, bot ve tarayıcı, dağılımlar |
 | Sunucular | Botun olduğu sunucular (canlı), sahipleri, Dealio kullanan kişi sayısı; olay geçmişi, ayrılan ve engellenen sunucular. Detayda o sunucudan gelen kullanıcılar, **sunucudan çık** ve **engelle** |
-| Kullanıcılar | Arama, filtre, CSV; geldiği sunucu, son görülme. Detayda wishlist, kurallar, bildirim geçmişi, kullanım zaman çizelgesi ve işlemler |
+| Kullanıcılar | Arama, durum ve son kontrol filtresi (`#/users?check=problem`), CSV; geldiği sunucu, son görülme, başarısız kontrolün nedeni. Detayda wishlist, kurallar, bildirim geçmişi, kullanım zaman çizelgesi ve işlemler |
 | Oyunlar | En çok istenen, şu an indirimde, en çok uyarı ve kural konan oyunlar |
-| Kullanım | Günlük aktif kullanıcı, eylemler, kurulum hunisi ve başarısızlık sebepleri, kurulum türü, kaynak sunucular |
+| Kullanım | Günlük aktif kullanıcı, eylemler (“Wishlist sekmesine geçti” gibi düz cümlelerle; kayıtlı kod ipucunda ve CSV'de), kurulum hunisi ve başarısızlık sebepleri, kurulum türü, kaynak sunucular |
 | Duyurular | Dört dilde duyuru yazma, Discord önizlemesi, hedef kitle, gönderim takibi, duraklat/sürdür/iptal |
-| Sistem | Sağlık, süreç, veritabanı, tarayıcı; **şimdi tara**, **bildirimleri şimdi dene**; kayıtları aç/kapat, kullanıcı sınırı, bot durum metni; engellenen kullanıcılar |
+| Sistem | Sağlık, süreç, veritabanı, tarayıcı; **şimdi tara**, **bildirimleri şimdi dene**; otomatik tarama, kayıtları aç/kapat, kullanıcı sınırı, bot durum metni; engellenen kullanıcılar |
 | Denetim | Panelden yapılan tüm işlemler (1 yıl) |
 | Loglar | Bot sürecinin son 1000 satırı, canlı akış |
+
+### Bot kontrolü
+
+Genel bakıştaki kartta beş işlem var; hepsi Denetim'e yazılır.
+
+- **Şimdi tara**: tüm aktif kullanıcıları hemen kontrol eder (duraklatılmışken de çalışır).
+- **Bekleyen uyarıları gönder**: kuyruktaki uyarıları sıradaki denemeyi beklemeden dener.
+- **Otomatik tarama**: kapatınca zamanlanmış taramalar atlanır, takvim yine kurulur; bot, komutlar ve bekleyen uyarılar çalışır. Ayar veritabanında saklanır, yeniden başlatmada korunur.
+- **Yeniden başlat**: botu düzgünce kapatır ve 75 koduyla çıkar; systemd (`Restart=on-failure`) birkaç saniyede yeniden açar. Panel oturumu kapanır; sayfa bot dönünce giriş ekranına yenilenir.
+- **Durdur** (`DURDUR` yazarak onay): botu kapatır ve 0 koduyla çıkar, systemd yeniden açmaz. Panel de kapanır; yeniden açmak için VM'de `sudo systemctl start dealio`. Healthchecks bu sırada “bot kapalı” uyarısı gönderir.
 
 ## Kullanıcı işlemleri
 

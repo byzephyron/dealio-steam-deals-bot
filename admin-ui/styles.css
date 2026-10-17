@@ -639,6 +639,35 @@ textarea.input { resize: vertical; min-height: 150px; line-height: 1.55; }
 .note .icon { color: var(--accent); margin-top: 2px; }
 .audience + .note { margin-top: 14px; }
 
+/* Bot controls */
+/* Tiles split by hairlines like the stats strip, so a short last row leaves no grey gap. */
+.controls { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); overflow: hidden; }
+.control { display: grid; grid-template-columns: auto 1fr; grid-template-rows: 1fr auto; gap: 10px 12px; padding: 14px 16px;
+  min-width: 0; margin: -1px 0 0 -1px; border-left: 1px solid var(--line); border-top: 1px solid var(--line); }
+@media (max-width: 1280px) { .controls { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); } }
+.control-icon { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 8px;
+  background: var(--accent-soft); color: var(--accent); }
+.control-danger .control-icon { background: var(--bad-soft); color: var(--bad); }
+.control-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.control-text strong { font-weight: 650; }
+.control-action { grid-column: 2; display: flex; align-items: center; }
+.controls-card .card-head { margin-bottom: 14px; }
+.exit-screen .dialog { gap: 12px; }
+.exit-wait { display: flex; align-items: center; gap: 10px; margin: 0; color: var(--muted); font-variant-numeric: tabular-nums; }
+.exit-command { margin: 0; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--surface-2); border: 1px solid var(--line);
+  overflow-x: auto; }
+
+/* Check failure reasons */
+.reasons { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.reasons li { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: var(--radius-sm);
+  background: var(--surface-2); border: 1px solid var(--line); }
+.reasons p { margin: 0; }
+.reasons-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.reasons-count { font-family: var(--display); font-stretch: 84%; font-weight: 700; font-size: 16px; white-space: nowrap; }
+.reason { display: flex; flex-direction: column; gap: 4px; }
+.reason-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
 /* Timeline & funnel */
 .timeline { list-style: none; margin: 0; padding: 0 0 0 4px; display: flex; flex-direction: column; max-height: 380px; overflow-y: auto; }
 .timeline li { position: relative; display: grid; grid-template-columns: 110px 1fr auto; gap: 12px; align-items: baseline; padding: 6px 0 6px 18px; }

@@ -9,12 +9,15 @@ export interface RuntimeSettingsSnapshot {
   readonly defaultMaxUsers: number | null;
   readonly signupsOpen: boolean;
   readonly presenceText: string | null;
+  /** The owner paused the automatic wishlist scans; manual scans and alert retries still run. */
+  readonly scansPaused: boolean;
 }
 
 export interface RuntimeSettingsUpdate {
   readonly maxUsers?: number | null;
   readonly signupsOpen?: boolean;
   readonly presenceText?: string | null;
+  readonly scansPaused?: boolean;
 }
 
 export class InvalidSettingError extends Error {
@@ -45,6 +48,10 @@ export class RuntimeSettings {
     return this.read('presence_text');
   }
 
+  public scansPaused(): boolean {
+    return this.read('scans_paused') === 'true';
+  }
+
   public snapshot(): RuntimeSettingsSnapshot {
     return {
       maxUsers: this.maxUsers(),
@@ -52,6 +59,7 @@ export class RuntimeSettings {
       defaultMaxUsers: this.defaultMaxUsers,
       signupsOpen: this.signupsOpen(),
       presenceText: this.presenceText(),
+      scansPaused: this.scansPaused(),
     };
   }
 
@@ -70,6 +78,9 @@ export class RuntimeSettings {
       const text = update.presenceText?.trim() ?? '';
       if (text.length > 128) throw new InvalidSettingError('The status text can be at most 128 characters');
       this.repository.setSetting('presence_text', text === '' ? null : text, at);
+    }
+    if (update.scansPaused !== undefined) {
+      this.repository.setSetting('scans_paused', update.scansPaused ? 'true' : null, at);
     }
     return this.snapshot();
   }

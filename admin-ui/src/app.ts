@@ -127,7 +127,7 @@ function Login(props: { onSignedIn: (csrf: string) => void }): VNode {
     </main>`;
 }
 
-function Route(props: { path: string }): VNode {
+function Route(props: { path: string; search: string }): VNode {
   const userMatch = /^\/users\/(\d{5,25})$/.exec(props.path);
   if (userMatch) return html`<${UserDetailPage} id=${userMatch[1]} />`;
   const guildMatch = /^\/guilds\/(\d{5,25})$/.exec(props.path);
@@ -136,7 +136,7 @@ function Route(props: { path: string }): VNode {
   if (announcementMatch) return html`<${AnnouncementDetailPage} id=${announcementMatch[1]} />`;
   switch (props.path) {
     case '/guilds': return html`<${GuildsPage} />`;
-    case '/users': return html`<${UsersPage} />`;
+    case '/users': return html`<${UsersPage} search=${props.search} />`;
     case '/games': return html`<${GamesPage} />`;
     case '/usage': return html`<${UsagePage} />`;
     case '/announcements': return html`<${AnnouncementsPage} />`;
@@ -163,7 +163,8 @@ function Crumbs(props: { path: string; section: string }): VNode {
 }
 
 function Shell(props: { onSignOut: () => void }): VNode {
-  const path = usePath();
+  // `#/users?check=problem`: the query only preselects filters on the page.
+  const [path = '/', search = ''] = usePath().split('?');
   const section = '/' + (path.split('/')[1] ?? '');
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -224,7 +225,7 @@ function Shell(props: { onSignOut: () => void }): VNode {
             <${ThemeToggle} />
           </div>
         </header>
-        <main class="content"><${Route} key=${path} path=${path} /></main>
+        <main class="content"><${Route} key=${`${path}?${search}`} path=${path} search=${search} /></main>
       </div>
       ${searchOpen ? html`<${SearchPalette} pages=${sections} onClose=${() => setSearchOpen(false)} />` : null}
       <${Toasts} />

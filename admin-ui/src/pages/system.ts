@@ -40,6 +40,13 @@ function SettingsForm(props: { settings: RuntimeSettings; userCount: number | nu
           ${props.settings.signupsOpen ? 'Açık' : 'Kapalı'}<span class="switch-track" aria-hidden="true"></span></button>
       </div>
       <div class="setting-row">
+        <div><strong>Otomatik tarama</strong>
+          <p class="muted small">Kapalıyken zamanlanmış taramalar atlanır; bot, komutlar, “Şimdi tara” ve bekleyen uyarılar çalışır.</p></div>
+        <button class=${`switch ${props.settings.scansPaused ? '' : 'on'}`} role="switch" aria-checked=${!props.settings.scansPaused} disabled=${busy !== null}
+          onClick=${() => save({ scansPaused: !props.settings.scansPaused }, props.settings.scansPaused ? 'Otomatik tarama sürdürüldü' : 'Otomatik tarama duraklatıldı')}>
+          ${props.settings.scansPaused ? 'Kapalı' : 'Açık'}<span class="switch-track" aria-hidden="true"></span></button>
+      </div>
+      <div class="setting-row">
         <div><strong>Kullanıcı sınırı</strong>
           <p class="muted small">${[
             `${props.settings.maxUsers === null ? 'Şu an sınır yok' : `Şu an ${num(props.settings.maxUsers)}`}${props.userCount !== null ? ` (${num(props.userCount)} kayıtlı)` : ''}.`,

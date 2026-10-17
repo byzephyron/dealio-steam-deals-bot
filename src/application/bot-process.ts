@@ -61,6 +61,13 @@ export interface BotProcessControl {
   readonly completion: Promise<void>;
 }
 
+/**
+ * Exit status after an owner restart from the admin panel (EX_TEMPFAIL). systemd
+ * runs Dealio with Restart=on-failure, so a non-zero exit starts it again while a
+ * clean exit (owner stop, SIGTERM) leaves it down.
+ */
+export const ownerRestartExitCode = 75;
+
 const systemClock: BotProcessClock = {
   setInterval: (callback, delayMs) => {
     const timer = setInterval(callback, delayMs);
@@ -111,6 +118,7 @@ export function runBotProcess(options: RunBotProcessOptions = {}): BotProcessCon
   const healthPath = resolve(runtimeDirectory, 'bot.health.json');
   const startupAbortController = new AbortController();
   let shutdownRequested = false;
+  let ownerExit: 'stop' | 'restart' | null = null;
   let resolveShutdownRequest = (): void => undefined;
   const shutdownRequest = new Promise<void>((resolve) => {
     resolveShutdownRequest = resolve;
@@ -177,11 +185,19 @@ export function runBotProcess(options: RunBotProcessOptions = {}): BotProcessCon
         signal: startupAbortController.signal,
         nodePidPath,
         healthPath,
+        requestExit: (mode) => {
+          if (shutdownRequested) return;
+          ownerExit = mode;
+          requestShutdown(`owner ${mode} request`);
+        },
       });
       if (!shutdownRequested) {
         await shutdownRequest;
       }
       await runtime.stop();
+      if (ownerExit === 'restart') {
+        dependencies.process.exitCode = ownerRestartExitCode;
+      }
     } catch (error: unknown) {
       if (!(shutdownRequested && error instanceof BotStartupCancelledError)) {
         const failure = shutdownRequested ? 'Bot shutdown failed' : 'Bot failed to start';

@@ -6,43 +6,16 @@ import type { Usage, UsageCount } from '../types.js';
 import {
   BarList, Card, DataTable, ErrorBox, Loading, Page, When, useAsync, type Column, RefreshButton, live,
 } from '../ui.js';
+import { actionLabel, setupFailureReason, setupStepLabel } from '../explain.js';
 import { contextNames, installNames } from './user-detail.js';
 
-/** Friendly names for the most common actions; the raw action is kept beside them. */
-const actionNames: Readonly<Record<string, string>> = {
-  '/dealio': '/dealio komutu',
-  '/setup': '/setup komutu',
-  '/delete-data': '/delete-data komutu',
-  'dealio-open:home': 'DM’deki “Dealio paneli” düğmesi',
-};
-
-const setupSteps: Readonly<Record<string, string>> = {
-  'prepare-ok': 'Steam profili doğrulandı',
-  'confirm-ok': 'Kurulum tamamlandı',
-};
-
-const failureNames: Readonly<Record<string, string>> = {
-  STEAM_WISHLIST_INACCESSIBLE: 'Wishlist gizli / erişilemiyor',
-  STEAM_NOT_FOUND: 'Steam profili bulunamadı',
-  INVALID_CONFIGURATION: 'Geçersiz profil girişi',
-  INVALID_STORE_COUNTRY: 'Geçersiz bölge',
-  STEAM_TIMEOUT: 'Steam zaman aşımı',
-  STEAM_UPSTREAM_ERROR: 'Steam hatası',
-  STEAM_RATE_LIMITED: 'Steam hız sınırı',
-  STEAM_NETWORK_ERROR: 'Ağ hatası',
-  SetupCapacityReachedError: 'Kapasite dolu / kayıt kapalı',
-  SetupAlreadyCompletedError: 'Zaten kayıtlı',
-};
-
-function setupLabel(key: string): string {
-  if (setupSteps[key]) return setupSteps[key]!;
-  const [step, code = '?'] = key.split(':');
-  return `${failureNames[code] ?? code}${step === 'confirm-failed' ? ' (onayda)' : ''}`;
-}
-
-const usageColumns = (label: string, name: (key: string) => string): Column<UsageCount>[] => [
-  { key: 'key', label, render: (row) => html`${name(row.key)} ${name(row.key) !== row.key ? html`<code class="small muted">${row.key}</code>` : null}`,
-    sort: (row) => row.key, csv: (row) => row.key },
+/** What users did, in words; the stored code stays in the tooltip and the CSV. */
+const actionColumns: Column<UsageCount>[] = [
+  { key: 'key', label: 'Ne yaptı', render: (row) => html`<span class="wrap" title=${row.key}>${actionLabel(row.key).label}</span>`,
+    sort: (row) => actionLabel(row.key).label, csv: (row) => actionLabel(row.key).label },
+  { key: 'area', label: 'Nerede', render: (row) => html`<span class="muted">${actionLabel(row.key).area}</span>`,
+    sort: (row) => actionLabel(row.key).area, csv: (row) => actionLabel(row.key).area, hideOnMobile: true },
+  { key: 'code', label: 'Kod', render: () => null, csv: (row) => row.key },
   { key: 'count', label: 'Kullanım', align: 'end', render: (row) => num(row.count), sort: (row) => row.count, csv: (row) => row.count },
   { key: 'users', label: 'Kişi', align: 'end', render: (row) => num(row.users), sort: (row) => row.users, csv: (row) => row.users },
 ];
@@ -75,7 +48,7 @@ export function UsagePage(): VNode {
                 <small class="muted">${prepared > 0 ? `%${Math.round((completed / prepared) * 100)} dönüşüm` : ''}</small></li>
             </ol>
             <h3 class="sub-head">Başarısız denemeler</h3>
-            ${BarList({ rows: failures.map((row) => ({ key: row.key, label: setupLabel(row.key), value: row.users, title: row.key })),
+            ${BarList({ rows: failures.map((row) => ({ key: row.key, label: setupFailureReason(row.key), value: row.users, title: setupStepLabel(row.key) })),
               empty: 'Başarısız deneme yok.' })}` })}
           ${Card({ title: 'Kurulum türü', children: BarList({ rows: data.installs.map((row) => ({
             key: row.key, label: installNames[row.key] ?? row.key, value: row.users })), empty: 'Veri yok.' }) })}
@@ -85,8 +58,8 @@ export function UsagePage(): VNode {
             ${BarList({ rows: data.locales.slice(0, 8).map((row) => ({ key: row.key, label: row.key, value: row.users })) })}` })}
         </div>
         <div class="grid-2">
-          ${Card({ title: 'Eylemler', class: 'card-flush', children: html`<${DataTable}
-            columns=${usageColumns('Eylem', (key) => actionNames[key] ?? key)} rows=${data.actions}
+          ${Card({ title: 'Eylemler', subtitle: 'Kullanıcıların Dealio’da bastığı düğmeler ve komutlar', class: 'card-flush', children: html`<${DataTable}
+            columns=${actionColumns.filter((column) => column.key !== 'code')} csvColumns=${actionColumns} rows=${data.actions}
             rowKey=${(row: UsageCount) => row.key} csvName="dealio-eylemler" initialSort=${{ key: 'count', direction: 'desc' }}
             pageSize=${15} empty="Henüz etkileşim kaydı yok." />` })}
           ${Card({ title: 'Kullanıcıların geldiği sunucular', class: 'card-flush', children: html`<${DataTable}

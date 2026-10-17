@@ -56,6 +56,11 @@ export interface SchedulerOptions {
    * it instead of up to a full interval later; the interval resumes from there.
    */
   readonly nextPriceChange?: (now: Date) => Date;
+  /**
+   * The owner paused automatic scans (admin panel). A due scan is skipped and the
+   * next one is still scheduled, so resuming needs no restart; `runNow` still scans.
+   */
+  readonly isPaused?: () => boolean;
 }
 
 /** Steam's API can lag its own price change by a moment. */
@@ -85,6 +90,7 @@ export interface SchedulerStatus {
   readonly running: boolean;
   readonly runStartedAt: string | null;
   readonly lastRun: SchedulerRunReport | null;
+  readonly paused: boolean;
 }
 
 export class WishlistScheduler {
@@ -133,6 +139,7 @@ export class WishlistScheduler {
       running: this.activeRun !== null,
       runStartedAt: this.activeRun !== null ? this.runStartedAt : null,
       lastRun: this.lastRun,
+      paused: this.isPaused(),
     };
   }
 
@@ -202,7 +209,7 @@ export class WishlistScheduler {
       this.clock.clearTimeout(this.timer);
       this.timer = null;
     }
-    void this.runAutomaticCycle();
+    void this.runAutomaticCycle(true);
     return true;
   }
 
@@ -323,7 +330,17 @@ export class WishlistScheduler {
     return { userCount: users.length, completedCount, errorCount };
   }
 
-  private async runAutomaticCycle(): Promise<void> {
+  private isPaused(): boolean {
+    try {
+      return this.options.isPaused?.() === true;
+    } catch (_error: unknown) {
+      // An unreadable setting must not stop scanning.
+      return false;
+    }
+  }
+
+  /** `requested`: the owner asked for this scan, so a pause does not skip it. */
+  private async runAutomaticCycle(requested = false): Promise<void> {
     const existingRun = this.activeRun;
     if (existingRun !== null) {
       await existingRun;
@@ -340,7 +357,11 @@ export class WishlistScheduler {
       return;
     }
 
-    await this.runOnce();
+    if (!requested && this.isPaused()) {
+      this.logger.info('Automatic scan skipped: paused by the owner.');
+    } else {
+      await this.runOnce();
+    }
     if (this.stopping) {
       return;
     }
