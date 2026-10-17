@@ -3,9 +3,10 @@ import { api } from '../api.js';
 import { ConfirmDialog, useAction } from '../actions.js';
 import { AnnouncementEditor, editorLanguages, filledLanguages, type Content } from '../announcement-editor.js';
 import { dateTime, displayName, languageNames, num, relative } from '../format.js';
+import { useRowProfiles } from '../profiles.js';
 import type { Broadcast, BroadcastRecipient, RecipientStatus } from '../types.js';
 import {
-  BackLink, Badge, Card, DataTable, ErrorBox, Facts, Loading, Page, Spinner, When, useAsync, type Column, type Tone, RefreshButton, live,
+  BackLink, Badge, Card, DataTable, ErrorBox, Facts, Loading, Page, Spinner, When, useApi, type Column, type Tone, RefreshButton, live,
 } from '../ui.js';
 import { UserCell } from './users.js';
 import { Icon } from '../icons.js';
@@ -135,7 +136,7 @@ export function BroadcastControls(props: { broadcast: Broadcast; onChanged: () =
 }
 
 export function AnnouncementsPage(): VNode {
-  const state = useAsync(() => api.get<{ broadcasts: Broadcast[] }>('/api/broadcasts'), [], live);
+  const state = useApi<{ broadcasts: Broadcast[] }>('/api/broadcasts', live);
   const sending = state.data?.broadcasts.some((broadcast) => broadcast.status === 'sending') ?? false;
   useEffect(() => {
     if (!sending) return;
@@ -169,16 +170,17 @@ export function AnnouncementsPage(): VNode {
 }
 
 export function AnnouncementDetailPage(props: { id: string }): VNode {
-  const state = useAsync(() => api.get<{ broadcast: Broadcast; recipients: BroadcastRecipient[] }>(`/api/broadcasts/${props.id}`), [props.id], live);
+  const state = useApi<{ broadcast: Broadcast; recipients: BroadcastRecipient[] }>(`/api/broadcasts/${props.id}`, live);
   const data = state.data;
+  const profiles = useRowProfiles((data?.recipients ?? []).map((row) => ({ id: row.discordUserId, profile: row.profile })));
   useEffect(() => {
     if (data?.broadcast.status !== 'sending') return;
     const timer = setInterval(state.refresh, 3000);
     return () => clearInterval(timer);
   }, [data?.broadcast.status]);
   const columns: Column<BroadcastRecipient>[] = [
-    { key: 'user', label: 'Kullanıcı', render: (row) => html`<a href=${`#/users/${row.discordUserId}`}>${UserCell({ id: row.discordUserId, profile: row.profile })}</a>`,
-      sort: (row) => displayName(row.profile, row.discordUserId), csv: (row) => row.discordUserId },
+    { key: 'user', label: 'Kullanıcı', render: (row) => html`<a href=${`#/users/${row.discordUserId}`}>${UserCell({ id: row.discordUserId, profile: profiles.get(row.discordUserId) })}</a>`,
+      sort: (row) => displayName(profiles.get(row.discordUserId), row.discordUserId), csv: (row) => row.discordUserId },
     { key: 'language', label: 'Dil', render: (row) => row.language.toUpperCase(), csv: (row) => row.language },
     { key: 'status', label: 'Durum', render: (row) => BroadcastStatusBadge({ status: row.status }), sort: (row) => row.status,
       csv: (row) => row.status },
@@ -210,6 +212,6 @@ export function AnnouncementDetailPage(props: { id: string }): VNode {
         </div>
         ${Card({ title: 'Alıcılar', class: 'card-flush', children: html`<${DataTable} columns=${columns} rows=${data.recipients}
           rowKey=${(row: BroadcastRecipient) => row.discordUserId} csvName=${`dealio-duyuru-${props.id.slice(0, 8)}`}
-          search=${(row: BroadcastRecipient) => `${row.discordUserId} ${row.profile?.username ?? ''}`} />` })}`,
+          search=${(row: BroadcastRecipient) => `${row.discordUserId} ${profiles.get(row.discordUserId)?.username ?? ''}`} />` })}`,
   });
 }

@@ -32,3 +32,16 @@ export function useProfiles(ids: readonly string[]): ReadonlyMap<string, Profile
 export function rememberProfile(profile: Profile | null, id: string): void {
   cache.set(id, profile);
 }
+
+/**
+ * Profiles for rows from the API. The bot sends only the profiles it already knows so
+ * the page is not held up by Discord; a row without `profile` is fetched here after
+ * the page shows (`undefined` in the map until then).
+ */
+export function useRowProfiles(rows: ReadonlyArray<{ readonly id: string; readonly profile?: Profile | null }>):
+  ReadonlyMap<string, Profile | null> {
+  for (const row of rows) {
+    if (row.profile !== undefined) cache.set(row.id, row.profile);
+  }
+  return useProfiles(rows.map((row) => row.id));
+}

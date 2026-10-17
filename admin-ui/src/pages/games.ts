@@ -1,9 +1,8 @@
 import { html, type VNode } from '../vendor/preact-htm.js';
-import { api } from '../api.js';
 import { num } from '../format.js';
 import type { GameRow, Games } from '../types.js';
 import {
-  BarList, Card, DataTable, ErrorBox, Loading, Page, useAsync, type Column, RefreshButton, live,
+  BarList, Card, DataTable, ErrorBox, Loading, Page, useApi, type Column, RefreshButton, live,
 } from '../ui.js';
 import { GameCell } from './user-detail.js';
 
@@ -24,7 +23,7 @@ const discountColumn: Column<GameRow> = {
 };
 
 export function GamesPage(): VNode {
-  const state = useAsync(() => api.get<Games>('/api/games'), [], live);
+  const state = useApi<Games>('/api/games', live);
   const data = state.data;
   const table = (rows: GameRow[], columns: Column<GameRow>[], csv: string, empty: string): VNode =>
     html`<${DataTable} columns=${columns.filter((column) => column.key !== 'appId')} csvColumns=${columns} rows=${rows} rowKey=${(row: GameRow) => String(row.appId)}

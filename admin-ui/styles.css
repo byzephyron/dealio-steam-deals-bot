@@ -1,4 +1,4 @@
-/* Dealio admin panel. theme-boot.js always sets data-theme on <html>. The palette is the
+/* Dealio admin panel. boot.js always sets data-theme on <html>. The palette is the
    public site's (docs/styles.css): Steam night blue, Steam's link blue as --accent and the
    site's deal green as --deal. Inter carries the text; Archivo, narrowed with its width
    axis, sets headings and every figure the owner reads at a glance, like a sale tag. */

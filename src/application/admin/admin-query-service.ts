@@ -47,12 +47,28 @@ function withArtwork<T extends { readonly appId: number }>(rows: readonly T[], a
   return rows.map((row) => ({ ...row, headerImageUrl: artwork.get(row.appId) ?? null }));
 }
 
+/**
+ * Wishlist-wide aggregates read every wishlist item but change only when a scan writes
+ * (every 30 minutes), while open pages ask every 30 seconds; a minute-old answer is used.
+ */
+const wishlistAggregateTtlMs = 60_000;
+
 /** Everything the admin panel reads. No method here changes state. */
 export class AdminQueryService {
   private readonly now: () => Date;
+  private readonly recentAnswers = new Map<string, { readonly at: number; readonly value: unknown }>();
 
   public constructor(private readonly dependencies: AdminQueryDependencies) {
     this.now = dependencies.now ?? (() => new Date());
+  }
+
+  private wishlistAggregate<T>(key: string, compute: () => T): T {
+    const now = this.now().getTime();
+    const recent = this.recentAnswers.get(key);
+    if (recent && now - recent.at < wishlistAggregateTtlMs && now >= recent.at) return recent.value as T;
+    const value = compute();
+    this.recentAnswers.set(key, { at: now, value });
+    return value;
   }
 
   public async overview(): Promise<unknown> {
@@ -68,7 +84,10 @@ export class AdminQueryService {
         count: guilds.length,
         members: guilds.reduce((sum, guild) => sum + guild.memberCount, 0),
       },
-      counts: repository.overviewCounts(now),
+      counts: {
+        ...repository.overviewCounts(now),
+        ...this.wishlistAggregate('wishlist-games', () => repository.wishlistGameCounts()),
+      },
       telemetrySince: telemetry.firstEventAt(),
       activity: {
         active24h: telemetry.activeUsersSince(day(1)),
@@ -91,7 +110,7 @@ export class AdminQueryService {
         notificationModes: repository.notificationModes(),
         checkStatuses: repository.checkStatuses(),
         checkErrors: repository.checkErrorCodes(),
-        currencies: repository.currencies(),
+        currencies: this.wishlistAggregate('currencies', () => repository.currencies()),
       },
     };
   }
@@ -129,7 +148,7 @@ export class AdminQueryService {
     const rules = assistant.rules(config);
     const names = new Map(snapshot?.items.map((item) => [item.appId, item.name]) ?? []);
     const profile = (await this.dependencies.directory.users([discordUserId])).get(discordUserId) ?? null;
-    const summary = adminRepository.users().find((row) => row.discordUserId === discordUserId) ?? null;
+    const summary = adminRepository.users(discordUserId)[0] ?? null;
     return {
       config,
       summary,
@@ -164,12 +183,14 @@ export class AdminQueryService {
   public async guilds(): Promise<unknown> {
     const { telemetry, controls, directory } = this.dependencies;
     const guilds = directory.guilds();
-    const owners = await directory.users(guilds.map((guild) => guild.ownerId));
+    // Profiles Discord has not been asked for yet are left out (`owner` absent); the
+    // panel asks /api/profiles for them once the page is on screen.
+    const owners = directory.knownUsers(guilds.map((guild) => guild.ownerId));
     const sources = new Map(telemetry.guildSources().map((source) => [source.guildId, source]));
     return {
       guilds: guilds.map((guild: DirectoryGuild) => ({
         ...guild,
-        owner: owners.get(guild.ownerId) ?? null,
+        owner: owners.get(guild.ownerId),
         dealioUsers: sources.get(guild.id)?.users ?? 0,
         registeredUsers: sources.get(guild.id)?.registeredUsers ?? 0,
         lastActivityAt: sources.get(guild.id)?.lastSeenAt ?? null,
@@ -187,13 +208,14 @@ export class AdminQueryService {
     const events = telemetry.guildEvents(100, guildId);
     if (!live && events.length === 0) return null;
     const users = telemetry.guildUsers(guildId);
-    const profiles = await directory.users([...(live ? [live.ownerId] : []), ...users.slice(0, 50).map((user) => user.discordUserId)]);
+    // Unknown profiles are left out, as in guilds().
+    const profiles = directory.knownUsers([...(live ? [live.ownerId] : []), ...users.map((user) => user.discordUserId)]);
     return {
-      guild: live ? { ...live, owner: profiles.get(live.ownerId) ?? null } : null,
+      guild: live ? { ...live, owner: profiles.get(live.ownerId) } : null,
       name: live?.name ?? events[0]?.guildName ?? guildId,
       blocked: controls.isGuildBlocked(guildId),
       events,
-      users: users.map((user) => ({ ...user, profile: profiles.get(user.discordUserId) ?? null })),
+      users: users.map((user) => ({ ...user, profile: profiles.get(user.discordUserId) })),
       telemetrySince: telemetry.firstEventAt(),
       audit: controls.auditEntries(30, guildId),
     };
@@ -230,10 +252,11 @@ export class AdminQueryService {
     const broadcast = this.dependencies.broadcasts.get(broadcastId);
     if (!broadcast) return null;
     const recipients = this.dependencies.broadcasts.recipients(broadcastId);
-    const profiles = await this.dependencies.directory.users(recipients.slice(0, 100).map((row) => row.discordUserId));
+    // Unknown profiles are left out, as in guilds().
+    const profiles = this.dependencies.directory.knownUsers(recipients.map((row) => row.discordUserId));
     return {
       broadcast,
-      recipients: recipients.map((row) => ({ ...row, profile: profiles.get(row.discordUserId) ?? null })),
+      recipients: recipients.map((row) => ({ ...row, profile: profiles.get(row.discordUserId) })),
     };
   }
 
@@ -247,10 +270,10 @@ export class AdminQueryService {
     const artwork = repository.gameArtwork();
     return {
       wishlisted: withArtwork(repository.topWishlistedGames(50), artwork),
-      onSale: withArtwork(repository.topGamesOnSale(50), artwork),
+      onSale: withArtwork(this.wishlistAggregate('games-on-sale', () => repository.topGamesOnSale(50)), artwork),
       alerted: withArtwork(repository.topAlertedGames(30, 50, this.now()), artwork),
       ruled: withArtwork(repository.topRuledGames(50), artwork),
-      currencies: repository.currencies(),
+      currencies: this.wishlistAggregate('currencies', () => repository.currencies()),
     };
   }
 

@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AdminSessions } from '../src/admin/admin-auth.js';
-import { AdminServer, isLocalHost } from '../src/admin/admin-server.js';
+import { AdminServer, assetVersion, isLocalHost } from '../src/admin/admin-server.js';
 
 const token = 'test-admin-token-0123456789abcdefghij';
 
@@ -186,6 +186,37 @@ describe('admin server', () => {
     expect((await call(port, '/..%2f..%2fpackage.json')).status).toBe(404);
     expect((await call(port, '/missing.js')).status).toBe(404);
     expect((await call(port, '/', { method: 'POST' })).status).toBe(405);
+  });
+
+  it('compresses the UI, caches versioned URLs for good and revalidates the rest', async () => {
+    const script = `export const text = ${JSON.stringify('Dealio '.repeat(400))};`;
+    writeFileSync(join(staticDirectory, 'app.js'), script);
+    const version = assetVersion(Buffer.from(script));
+
+    const plain = await call(port, '/app.js');
+    expect(plain.headers['content-encoding']).toBeUndefined();
+    expect(plain.body).toBe(script);
+    expect(plain.headers['cache-control']).toBe('no-cache');
+    expect(plain.headers.etag).toBe(`"${version}"`);
+
+    const compressed = await call(port, `/app.js?v=${version}`, { headers: { 'Accept-Encoding': 'gzip, deflate, br' } });
+    expect(compressed.headers['content-encoding']).toBe('gzip');
+    expect(compressed.headers.vary).toBe('Accept-Encoding');
+    expect(compressed.headers['cache-control']).toContain('immutable');
+    expect(Number(compressed.headers['content-length'])).toBeLessThan(script.length / 10);
+    expect((await call(port, '/app.js', { headers: { 'Accept-Encoding': 'br, gzip;q=0' } })).headers['content-encoding']).toBeUndefined();
+    // A stale version is served as it is now, but not cached for good.
+    expect((await call(port, '/app.js?v=000000000000')).headers['cache-control']).toBe('no-cache');
+
+    const revalidated = await call(port, '/app.js', { headers: { 'If-None-Match': `"${version}"` } });
+    expect(revalidated.status).toBe(304);
+    expect(revalidated.body).toBe('');
+
+    // A rebuilt file is read again.
+    writeFileSync(join(staticDirectory, 'app.js'), 'export const changed = true;');
+    const rebuilt = await call(port, '/app.js', { headers: { 'If-None-Match': `"${version}"` } });
+    expect(rebuilt.status).toBe(200);
+    expect(rebuilt.body).toBe('export const changed = true;');
   });
 });
 

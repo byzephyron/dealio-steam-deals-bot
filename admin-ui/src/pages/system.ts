@@ -1,10 +1,9 @@
 import { html, useEffect, useState, type VNode } from '../vendor/preact-htm.js';
-import { api } from '../api.js';
 import { useAction } from '../actions.js';
 import { bytes, dateTime, duration, num, relative } from '../format.js';
 import type { RuntimeSettings, SystemInfo } from '../types.js';
 import {
-  Badge, Card, ErrorBox, Facts, Loading, Page, When, useAsync, useTicker, RefreshButton, live,
+  Badge, Card, ErrorBox, Facts, Loading, Page, When, useApi, useTicker, RefreshButton, live,
 } from '../ui.js';
 import { SchedulerFacts } from './overview.js';
 import { Icon } from '../icons.js';
@@ -75,7 +74,7 @@ function SettingsForm(props: { settings: RuntimeSettings; userCount: number | nu
 
 /** The owner's own username and password; only a hash is stored on the server. */
 function OwnerAccount(): VNode {
-  const account = useAsync(() => api.get<{ username: string | null }>('/api/account'), []);
+  const account = useApi<{ username: string | null }>('/api/account');
   const { busy, run } = useAction();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -125,7 +124,7 @@ function OwnerAccount(): VNode {
 }
 
 export function SystemPage(): VNode {
-  const state = useAsync(() => api.get<SystemInfo>('/api/system'), [], live);
+  const state = useApi<SystemInfo>('/api/system', live);
   const { busy, run } = useAction();
   useTicker(15_000);
   const data = state.data;

@@ -1,6 +1,8 @@
+import { createHash } from 'node:crypto';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync, type Stats } from 'node:fs';
 import { extname, join, normalize, resolve, sep } from 'node:path';
+import { gzipSync } from 'node:zlib';
 import { safeLogger } from '../application/safe-logger.js';
 import { csrfMatches, type AdminSession, type AdminSessions } from './admin-auth.js';
 import { InvalidOwnerCredentialsError } from './owner-credentials.js';
@@ -59,6 +61,36 @@ const contentTypes: Record<string, string> = {
   '.json': 'application/json; charset=utf-8',
   '.woff2': 'font/woff2',
 };
+const compressible = new Set(['.html', '.js', '.mjs', '.css', '.svg', '.json']);
+
+/** Same hash as `version` in scripts/build-admin-ui.mjs, which puts it in `?v=`. */
+export function assetVersion(body: Buffer): string {
+  return createHash('sha256').update(body).digest('hex').slice(0, 12);
+}
+
+interface StaticFile {
+  readonly mtimeMs: number;
+  readonly size: number;
+  readonly type: string;
+  readonly version: string;
+  readonly body: Buffer;
+  readonly gzip: Buffer | null;
+}
+
+/** Whether Accept-Encoding lists gzip without turning it down with `q=0`. */
+function acceptsGzip(header: string | undefined): boolean {
+  return (header ?? '').split(',').some((part) => {
+    const [name = '', ...parameters] = part.trim().toLowerCase().split(';');
+    return name.trim() === 'gzip' && !parameters.some((parameter) => /^\s*q=0(\.0*)?\s*$/.test(parameter));
+  });
+}
+
+function etagMatches(header: string | undefined, etag: string): boolean {
+  return (header ?? '').split(',').some((candidate) => {
+    const value = candidate.trim();
+    return value === '*' || value.replace(/^W\//, '') === etag;
+  });
+}
 
 export const adminContentSecurityPolicy = [
   "default-src 'none'",
@@ -158,6 +190,8 @@ export class AdminServer {
   private readonly routes: readonly CompiledRoute[];
   private readonly logger: Pick<Console, 'log' | 'error'>;
   private readonly openStreams = new Set<ServerResponse>();
+  /** The built UI, read and compressed once per file version. */
+  private readonly staticFiles = new Map<string, StaticFile>();
 
   public constructor(private readonly options: AdminServerOptions) {
     this.routes = options.routes.map(compile);
@@ -171,6 +205,9 @@ export class AdminServer {
     });
     this.server.headersTimeout = 15_000;
     this.server.requestTimeout = 30_000;
+    // Through the SSH tunnel a new connection costs extra round trips; keep idle ones
+    // open across the pages' 30-second refreshes.
+    this.server.keepAliveTimeout = 65_000;
   }
 
   public start(): Promise<number> {
@@ -211,7 +248,7 @@ export class AdminServer {
         sendJson(response, 405, { error: 'Method not allowed' });
         return;
       }
-      this.serveStatic(url.pathname, response);
+      this.serveStatic(url, request, response);
       return;
     }
 
@@ -393,7 +430,7 @@ export class AdminServer {
     sendJson(response, 200, { result: { username: this.options.sessions.ownerUsername() } });
   }
 
-  private serveStatic(pathname: string, response: ServerResponse): void {
+  private serveStatic(url: URL, request: IncomingMessage, response: ServerResponse): void {
     const root = this.options.staticDirectory;
     if (!root) {
       sendJson(response, 404, { error: 'Admin UI is not built' });
@@ -401,7 +438,7 @@ export class AdminServer {
     }
     let decoded: string;
     try {
-      decoded = decodeURIComponent(pathname);
+      decoded = decodeURIComponent(url.pathname);
     } catch {
       sendJson(response, 400, { error: 'Bad path' });
       return;
@@ -412,17 +449,59 @@ export class AdminServer {
       sendJson(response, 404, { error: 'Not found' });
       return;
     }
-    const isFile = existsSync(candidate) && statSync(candidate).isFile();
     // Unknown paths without an extension are client-side routes of the single page.
-    const file = isFile ? candidate : extname(decoded) === '' ? join(base, 'index.html') : null;
-    if (!file || !existsSync(file)) {
+    const file = fileStats(candidate)?.isFile() ? candidate : extname(decoded) === '' ? join(base, 'index.html') : null;
+    const stats = file ? fileStats(file) : null;
+    if (!file || !stats?.isFile()) {
       sendJson(response, 404, { error: 'Not found' });
       return;
     }
+    const asset = this.staticFile(file, stats);
+    const etag = `"${asset.version}"`;
+    // index.html names every asset with `?v=<hash>` (scripts/build-admin-ui.mjs), so
+    // such a URL never changes content; anything else is checked on each load.
+    response.setHeader('Cache-Control', url.searchParams.get('v') === asset.version
+      ? 'private, max-age=31536000, immutable' : 'no-cache');
+    response.setHeader('ETag', etag);
+    response.setHeader('Content-Type', asset.type);
+    if (asset.gzip) response.setHeader('Vary', 'Accept-Encoding');
+    if (etagMatches(request.headers['if-none-match'], etag)) {
+      response.statusCode = 304;
+      response.end();
+      return;
+    }
+    const gzip = asset.gzip && acceptsGzip(request.headers['accept-encoding']) ? asset.gzip : null;
+    const body = gzip ?? asset.body;
+    if (gzip) response.setHeader('Content-Encoding', 'gzip');
     response.statusCode = 200;
-    response.setHeader('Content-Type', contentTypes[extname(file)] ?? 'application/octet-stream');
-    response.setHeader('Cache-Control', 'no-cache');
-    response.end(readFileSync(file));
+    response.setHeader('Content-Length', body.length);
+    response.end(body);
+  }
+
+  private staticFile(file: string, stats: Stats): StaticFile {
+    const cached = this.staticFiles.get(file);
+    if (cached && cached.mtimeMs === stats.mtimeMs && cached.size === stats.size) return cached;
+    const body = readFileSync(file);
+    const compress = compressible.has(extname(file)) && body.length > 1024;
+    const asset: StaticFile = {
+      mtimeMs: stats.mtimeMs,
+      size: stats.size,
+      type: contentTypes[extname(file)] ?? 'application/octet-stream',
+      version: assetVersion(body),
+      body,
+      // gzip takes milliseconds; brotli would hold the bot's event loop far longer for a few kilobytes.
+      gzip: compress ? gzipSync(body, { level: 9 }) : null,
+    };
+    this.staticFiles.set(file, asset);
+    return asset;
+  }
+}
+
+function fileStats(path: string): Stats | null {
+  try {
+    return statSync(path);
+  } catch {
+    return null;
   }
 }
 
