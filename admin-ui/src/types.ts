@@ -133,6 +133,8 @@ export interface UserRow {
   readonly alertsSent: number;
   readonly lastAlertAt: string | null;
   readonly pendingAlerts: number;
+  /** The latest alert that reached the user or finally failed. */
+  readonly lastDelivery?: { readonly status: 'sent' | 'terminal_failed'; readonly at: string; readonly error: string | null } | null;
   readonly sourceGuildId?: string | null;
   readonly sourceGuildName?: string | null;
   readonly lastSeenAt?: string | null;

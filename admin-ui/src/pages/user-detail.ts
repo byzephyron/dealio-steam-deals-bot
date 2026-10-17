@@ -11,7 +11,7 @@ import {
   Avatar, BackLink, Badge, Card, CopyText, DataTable, ErrorBox, Facts, Loading, Page, When, useAsync, type Column, type Tone, RefreshButton, live,
 } from '../ui.js';
 import { actionLabel } from '../explain.js';
-import { CheckReason, checkBadge, userStatus } from './users.js';
+import { CheckReason, DeliveryReason, checkBadge, userStatus } from './users.js';
 import { UserActions } from './user-actions.js';
 import { AuditTable } from './audit.js';
 import { BroadcastStatusBadge } from './announcements.js';
@@ -164,7 +164,9 @@ export function UserDetailPage(props: { id: string }): VNode {
           ['Dil', languageNames[config.language] ?? config.language],
           ['Varsayılan eşik', config.minimumDiscountPercent > 0 ? `%${config.minimumDiscountPercent}+` : 'Her indirim'],
           ['DM onayı', dateTime(config.dmOptInAt)],
-          ['DM engeli', config.dmDeliveryBlockedAt ? `${dateTime(config.dmDeliveryBlockedAt)} (${config.dmDeliveryErrorCode ?? '?'})` : 'Yok'],
+          ['DM engeli', config.dmDeliveryBlockedAt
+            ? html`${DeliveryReason({ error: config.dmDeliveryErrorCode })}<small class="muted block">${dateTime(config.dmDeliveryBlockedAt)} tarihinden beri</small>`
+            : 'Yok'],
           ['Yapılandırma', html`v${config.configVersion} · <code class="small">${config.configurationId.slice(0, 8)}</code>`],
           ['Güncellendi', When({ at: config.updatedAt })],
         ] }) })}

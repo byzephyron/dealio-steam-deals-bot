@@ -36,7 +36,7 @@ it('exports an open SQLite database encrypted and rehearses recovery without cha
       cwd: directory, encoding: 'utf8', timeout: 15_000,
       env: { ...process.env, DEALIO_BACKUP_PRIVATE_KEY: keys.privateKey },
     });
-    expect(JSON.parse(evidence)).toMatchObject({ ok: true, schemaVersion: 14 });
+    expect(JSON.parse(evidence)).toMatchObject({ ok: true, schemaVersion: 15 });
     expect(db.prepare('SELECT value FROM recovery_probe').get()?.value).toBe('private-recovery-probe');
     expect(await readFile(artifact, 'utf8')).toBe(encrypted);
   } finally { db.close(); await rm(directory, { recursive: true, force: true }); }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { actionLabel, checkErrorInfo, setupFailureReason, setupStepLabel } from '../admin-ui/src/explain.js';
+import { actionLabel, checkErrorInfo, deliveryErrorInfo, setupFailureReason, setupStepLabel } from '../admin-ui/src/explain.js';
 
 describe('admin panel explanations', () => {
   it('names what a user did from the stored interaction code', () => {
@@ -18,6 +18,14 @@ describe('admin panel explanations', () => {
     expect(actionLabel('assistant:brand-new')).toEqual({ label: 'brand-new düğmesine bastı', area: 'Panel' });
     expect(actionLabel('mystery:thing').area).toBe('mystery');
     expect(actionLabel('/legacy').label).toBe('/legacy komutunu kullandı');
+  });
+
+  it('explains why Discord refused an alert, from stored codes or Discord’s message', () => {
+    expect(deliveryErrorInfo('Cannot send messages to this user due to having no mutual guilds').title).toBe('Ortak sunucu yok');
+    expect(deliveryErrorInfo('DISCORD_NO_MUTUAL_GUILD').title).toBe('Ortak sunucu yok');
+    expect(deliveryErrorInfo('Cannot send messages to this user')).toMatchObject({ title: 'DM’leri kapalı', fix: 'user' });
+    expect(deliveryErrorInfo('50007').title).toBe('DM’leri kapalı');
+    expect(deliveryErrorInfo('Internal Server Error')).toMatchObject({ title: 'Discord teslim etmedi', fix: 'owner' });
   });
 
   it('explains setup failures and check errors in plain words', () => {

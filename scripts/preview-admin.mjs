@@ -85,10 +85,13 @@ for (let index = 0; index < 46; index += 1) {
       const statusName = random() < 0.9 ? 'sent' : pick(['failed', 'terminal_failed', 'candidate']);
       database.prepare(`INSERT INTO notification_log (discord_user_id, steam_id64, config_version, app_id, sale_episode_id, sale_key,
           game_name, currency, normal_price_minor, final_price_minor, discount_percent, status, attempt_count, created_at,
-          last_attempt_at, delivered_at, store_country_code)
-        VALUES (?, 'x', 1, ?, ?, 'k', ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`).run(id, item.appId, `e-${item.appId}`, item.name, currency,
+          last_attempt_at, delivered_at, store_country_code, last_error)
+        VALUES (?, 'x', 1, ?, ?, 'k', ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?)`).run(id, item.appId, `e-${item.appId}`, item.name, currency,
         item.price.initialMinor, item.price.finalMinor, item.price.discountPercent, statusName, sentAt, sentAt,
-        statusName === 'sent' ? sentAt : null, country);
+        statusName === 'sent' ? sentAt : null, country,
+        // Discord's own messages, as older alert rows keep them.
+        statusName === 'terminal_failed' ? pick(['Cannot send messages to this user due to having no mutual guilds',
+          'Cannot send messages to this user', 'Internal Server Error']) : null);
     }
   }
 }

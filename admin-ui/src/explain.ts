@@ -86,6 +86,36 @@ export function checkErrorInfo(code: string): CheckErrorInfo {
   return checkErrors[code] ?? { title: 'Bilinmeyen hata', detail: `Bot “${code}” kodunu kaydetti; ayrıntı Loglar’da.`, fix: 'owner' };
 }
 
+/* Alert delivery */
+
+/**
+ * Why Discord did not deliver an alert DM. Accepts Dealio's stored codes
+ * (DISCORD_DM_BLOCKED, DISCORD_NO_MUTUAL_GUILD, legacy "50007") and Discord's own
+ * error messages, which older alert rows keep.
+ */
+export function deliveryErrorInfo(error: string | null): CheckErrorInfo {
+  const text = error ?? '';
+  if (text === 'DISCORD_NO_MUTUAL_GUILD' || text === '50278' || /no mutual guilds/i.test(text)) {
+    return {
+      title: 'Ortak sunucu yok',
+      detail: 'Kullanıcı Dealio’nun olduğu hiçbir sunucuda değil ve Dealio’yu hesabına (Uygulamalarım) kurmamış; Discord bu yüzden DM’ye izin vermiyor. Dealio’yu bir sunucuya eklemesi ya da hesabına kurması gerekir.',
+      fix: 'user',
+    };
+  }
+  if (text === 'DISCORD_DM_BLOCKED' || text === '50007' || /^Cannot send messages to this user/i.test(text)) {
+    return {
+      title: 'DM’leri kapalı',
+      detail: 'Kullanıcı Discord gizlilik ayarlarında bu sunucudan ya da uygulamalardan DM almayı kapatmış. Açınca /dealio’dan takibi sürdürmesi yeterli.',
+      fix: 'user',
+    };
+  }
+  return {
+    title: 'Discord teslim etmedi',
+    detail: error ? `Discord’un cevabı: “${error}”. Ayrıntı Loglar’da.` : 'Discord uyarıyı kabul etmedi; ayrıntı Loglar’da.',
+    fix: 'owner',
+  };
+}
+
 /* Interactions */
 
 /** Where in Dealio an action happened, from its component prefix. */
