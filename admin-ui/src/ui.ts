@@ -1,5 +1,5 @@
 import { html, useCallback, useEffect, useMemo, useRef, useState, type Child, type VNode } from './vendor/preact-htm.js';
-import { ApiError } from './api.js';
+import { ApiError, getFirst, rememberedResponse, rememberResponse } from './api.js';
 import { dateTime, relative } from './format.js';
 import { Icon, type IconName } from './icons.js';
 
@@ -25,11 +25,11 @@ export const live = { refreshMs: 30_000 } as const;
  * at once when a hidden tab comes back with stale data.
  */
 export function useAsync<T>(loader: () => Promise<T>, deps: readonly unknown[],
-  options: { readonly refreshMs?: number } = {}): AsyncState<T> {
-  const [data, setData] = useState<T | null>(null);
+  options: { readonly refreshMs?: number; readonly initial?: { readonly data: T; readonly at: number } } = {}): AsyncState<T> {
+  const [data, setData] = useState<T | null>(() => options.initial?.data ?? null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [updatedAt, setUpdatedAt] = useState<number | null>(null);
+  const [updatedAt, setUpdatedAt] = useState<number | null>(() => options.initial?.at ?? null);
   const [generation, setGeneration] = useState(0);
   const quiet = useRef(false);
   const lastLoad = useRef(0);
@@ -72,6 +72,14 @@ export function useAsync<T>(loader: () => Promise<T>, deps: readonly unknown[],
     };
   }, [refreshMs]);
   return { data, error, loading, updatedAt, live: Boolean(refreshMs), reload, refresh };
+}
+
+/** `useAsync` for a GET: a page opened again starts from its last answer while it reloads. */
+export function useApi<T>(path: string, options: { readonly refreshMs?: number } = {}): AsyncState<T> {
+  return useAsync(() => getFirst<T>(path).then((value) => {
+    rememberResponse(path, value);
+    return value;
+  }), [path], { ...options, initial: rememberedResponse<T>(path) });
 }
 
 /** "● Canlı · 12 sn önce" and a manual refresh button, for a page's header. */

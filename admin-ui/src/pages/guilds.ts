@@ -1,12 +1,12 @@
 import { html, useState, type VNode } from '../vendor/preact-htm.js';
-import { api } from '../api.js';
 import { ConfirmDialog, useAction } from '../actions.js';
 import { compact, dateTime, day, displayName, num, relative, trackingNote } from '../format.js';
 import { Icon } from '../icons.js';
 import { navigate } from '../router.js';
-import type { Guild, GuildBlock, GuildDetail, GuildEvent, GuildsResponse } from '../types.js';
+import { useRowProfiles } from '../profiles.js';
+import type { Guild, GuildBlock, GuildDetail, GuildEvent, GuildsResponse, Profile } from '../types.js';
 import {
-  Avatar, BackLink, Badge, Card, DataTable, ErrorBox, Facts, Loading, Page, Stat, When, useAsync, type Column, RefreshButton, live,
+  Avatar, BackLink, Badge, Card, DataTable, ErrorBox, Facts, Loading, Page, Stat, When, useApi, type Column, RefreshButton, live,
 } from '../ui.js';
 import { AuditTable } from './audit.js';
 import { UserCell } from './users.js';
@@ -17,11 +17,12 @@ function GuildName(props: { guild: Pick<Guild, 'id' | 'name' | 'iconUrl'> }): VN
     <span><strong>${props.guild.name}</strong><small class="muted">${props.guild.id}</small></span></span>`;
 }
 
-function OwnerCell(props: { guild: Guild }): VNode {
-  const { owner, ownerId } = props.guild;
+/** `owner` is undefined while its profile is still being fetched. */
+function OwnerCell(props: { ownerId: string; owner: Profile | null | undefined }): VNode {
+  const { owner, ownerId } = props;
   return html`<span class="person">
     ${Avatar({ src: owner?.avatarUrl ?? null, name: displayName(owner, '?'), size: 24 })}
-    <span>${displayName(owner, 'Bilinmiyor')}<small class="muted">${owner ? `@${owner.username}` : ownerId}</small></span></span>`;
+    <span>${displayName(owner, owner === undefined ? 'Yükleniyor…' : 'Bilinmiyor')}<small class="muted">${owner ? `@${owner.username}` : ownerId}</small></span></span>`;
 }
 
 const eventColumns: Column<GuildEvent>[] = [
@@ -38,7 +39,7 @@ const eventColumns: Column<GuildEvent>[] = [
 type Tab = 'active' | 'events' | 'departed' | 'blocked';
 
 export function GuildsPage(): VNode {
-  const state = useAsync(() => api.get<GuildsResponse>('/api/guilds'), [], live);
+  const state = useApi<GuildsResponse>('/api/guilds', live);
   const [tab, setTab] = useState<Tab>('active');
   const { busy, run } = useAction();
   const data = state.data;
@@ -46,6 +47,7 @@ export function GuildsPage(): VNode {
   const members = guilds.reduce((sum, guild) => sum + guild.memberCount, 0);
   const newest = [...guilds].sort((a, b) => (b.joinedAt ?? '').localeCompare(a.joinedAt ?? ''))[0];
   const withUsers = guilds.filter((guild) => (guild.dealioUsers ?? 0) > 0).length;
+  const owners = useRowProfiles(guilds.map((guild) => ({ id: guild.ownerId, profile: guild.owner })));
 
   const columns: Column<Guild>[] = [
     { key: 'name', label: 'Sunucu', render: (guild) => GuildName({ guild }), sort: (guild) => guild.name.toLocaleLowerCase('tr-TR'),
@@ -56,8 +58,9 @@ export function GuildsPage(): VNode {
     { key: 'dealio', label: 'Dealio kullanan', align: 'end', render: (guild) => html`${num(guild.dealioUsers ?? 0)}
       ${(guild.registeredUsers ?? 0) > 0 ? html`<small class="muted block">${num(guild.registeredUsers)} kayıtlı</small>` : null}`,
       sort: (guild) => guild.dealioUsers ?? 0, csv: (guild) => guild.dealioUsers ?? 0 },
-    { key: 'owner', label: 'Sahip', render: (guild) => OwnerCell({ guild }), sort: (guild) => displayName(guild.owner, guild.ownerId),
-      csv: (guild) => guild.owner?.username ?? guild.ownerId },
+    { key: 'owner', label: 'Sahip', render: (guild) => OwnerCell({ ownerId: guild.ownerId, owner: owners.get(guild.ownerId) }),
+      sort: (guild) => displayName(owners.get(guild.ownerId), guild.ownerId),
+      csv: (guild) => owners.get(guild.ownerId)?.username ?? guild.ownerId },
     { key: 'ownerId', label: 'Sahip ID', render: () => null, csv: (guild) => guild.ownerId },
     { key: 'joined', label: 'Bot katıldı', render: (guild) => html`<span title=${dateTime(guild.joinedAt)}>${relative(guild.joinedAt)}</span>`,
       sort: (guild) => guild.joinedAt, csv: (guild) => guild.joinedAt },
@@ -105,7 +108,7 @@ export function GuildsPage(): VNode {
         <div class="card card-flush">
           ${tab === 'active' ? html`<${DataTable} columns=${columns.filter((column) => !hidden.includes(column.key))}
             csvColumns=${columns} rows=${guilds} rowKey=${(guild: Guild) => guild.id} onRow=${(guild: Guild) => navigate(`/guilds/${guild.id}`)}
-            search=${(guild: Guild) => `${guild.name} ${guild.id} ${guild.owner?.username ?? ''}`}
+            search=${(guild: Guild) => `${guild.name} ${guild.id} ${owners.get(guild.ownerId)?.username ?? ''}`}
             searchPlaceholder="Sunucu, ID veya sahip ara…" csvName="dealio-sunucular"
             initialSort=${{ key: 'members', direction: 'desc' }} empty="Bot henüz hiçbir sunucuda değil." />` : null}
           ${tab === 'events' ? html`<${DataTable} columns=${eventColumns} rows=${data.events}
@@ -121,11 +124,15 @@ export function GuildsPage(): VNode {
 }
 
 export function GuildDetailPage(props: { id: string }): VNode {
-  const state = useAsync(() => api.get<GuildDetail>(`/api/guilds/${props.id}`), [props.id], live);
+  const state = useApi<GuildDetail>(`/api/guilds/${props.id}`, live);
   const [open, setOpen] = useState<null | 'leave' | 'block'>(null);
   const { busy, run } = useAction();
   const data = state.data;
   const guild = data?.guild ?? null;
+  const profiles = useRowProfiles([
+    ...(guild ? [{ id: guild.ownerId, profile: guild.owner }] : []),
+    ...(data?.users ?? []).map((user) => ({ id: user.discordUserId, profile: user.profile })),
+  ]);
   const done = (result: unknown): void => {
     if (result !== null) {
       setOpen(null);
@@ -162,7 +169,7 @@ export function GuildDetailPage(props: { id: string }): VNode {
         <div class="grid-2">
           ${Card({ title: 'Bilgiler', children: guild ? Facts({ rows: [
             ['Sunucu ID', html`<code>${guild.id}</code>`],
-            ['Sahip', OwnerCell({ guild })],
+            ['Sahip', OwnerCell({ ownerId: guild.ownerId, owner: profiles.get(guild.ownerId) })],
             ['Üye', num(guild.memberCount)],
             ['Sunucu açıldı', day(guild.createdAt)],
             ['Bot katıldı', dateTime(guild.joinedAt)],
@@ -176,7 +183,7 @@ export function GuildDetailPage(props: { id: string }): VNode {
         </div>
         ${Card({ title: 'Bu sunucudan Dealio kullananlar', subtitle: trackingNote(data.telemetrySince), class: 'card-flush', children: html`<${DataTable}
           columns=${[
-            { key: 'user', label: 'Kullanıcı', render: (row: GuildDetail['users'][number]) => UserCell({ id: row.discordUserId, profile: row.profile }),
+            { key: 'user', label: 'Kullanıcı', render: (row: GuildDetail['users'][number]) => UserCell({ id: row.discordUserId, profile: profiles.get(row.discordUserId) }),
               csv: (row: GuildDetail['users'][number]) => row.discordUserId },
             { key: 'registered', label: 'Kayıt', render: (row: GuildDetail['users'][number]) => row.registered
               ? Badge({ tone: 'good', label: 'Kayıtlı' }) : Badge({ tone: 'neutral', label: 'Kayıtsız' }),

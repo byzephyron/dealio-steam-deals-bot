@@ -1,5 +1,5 @@
 import { html, render, useEffect, useState, type VNode } from './vendor/preact-htm.js';
-import { api, ApiError, setCsrfToken, whenSignedOut } from './api.js';
+import { api, ApiError, bootSession, forgetResponses, setCsrfToken, whenSignedOut } from './api.js';
 import { Icon, type IconName } from './icons.js';
 import { GamesPage } from './pages/games.js';
 import { GuildsPage } from './pages/guilds.js';
@@ -236,6 +236,7 @@ function App(): VNode {
   const [state, setState] = useState<'checking' | 'signed-in' | 'signed-out'>('checking');
   useEffect(() => {
     whenSignedOut(() => {
+      forgetResponses();
       setCsrfToken(null);
       setState('signed-out');
     });
@@ -244,10 +245,11 @@ function App(): VNode {
     // from the address bar before signing in.
     const login = /^#login=([^&]+)$/.exec(window.location.hash);
     if (login) window.history.replaceState(null, '', '#/');
+    const early = bootSession<SessionResponse>();
     const session = login
       ? api.post<SessionResponse>('/api/login', { code: decodeURIComponent(login[1]!) })
         .catch(() => api.get<SessionResponse>('/api/session'))
-      : api.get<SessionResponse>('/api/session');
+      : early?.catch(() => api.get<SessionResponse>('/api/session')) ?? api.get<SessionResponse>('/api/session');
     session.then((result) => {
       setCsrfToken(result.csrf ?? null);
       setState(result.authenticated ? 'signed-in' : 'signed-out');
@@ -255,6 +257,7 @@ function App(): VNode {
   }, []);
   const signOut = (): void => {
     void api.post('/api/logout').finally(() => {
+      forgetResponses();
       setCsrfToken(null);
       setState('signed-out');
     });

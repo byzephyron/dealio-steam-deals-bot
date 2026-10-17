@@ -22,7 +22,7 @@ function apply(theme: Theme): void {
 }
 
 /**
- * The panel's theme. theme-boot.js sets it before the first paint; a choice made
+ * The panel's theme. boot.js sets it before the first paint; a choice made
  * here is remembered in this browser, otherwise the system setting is followed.
  */
 export function useTheme(): [Theme, () => void] {

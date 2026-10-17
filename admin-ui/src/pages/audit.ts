@@ -1,9 +1,8 @@
 import { html, type VNode } from '../vendor/preact-htm.js';
-import { api } from '../api.js';
 import { dateTime, relative } from '../format.js';
 import type { AuditEntry } from '../types.js';
 import {
-  Badge, DataTable, ErrorBox, Loading, Page, useAsync, type Column, RefreshButton, live,
+  Badge, DataTable, ErrorBox, Loading, Page, useApi, type Column, RefreshButton, live,
 } from '../ui.js';
 
 export const auditActionNames: Readonly<Record<string, string>> = {
@@ -60,7 +59,7 @@ export function AuditTable(props: { entries: AuditEntry[]; csvName?: string }): 
 }
 
 export function AuditPage(): VNode {
-  const state = useAsync(() => api.get<{ entries: AuditEntry[] }>('/api/audit'), [], live);
+  const state = useApi<{ entries: AuditEntry[] }>('/api/audit', live);
   return Page({
     title: 'Denetim kaydı',
     subtitle: 'Bu panelden yapılan her işlem (başarılı ya da değil) bir yıl saklanır.',

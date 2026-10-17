@@ -1,5 +1,4 @@
 import { html, useState, type VNode } from '../vendor/preact-htm.js';
-import { api } from '../api.js';
 import { AreaChart, carryForward, DailyColumns, Donut, fillDays, Sparkline } from '../chart.js';
 import {
   checkStatusNames, compact, country, day, duration, flag, bytes, languageNames, notificationModeNames, num, relative,
@@ -9,7 +8,7 @@ import { BotControls } from '../bot-controls.js';
 import { checkErrorInfo, checkFixNames } from '../explain.js';
 import type { Overview } from '../types.js';
 import {
-  Badge, BarList, Card, ErrorBox, Facts, Loading, Meter, Page, Stat, When, useAsync, useTicker, RefreshButton, live, periodTrend,
+  Badge, BarList, Card, ErrorBox, Facts, Loading, Meter, Page, Stat, When, useApi, useTicker, RefreshButton, live, periodTrend,
   type Tone, type Trend,
 } from '../ui.js';
 
@@ -85,7 +84,7 @@ function levelTrend(values: readonly number[]): Trend {
 }
 
 export function OverviewPage(): VNode {
-  const state = useAsync(() => api.get<Overview>('/api/overview'), [], live);
+  const state = useApi<Overview>('/api/overview', live);
   useTicker(30_000);
   const data = state.data;
   const actions = html`<${RefreshButton} state=${state} />`;

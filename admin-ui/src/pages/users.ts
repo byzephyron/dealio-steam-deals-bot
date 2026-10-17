@@ -1,5 +1,4 @@
 import { html, useMemo, useState, type VNode } from '../vendor/preact-htm.js';
-import { api } from '../api.js';
 import {
   checkStatusNames, country, dateTime, day, displayName, flag, languageNames, notificationModeNames, num, trackingNote,
 } from '../format.js';
@@ -8,7 +7,7 @@ import { useProfiles } from '../profiles.js';
 import { navigate } from '../router.js';
 import type { Profile, UserRow } from '../types.js';
 import {
-  Avatar, Badge, DataTable, ErrorBox, Loading, Page, When, useAsync, type Column, type Tone, RefreshButton, live,
+  Avatar, Badge, DataTable, ErrorBox, Loading, Page, When, useApi, type Column, type Tone, RefreshButton, live,
 } from '../ui.js';
 
 export function userStatus(row: { enabled: boolean; dmDeliveryBlockedAt: string | null; blocked?: boolean }): { tone: Tone; label: string } {
@@ -91,7 +90,7 @@ function initialCheckFilter(search: string): CheckFilter {
 }
 
 export function UsersPage(props: { search?: string }): VNode {
-  const state = useAsync(() => api.get<{ users: UserRow[]; telemetrySince?: string | null }>('/api/users'), [], live);
+  const state = useApi<{ users: UserRow[]; telemetrySince?: string | null }>('/api/users', live);
   const users = state.data?.users ?? [];
   const telemetrySince = state.data?.telemetrySince ?? null;
   const profiles = useProfiles(users.map((user) => user.discordUserId));

@@ -55,10 +55,12 @@ export interface AdminOverviewCounts {
   readonly queueRetry: number;
   readonly queueSending: number;
   readonly terminalFailed7d: number;
+  readonly rules: number;
+}
+
+export interface AdminWishlistGameCounts {
   readonly trackedGames: number;
   readonly gamesOnSale: number;
-  readonly rules: number;
-  readonly priceObservations: number;
 }
 
 export interface AdminGameRow {
@@ -121,23 +123,35 @@ function lastDelivery(value: SQLOutputValue): AdminUserRow['lastDelivery'] {
   return { status, at, error: typeof error === 'string' ? error : null };
 }
 
-/** Names come from each user's latest wishlist snapshot (Steam's localized title). */
-const snapshotGamesCte = `
-  snapshot_game AS (
-    SELECT snapshot.discord_user_id AS discord_user_id,
-           CAST(json_extract(item.value, '$.appId') AS INTEGER) AS app_id,
-           json_extract(item.value, '$.name') AS name
-    FROM wishlist_snapshot AS snapshot
-    JOIN user_config AS config
-      ON config.discord_user_id = snapshot.discord_user_id
-     AND config.config_version = snapshot.config_version
-    JOIN json_each(snapshot.payload, '$.items') AS item
-  ),
-  game_name AS (
-    SELECT app_id, MAX(name) AS name FROM snapshot_game GROUP BY app_id
-  )`;
+/** What the admin panel reads from the stored wishlist snapshots. */
+interface SnapshotCatalog {
+  /** Changes whenever a snapshot or a user's configuration generation does. */
+  readonly fingerprint: string;
+  /** Steam's localized title per game, from the current generation's snapshots. */
+  readonly names: ReadonlyMap<number, string>;
+  /** Steam's stored artwork per game, from any snapshot. */
+  readonly artwork: ReadonlyMap<number, string>;
+  /** Games on each user's latest current-generation snapshot. */
+  readonly wishlistCounts: ReadonlyMap<string, number>;
+  /** Users with each game on a current-generation snapshot. */
+  readonly wishlistedBy: ReadonlyMap<number, number>;
+}
+
+interface SnapshotItem { readonly appId?: unknown; readonly name?: unknown; readonly headerImageUrl?: unknown }
+
+/** Larger of two names in SQLite's BINARY order, as MAX(name) picked them before. */
+function laterName(current: string | undefined, candidate: string): string {
+  return current === undefined || candidate > current ? candidate : current;
+}
+
+/** `ORDER BY count DESC, name`. */
+function byCountThenName<T extends { readonly count: number; readonly name: string }>(rows: T[]): T[] {
+  return rows.sort((left, right) => right.count - left.count || (left.name < right.name ? -1 : left.name > right.name ? 1 : 0));
+}
 
 export class AdminRepository {
+  private catalog: SnapshotCatalog | null = null;
+
   public constructor(private readonly database: DatabaseSync) {}
 
   public schemaVersion(): number {
@@ -168,20 +182,11 @@ export class AdminRepository {
       JOIN user_config AS config
         ON config.discord_user_id = n.discord_user_id
        AND config.config_version = n.config_version`).get(day, week, week) as Row;
-    const games = this.database.prepare(`
-      SELECT COUNT(DISTINCT state.app_id) AS tracked,
-             COUNT(DISTINCT CASE WHEN state.on_sale = 1 THEN state.app_id END) AS on_sale
-      FROM wishlist_item_state AS state
-      JOIN user_config AS config
-        ON config.discord_user_id = state.discord_user_id
-       AND config.config_version = state.config_version
-      WHERE state.observation_status != 'missing'`).get() as Row;
     const rules = this.database.prepare(`
       SELECT COUNT(*) AS rules FROM game_rule AS rule
       JOIN user_config AS config
         ON config.discord_user_id = rule.discord_user_id AND config.config_version = rule.config_version
       WHERE rule.mode != 'inherit' OR rule.muted = 1`).get() as Row;
-    const observations = this.database.prepare('SELECT COUNT(*) AS n FROM price_observation').get() as Row;
     return {
       users: int(users.users),
       enabled: int(users.enabled),
@@ -196,11 +201,21 @@ export class AdminRepository {
       queueRetry: int(alerts.retry),
       queueSending: int(alerts.sending),
       terminalFailed7d: int(alerts.terminal_7d),
-      trackedGames: int(games.tracked),
-      gamesOnSale: int(games.on_sale),
       rules: int(rules.rules),
-      priceObservations: int(observations.n),
     };
+  }
+
+  /** Distinct games on current wishlists, and those on sale. Reads every wishlist item. */
+  public wishlistGameCounts(): AdminWishlistGameCounts {
+    const games = this.database.prepare(`
+      SELECT COUNT(DISTINCT state.app_id) AS tracked,
+             COUNT(DISTINCT CASE WHEN state.on_sale = 1 THEN state.app_id END) AS on_sale
+      FROM wishlist_item_state AS state
+      JOIN user_config AS config
+        ON config.discord_user_id = state.discord_user_id
+       AND config.config_version = state.config_version
+      WHERE state.observation_status != 'missing'`).get() as Row;
+    return { trackedGames: int(games.tracked), gamesOnSale: int(games.on_sale) };
   }
 
   /** New configurations per UTC day; deleted users are no longer counted. */
@@ -252,17 +267,15 @@ export class AdminRepository {
       .map((row) => ({ key: text(row.key), count: int(row.count) }));
   }
 
-  public users(): AdminUserRow[] {
+  /** Every user, newest first; with an ID, only that user. */
+  public users(discordUserId?: string): AdminUserRow[] {
+    const wishlistCounts = this.snapshotCatalog().wishlistCounts;
     return (preparedStatement(this.database, `
       SELECT config.discord_user_id, config.steam_id64, config.language, config.store_country_code,
              config.enabled, config.minimum_discount_percent, config.dm_delivery_blocked_at,
              config.dm_delivery_error_code, config.created_at, config.updated_at,
              state.last_status, state.last_error_code, state.last_completed_at,
              state.last_success_completed_at, state.last_success_checked_count,
-             (SELECT json_array_length(snapshot.payload, '$.items') FROM wishlist_snapshot AS snapshot
-               WHERE snapshot.discord_user_id = config.discord_user_id
-                 AND snapshot.config_version = config.config_version
-               ORDER BY snapshot.captured_at DESC LIMIT 1) AS snapshot_count,
              (SELECT COUNT(*) FROM wishlist_item_state AS item
                WHERE item.discord_user_id = config.discord_user_id
                  AND item.config_version = config.config_version AND item.on_sale = 1) AS on_sale_count,
@@ -292,7 +305,8 @@ export class AdminRepository {
                LIMIT 1) AS last_delivery
       FROM user_config AS config
       LEFT JOIN check_state AS state ON state.discord_user_id = config.discord_user_id
-      ORDER BY config.created_at DESC`).all() as Row[]).map((row) => ({
+      WHERE ?1 IS NULL OR config.discord_user_id = ?1
+      ORDER BY config.created_at DESC`).all(discordUserId ?? null) as Row[]).map((row) => ({
       discordUserId: text(row.discord_user_id),
       steamId64: text(row.steam_id64),
       language: text(row.language),
@@ -307,7 +321,7 @@ export class AdminRepository {
       lastCheckErrorCode: textOrNull(row.last_error_code),
       lastCheckCompletedAt: textOrNull(row.last_completed_at),
       lastSuccessAt: textOrNull(row.last_success_completed_at),
-      wishlistCount: intOrNull(row.snapshot_count) ?? intOrNull(row.last_success_checked_count),
+      wishlistCount: wishlistCounts.get(text(row.discord_user_id)) ?? intOrNull(row.last_success_checked_count),
       onSaleCount: int(row.on_sale_count),
       ruleCount: int(row.rule_count),
       mutedCount: int(row.muted_count),
@@ -362,50 +376,33 @@ export class AdminRepository {
     }));
   }
 
-  /** Games on the most current wishlists. */
   /**
    * Steam's own artwork URL per game, as the wishlist reads stored it. Newer games keep
    * their art under a hashed folder that a URL built from the app ID cannot reach.
    */
-  public gameArtwork(): Map<number, string> {
-    const rows = this.database.prepare(`
-      SELECT CAST(json_extract(item.value, '$.appId') AS INTEGER) AS app_id,
-             MAX(json_extract(item.value, '$.headerImageUrl')) AS url
-      FROM wishlist_snapshot AS snapshot
-      JOIN json_each(snapshot.payload, '$.items') AS item
-      WHERE json_extract(item.value, '$.headerImageUrl') IS NOT NULL
-      GROUP BY app_id`).all() as Row[];
-    const artwork = new Map<number, string>();
-    for (const row of rows) {
-      const appId = int(row.app_id);
-      const url = steamArtworkUrl(row.url, appId);
-      if (url) artwork.set(appId, url);
-    }
-    return artwork;
+  public gameArtwork(): ReadonlyMap<number, string> {
+    return this.snapshotCatalog().artwork;
   }
 
+  /** Games on the most current wishlists. */
   public topWishlistedGames(limit: number): AdminGameRow[] {
-    return (this.database.prepare(`
-      WITH ${snapshotGamesCte}
-      SELECT app_id, MAX(name) AS name, COUNT(DISTINCT discord_user_id) AS count
-      FROM snapshot_game GROUP BY app_id ORDER BY count DESC, name LIMIT ?`).all(limit) as Row[])
-      .map((row) => ({ appId: int(row.app_id), name: text(row.name), count: int(row.count) }));
+    const { names, wishlistedBy } = this.snapshotCatalog();
+    return byCountThenName([...wishlistedBy].map(([appId, count]) => ({ appId, name: names.get(appId) ?? `#${appId}`, count })))
+      .slice(0, limit);
   }
 
   /** Games on sale right now for the most users, with the deepest discount seen. */
   public topGamesOnSale(limit: number): AdminGameRow[] {
+    const { names } = this.snapshotCatalog();
     return (this.database.prepare(`
-      WITH ${snapshotGamesCte}
-      SELECT state.app_id, COALESCE(game_name.name, '#' || state.app_id) AS name,
-             COUNT(DISTINCT state.discord_user_id) AS count, MAX(state.discount_percent) AS max_discount
+      SELECT state.app_id, COUNT(DISTINCT state.discord_user_id) AS count, MAX(state.discount_percent) AS max_discount
       FROM wishlist_item_state AS state
       JOIN user_config AS config
         ON config.discord_user_id = state.discord_user_id AND config.config_version = state.config_version
-      LEFT JOIN game_name ON game_name.app_id = state.app_id
       WHERE state.on_sale = 1
       GROUP BY state.app_id ORDER BY count DESC, max_discount DESC LIMIT ?`).all(limit) as Row[])
       .map((row) => ({
-        appId: int(row.app_id), name: text(row.name), count: int(row.count),
+        appId: int(row.app_id), name: names.get(int(row.app_id)) ?? `#${int(row.app_id)}`, count: int(row.count),
         maxDiscountPercent: intOrNull(row.max_discount),
       }));
   }
@@ -423,21 +420,21 @@ export class AdminRepository {
   }
 
   public topRuledGames(limit: number): Array<AdminGameRow & { readonly muted: number; readonly targets: number }> {
-    return (this.database.prepare(`
-      WITH ${snapshotGamesCte}
-      SELECT rule.app_id, COALESCE(game_name.name, '#' || rule.app_id) AS name, COUNT(*) AS count,
+    const { names } = this.snapshotCatalog();
+    // Ties are ordered by name, which only the catalog knows: rank every ruled game here.
+    return byCountThenName((this.database.prepare(`
+      SELECT rule.app_id, COUNT(*) AS count,
              COUNT(CASE WHEN rule.muted = 1 THEN 1 END) AS muted,
              COUNT(CASE WHEN rule.mode = 'target' THEN 1 END) AS targets
       FROM game_rule AS rule
       JOIN user_config AS config
         ON config.discord_user_id = rule.discord_user_id AND config.config_version = rule.config_version
-      LEFT JOIN game_name ON game_name.app_id = rule.app_id
       WHERE rule.mode != 'inherit' OR rule.muted = 1
-      GROUP BY rule.app_id ORDER BY count DESC, name LIMIT ?`).all(limit) as Row[])
+      GROUP BY rule.app_id`).all() as Row[])
       .map((row) => ({
-        appId: int(row.app_id), name: text(row.name), count: int(row.count),
+        appId: int(row.app_id), name: names.get(int(row.app_id)) ?? `#${int(row.app_id)}`, count: int(row.count),
         muted: int(row.muted), targets: int(row.targets),
-      }));
+      }))).slice(0, limit);
   }
 
   public currencies(): CountRow[] {
@@ -449,6 +446,73 @@ export class AdminRepository {
       WHERE state.currency IS NOT NULL AND state.observation_status = 'known'
       GROUP BY key ORDER BY count DESC`).all() as Row[])
       .map((row) => ({ key: text(row.key), count: int(row.count) }));
+  }
+
+  /**
+   * Reads every snapshot payload in one pass, and again only after a snapshot or a
+   * configuration generation changed. Parsing the JSON in SQL for each request took
+   * seconds with a few thousand wishlists, and held the bot's event loop meanwhile.
+   */
+  private snapshotCatalog(): SnapshotCatalog {
+    const fingerprint = text((preparedStatement(this.database, `
+      SELECT (SELECT COUNT(*) || '/' || COALESCE(MAX(captured_at), '') FROM wishlist_snapshot)
+          || '/' || (SELECT COUNT(*) || '/' || COALESCE(SUM(config_version), 0) FROM user_config) AS fingerprint`)
+      .get() as Row).fingerprint);
+    if (this.catalog?.fingerprint === fingerprint) return this.catalog;
+
+    const generations = new Map((preparedStatement(this.database, 'SELECT discord_user_id, config_version FROM user_config')
+      .all() as Row[]).map((row) => [text(row.discord_user_id), int(row.config_version)]));
+    const names = new Map<number, string>();
+    const urls = new Map<number, string>();
+    const wishlistCounts = new Map<string, number>();
+    const latest = new Map<string, string>();
+    const wishlistedBy = new Map<number, number>();
+    let user: string | null = null;
+    let userGames = new Set<number>();
+    const countUserGames = (): void => {
+      for (const appId of userGames) wishlistedBy.set(appId, (wishlistedBy.get(appId) ?? 0) + 1);
+      userGames = new Set();
+    };
+    // Ordered by user so each user's games (one snapshot per language) count once.
+    for (const row of this.database.prepare(`
+      SELECT discord_user_id, config_version, captured_at, payload FROM wishlist_snapshot ORDER BY discord_user_id`)
+      .iterate() as Iterable<Row>) {
+      const id = text(row.discord_user_id);
+      if (id !== user) {
+        countUserGames();
+        user = id;
+      }
+      let items: unknown;
+      try {
+        items = (JSON.parse(text(row.payload)) as { items?: unknown }).items;
+      } catch {
+        continue;
+      }
+      if (!Array.isArray(items)) continue;
+      const current = generations.get(id) === int(row.config_version);
+      const capturedAt = text(row.captured_at);
+      if (current && capturedAt >= (latest.get(id) ?? '')) {
+        latest.set(id, capturedAt);
+        wishlistCounts.set(id, items.length);
+      }
+      for (const item of items as SnapshotItem[]) {
+        if (typeof item !== 'object' || item === null || !Number.isInteger(item.appId)) continue;
+        const appId = item.appId as number;
+        if (typeof item.headerImageUrl === 'string') urls.set(appId, laterName(urls.get(appId), item.headerImageUrl));
+        if (!current) continue;
+        userGames.add(appId);
+        if (typeof item.name === 'string') names.set(appId, laterName(names.get(appId), item.name));
+      }
+    }
+    countUserGames();
+
+    const artwork = new Map<number, string>();
+    for (const [appId, url] of urls) {
+      const checked = steamArtworkUrl(url, appId);
+      if (checked) artwork.set(appId, checked);
+    }
+    this.catalog = { fingerprint, names, artwork, wishlistCounts, wishlistedBy };
+    return this.catalog;
   }
 
   private dayCounts(sql: string, since: string): DayCount[] {

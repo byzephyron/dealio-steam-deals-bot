@@ -86,7 +86,6 @@ export interface Overview extends TelemetryCoverage {
     readonly trackedGames: number;
     readonly gamesOnSale: number;
     readonly rules: number;
-    readonly priceObservations: number;
   };
   /** Null means sign-ups have no cap. */
   readonly maxUsers: number | null;
@@ -251,7 +250,8 @@ export interface Guild {
   readonly large: boolean;
   readonly description: string | null;
   readonly features: readonly string[];
-  readonly owner: Profile | null;
+  /** Absent until the bot has looked the owner up (useRowProfiles fetches it). */
+  readonly owner?: Profile | null;
   readonly dealioUsers?: number;
   readonly registeredUsers?: number;
   readonly lastActivityAt?: string | null;
@@ -360,7 +360,8 @@ export interface BroadcastRecipient {
   readonly lastError: string | null;
   readonly discordMessageId: string | null;
   readonly updatedAt: string;
-  readonly profile: Profile | null;
+  /** Absent until the bot has looked the user up (useRowProfiles fetches it). */
+  readonly profile?: Profile | null;
 }
 
 export interface UsageCount { readonly key: string; readonly count: number; readonly users: number }
@@ -412,6 +413,7 @@ export interface GuildDetail extends TelemetryCoverage {
   readonly name: string;
   readonly blocked: boolean;
   readonly events: GuildEvent[];
-  readonly users: Array<{ discordUserId: string; interactions: number; lastSeenAt: string; registered: boolean; profile: Profile | null }>;
+  /** `profile` is absent until the bot has looked the user up (useRowProfiles fetches it). */
+  readonly users: Array<{ discordUserId: string; interactions: number; lastSeenAt: string; registered: boolean; profile?: Profile | null }>;
   readonly audit: AuditEntry[];
 }

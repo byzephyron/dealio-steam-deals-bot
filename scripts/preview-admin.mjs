@@ -111,6 +111,8 @@ const directory = {
   guilds: () => guilds,
   applicationCounts: async () => ({ approximateGuildCount: guilds.length, approximateUserInstallCount: 38 }),
   users: async (ids) => new Map(ids.map((id) => [id, profile(id, users.findIndex((user) => user.id === id) + 1)])),
+  // As right after a restart: nothing cached, so pages ask /api/profiles once they show.
+  knownUsers: () => new Map(),
 };
 
 // Synthetic usage telemetry and server history.

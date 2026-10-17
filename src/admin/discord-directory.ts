@@ -42,6 +42,8 @@ export interface DiscordDirectory {
   guilds(): DirectoryGuild[];
   applicationCounts(): Promise<ApplicationCounts | null>;
   users(ids: readonly string[]): Promise<Map<string, DirectoryUser | null>>;
+  /** Profiles already known, without asking Discord; the panel fetches the rest after the page shows. */
+  knownUsers(ids: readonly string[]): Map<string, DirectoryUser | null>;
 }
 
 const profileTtlMs = 6 * 3600_000;
@@ -90,6 +92,7 @@ function withTimeout<T>(promise: Promise<T>): Promise<T> {
 export class DiscordClientDirectory implements DiscordDirectory {
   private readonly profiles = new Map<string, { readonly user: DirectoryUser | null; readonly expiresAt: number }>();
   private application: { readonly counts: ApplicationCounts; readonly expiresAt: number } | null = null;
+  private refreshingApplication: Promise<ApplicationCounts | null> | null = null;
 
   public constructor(
     private readonly client: Client,
@@ -110,8 +113,19 @@ export class DiscordClientDirectory implements DiscordDirectory {
       .sort((left, right) => right.memberCount - left.memberCount || left.name.localeCompare(right.name));
   }
 
+  /**
+   * Waits for Discord only the first time; after that the overview gets the last
+   * counts at once and an expired value is refreshed in the background.
+   */
   public async applicationCounts(): Promise<ApplicationCounts | null> {
-    if (this.application && this.application.expiresAt > this.now()) return this.application.counts;
+    const cached = this.application;
+    if (cached && cached.expiresAt > this.now()) return cached.counts;
+    const refresh = this.refreshingApplication ??= this.fetchApplicationCounts()
+      .finally(() => { this.refreshingApplication = null; });
+    return cached ? cached.counts : refresh;
+  }
+
+  private async fetchApplicationCounts(): Promise<ApplicationCounts | null> {
     const application = this.client.application;
     if (!application) return null;
     try {
@@ -127,6 +141,27 @@ export class DiscordClientDirectory implements DiscordDirectory {
     }
   }
 
+  public knownUsers(ids: readonly string[]): Map<string, DirectoryUser | null> {
+    const result = new Map<string, DirectoryUser | null>();
+    for (const id of new Set(ids)) {
+      const known = this.knownUser(id);
+      if (known !== undefined) result.set(id, known);
+    }
+    return result;
+  }
+
+  /** A cached profile (null when Discord did not have one), or undefined when unknown. */
+  private knownUser(id: string): DirectoryUser | null | undefined {
+    if (!/^\d{5,25}$/.test(id)) return undefined;
+    const cached = this.profiles.get(id);
+    if (cached && cached.expiresAt > this.now()) return cached.user;
+    const known = this.client.users.cache.get(id);
+    if (!known) return undefined;
+    const user = directoryUser(known);
+    this.profiles.set(id, { user, expiresAt: this.now() + profileTtlMs });
+    return user;
+  }
+
   /**
    * Profiles from the cache, then from Discord a few at a time. A rate limit stops
    * the remaining lookups for this call instead of waiting; they show as unknown.
@@ -136,19 +171,9 @@ export class DiscordClientDirectory implements DiscordDirectory {
     const missing: string[] = [];
     for (const id of new Set(ids)) {
       if (!/^\d{5,25}$/.test(id)) continue;
-      const cached = this.profiles.get(id);
-      if (cached && cached.expiresAt > this.now()) {
-        result.set(id, cached.user);
-        continue;
-      }
-      const known = this.client.users.cache.get(id);
-      if (known) {
-        const user = directoryUser(known);
-        this.profiles.set(id, { user, expiresAt: this.now() + profileTtlMs });
-        result.set(id, user);
-        continue;
-      }
-      missing.push(id);
+      const known = this.knownUser(id);
+      if (known !== undefined) result.set(id, known);
+      else missing.push(id);
     }
 
     let stopped = false;

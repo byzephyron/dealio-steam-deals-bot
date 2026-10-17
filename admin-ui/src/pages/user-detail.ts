@@ -1,5 +1,4 @@
 import { html, type VNode } from '../vendor/preact-htm.js';
-import { api } from '../api.js';
 import {
   country, dateTime, day, displayName, flag, languageNames, minuteOfDay, money, notificationModeNames,
   notificationStatusNames, num, relative, trackingNote,
@@ -8,7 +7,7 @@ import { Icon } from '../icons.js';
 import { rememberProfile } from '../profiles.js';
 import type { NotificationRow, SnapshotItem, UserDetail } from '../types.js';
 import {
-  Avatar, BackLink, Badge, Card, CopyText, DataTable, ErrorBox, Facts, Loading, Page, When, useAsync, type Column, type Tone, RefreshButton, live,
+  Avatar, BackLink, Badge, Card, CopyText, DataTable, ErrorBox, Facts, Loading, Page, When, useApi, type Column, type Tone, RefreshButton, live,
 } from '../ui.js';
 import { actionLabel } from '../explain.js';
 import { CheckReason, DeliveryReason, checkBadge, userStatus } from './users.js';
@@ -73,7 +72,7 @@ const notificationTone: Record<string, Tone> = {
 };
 
 export function UserDetailPage(props: { id: string }): VNode {
-  const state = useAsync(() => api.get<UserDetail>(`/api/users/${props.id}`), [props.id], live);
+  const state = useApi<UserDetail>(`/api/users/${props.id}`, live);
   const data = state.data;
   if (!data) {
     return Page({ title: 'Kullanıcı', actions: BackLink({ href: '#/users', label: 'Kullanıcılar' }),

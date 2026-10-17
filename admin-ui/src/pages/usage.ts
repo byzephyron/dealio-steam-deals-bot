@@ -1,10 +1,9 @@
 import { html, useState, type VNode } from '../vendor/preact-htm.js';
-import { api } from '../api.js';
 import { AreaChart } from '../chart.js';
 import { num, trackingNote } from '../format.js';
 import type { Usage, UsageCount } from '../types.js';
 import {
-  BarList, Card, DataTable, ErrorBox, Loading, Page, When, useAsync, type Column, RefreshButton, live,
+  BarList, Card, DataTable, ErrorBox, Loading, Page, When, useApi, type Column, RefreshButton, live,
 } from '../ui.js';
 import { actionLabel, setupFailureReason, setupStepLabel } from '../explain.js';
 import { contextNames, installNames } from './user-detail.js';
@@ -22,7 +21,7 @@ const actionColumns: Column<UsageCount>[] = [
 
 export function UsagePage(): VNode {
   const [days, setDays] = useState(30);
-  const state = useAsync(() => api.get<Usage>(`/api/usage?days=${days}`), [days], live);
+  const state = useApi<Usage>(`/api/usage?days=${days}`, live);
   const data = state.data;
   const prepared = data?.setup.find((row) => row.key === 'prepare-ok')?.users ?? 0;
   const completed = data?.setup.find((row) => row.key === 'confirm-ok')?.users ?? 0;

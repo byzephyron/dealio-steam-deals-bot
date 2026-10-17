@@ -1,6 +1,6 @@
 /**
  * Types for the vendored `htm/preact/standalone` build (Preact + hooks + htm in one
- * ES module), copied to dist/admin-ui/vendor/preact-htm.js by scripts/copy-admin-assets.mjs.
+ * ES module), bundled into dist/admin-ui/app.js by scripts/build-admin-ui.mjs.
  */
 export interface VNode {
   readonly type: unknown;

@@ -29,8 +29,8 @@ describe('AdminRepository', () => {
     expect(repository.overviewCounts(now)).toMatchObject({
       users: 3, enabled: 1, paused: 1, dmBlocked: 1, newUsers24h: 1, newUsers7d: 2,
       alertsSent24h: 1, alertsSent7d: 1, alertsSentTotal: 2, queuePending: 1,
-      trackedGames: 2, gamesOnSale: 1,
     });
+    expect(repository.wishlistGameCounts()).toEqual({ trackedGames: 2, gamesOnSale: 1 });
   });
 
   it('lists users with wishlist, sale and alert summaries', () => {
@@ -53,6 +53,26 @@ describe('AdminRepository', () => {
     expect(artwork.get(30)).toBe(hashed);
     expect(artwork.has(40)).toBe(false);
     expect(artwork.has(10)).toBe(false);
+  });
+
+  it('reads the snapshots again only after they or a configuration generation change', () => {
+    expect(repository.topWishlistedGames(10)).toEqual([
+      { appId: 10, name: 'Alpha', count: 2 }, { appId: 20, name: 'Beta', count: 1 },
+    ]);
+    seedUser(database, { id: '100000000000000004', createdAt: '2026-09-01T00:00:00.000Z',
+      games: [{ appId: 20, name: 'Beta' }, { appId: 30, name: 'Gamma' }] });
+    expect(repository.topWishlistedGames(10)).toEqual([
+      { appId: 10, name: 'Alpha', count: 2 }, { appId: 20, name: 'Beta', count: 2 }, { appId: 30, name: 'Gamma', count: 1 },
+    ]);
+    expect(repository.users('100000000000000004')).toEqual([expect.objectContaining({ wishlistCount: 2 })]);
+    database.prepare('UPDATE user_config SET config_version = 2 WHERE discord_user_id = ?').run('100000000000000004');
+    expect(repository.topWishlistedGames(1)).toEqual([{ appId: 10, name: 'Alpha', count: 2 }]);
+    expect(repository.users('100000000000000004')[0]?.wishlistCount).toBeNull();
+    // A user's snapshots in two languages count each game once.
+    database.prepare("INSERT INTO wishlist_snapshot VALUES ('100000000000000001', 1, 'en', '2026-10-06T09:00:00.000Z', ?)")
+      .run(JSON.stringify({ items: [{ appId: 10, name: 'Alpha (en)' }], errors: [] }));
+    expect(repository.topWishlistedGames(1)).toEqual([{ appId: 10, name: 'Alpha (en)', count: 2 }]);
+    expect(repository.users('100000000000000001')[0]?.wishlistCount).toBe(1);
   });
 
   it('ignores state left from an older configuration generation', () => {
