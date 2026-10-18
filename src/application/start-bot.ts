@@ -53,6 +53,8 @@ import { AdminActionService } from './admin/admin-action-service.js';
 import { BroadcastService } from './admin/broadcast-service.js';
 import { RuntimeSettings } from './admin/runtime-settings.js';
 import { DiscordAnnouncementSender } from '../discord/announcement-sender.js';
+import { DiscordWishlistHiddenSender } from '../discord/wishlist-hidden-notice.js';
+import { WishlistHiddenNoticeService } from './wishlist-hidden-notice-service.js';
 import { applyPresence, registerGuildTracking } from '../discord/guild-tracking.js';
 import { AdminControlRepository } from '../persistence/admin-control-repository.js';
 import { BroadcastRepository } from '../persistence/broadcast-repository.js';
@@ -251,11 +253,21 @@ export async function startBot(
     runRetention();
     const retentionTimer=setInterval(runRetention,3600000);
     retentionTimer.unref();
+    const wishlistHiddenNoticeService = new WishlistHiddenNoticeService({
+      userConfigRepository,
+      checkStateRepository,
+      preference: (discordUserId) => wishlistStateRepository.assistant.preference(discordUserId),
+      sender: new DiscordWishlistHiddenSender(client),
+      coordinator: userOperationCoordinator,
+      isBlocked,
+      lifecycleSignal: applicationAbortController.signal,
+    });
     const scheduler = new WishlistScheduler({
       intervalHours: environment.pollIntervalHours,
       userConfigRepository,
       checkService,
       notificationService,
+      wishlistHiddenNotices: wishlistHiddenNoticeService,
       scheduleRepository: pollScheduleRepository,
       nextPriceChange: nextSteamPriceChange,
       isPaused: () => runtimeSettings.scansPaused(),
@@ -370,6 +382,7 @@ export async function startBot(
         setupPresentation: {
           bannerUrl: environment.dealioBannerUrl,
           pollIntervalHours: environment.pollIntervalHours,
+          onWishlistHidden: (discordUserId, language) => wishlistHiddenNoticeService.hintSetup(discordUserId, language),
         },
       },
       lifecycleSignal: applicationAbortController.signal,

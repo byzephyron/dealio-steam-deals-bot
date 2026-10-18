@@ -134,6 +134,35 @@ describe('WishlistScheduler', () => {
     expect(messages).not.toContain('sensitive-user-id');
   });
 
+  it('asks for the hidden-wishlist DM only when Steam says the wishlist is private', async () => {
+    const checkService = {
+      check: vi.fn(async (discordUserId: string) => ({
+        status: 'unavailable' as const,
+        errorCode: discordUserId === 'hidden-user' ? 'STEAM_WISHLIST_INACCESSIBLE' : 'STEAM_TIMEOUT',
+      })),
+    };
+    const wishlistHiddenNotices = { notify: vi.fn().mockResolvedValue('sent') };
+    const logger = createLogger();
+    const scheduler = new WishlistScheduler({
+      intervalHours: 6,
+      userConfigRepository: { findEnabled: () => [user('hidden-user'), user('slow-user')] },
+      checkService,
+      notificationService: createNotificationService(),
+      wishlistHiddenNotices,
+      scheduleRepository: createScheduleRepository(),
+      clock: createClock().clock,
+      now: () => new Date('2026-08-22T00:00:00.000Z'),
+      logger,
+    });
+
+    await scheduler.runOnce();
+
+    expect(wishlistHiddenNotices.notify).toHaveBeenCalledTimes(1);
+    expect(wishlistHiddenNotices.notify).toHaveBeenCalledWith('hidden-user');
+    expect(scheduler.status().lastRun).toMatchObject({ hiddenNoticesSent: 1 });
+    expect((logger.info as ReturnType<typeof vi.fn>).mock.calls.flat().join('\n')).not.toContain('hidden-user');
+  });
+
   it('checks every enabled configured user', async () => {
     const checkService = { check: vi.fn().mockResolvedValue(successResult()) };
     const { scheduler } = createScheduler(

@@ -258,10 +258,12 @@ describe('bot wiring', () => {
     ['setup', mocks.setup, [expect.any(SetupService), expect.any(AbortSignal), {
       bannerUrl: undefined,
       pollIntervalHours: 6,
+      onWishlistHidden: expect.any(Function),
     }, { navigate: mocks.navigate }]],
     ['delete-data', mocks.deleteData, [expect.any(UserConfigurationService), expect.any(SetupService), expect.any(AbortSignal), {
       bannerUrl: undefined,
       pollIntervalHours: 6,
+      onWishlistHidden: expect.any(Function),
     }]],
   ] satisfies readonly (readonly [string, ReturnType<typeof vi.fn>, readonly unknown[]])[];
 

@@ -1,6 +1,8 @@
 import type { DatabaseSync, SQLOutputValue } from 'node:sqlite';
 import type { CheckState, CheckStatus } from '../domain/check-state.js';
 
+const hiddenWishlistCode = 'STEAM_WISHLIST_INACCESSIBLE';
+
 interface CheckStateRow {
   discord_user_id: SQLOutputValue;
   last_started_at: SQLOutputValue;
@@ -131,7 +133,9 @@ export class CheckStateRepository {
          SET last_started_at = ?,
              last_completed_at = ?,
              last_status = 'unavailable',
-             last_error_code = ?
+             last_error_code = ?,
+             wishlist_hidden_checks = wishlist_hidden_checks
+               + CASE WHEN ? = '${hiddenWishlistCode}' THEN 1 ELSE 0 END
           WHERE discord_user_id = ?
             AND EXISTS (
               SELECT 1 FROM user_config
@@ -139,7 +143,59 @@ export class CheckStateRepository {
                 AND user_config.config_version = ?
             )`,
       )
-      .run(startedAt, completedAt, errorCode, discordUserId, configVersion);
+      .run(startedAt, completedAt, errorCode, errorCode, discordUserId, configVersion);
+  }
+
+  /**
+   * Takes the hidden-wishlist DM for one attempt, recorded before Discord is called.
+   * Only after `minimumChecks` consecutive "private" answers, never once it was
+   * delivered in this hidden period, and a stale attempt (a crash or a failed send)
+   * is retried after `retryAfterMs`, at most `maxAttempts` times.
+   */
+  public claimWishlistHiddenNotice(
+    discordUserId: string,
+    now: Date,
+    limits: { readonly minimumChecks: number; readonly maxAttempts: number; readonly retryAfterMs: number },
+  ): boolean {
+    const result = this.database
+      .prepare(
+        `UPDATE check_state
+         SET wishlist_hidden_notice_attempt_at = ?,
+             wishlist_hidden_notice_attempts = wishlist_hidden_notice_attempts + 1
+         WHERE discord_user_id = ?
+           AND last_status = 'unavailable'
+           AND last_error_code = '${hiddenWishlistCode}'
+           AND wishlist_hidden_checks >= ?
+           AND wishlist_hidden_notice_sent_at IS NULL
+           AND wishlist_hidden_notice_attempts < ?
+           AND (wishlist_hidden_notice_attempt_at IS NULL OR wishlist_hidden_notice_attempt_at <= ?)`,
+      )
+      .run(
+        now.toISOString(),
+        discordUserId,
+        limits.minimumChecks,
+        limits.maxAttempts,
+        new Date(now.getTime() - limits.retryAfterMs).toISOString(),
+      );
+    return Number(result.changes) === 1;
+  }
+
+  public markWishlistHiddenNoticeSent(discordUserId: string, sentAt: string): void {
+    this.database
+      .prepare('UPDATE check_state SET wishlist_hidden_notice_sent_at = ? WHERE discord_user_id = ?')
+      .run(sentAt, discordUserId);
+  }
+
+  /** Gives back an attempt that Discord only postponed (a rate limit). */
+  public releaseWishlistHiddenNotice(discordUserId: string): void {
+    this.database
+      .prepare(
+        `UPDATE check_state
+         SET wishlist_hidden_notice_attempt_at = NULL,
+             wishlist_hidden_notice_attempts = MAX(0, wishlist_hidden_notice_attempts - 1)
+         WHERE discord_user_id = ? AND wishlist_hidden_notice_sent_at IS NULL`,
+      )
+      .run(discordUserId);
   }
 
   public markSuccess(
@@ -161,7 +217,11 @@ export class CheckStateRepository {
               last_success_on_sale_count = ?,
               last_success_free_count = ?,
               last_success_unknown_price_count = ?,
-              last_success_failed_item_count = ?
+              last_success_failed_item_count = ?,
+              wishlist_hidden_checks = 0,
+              wishlist_hidden_notice_attempt_at = NULL,
+              wishlist_hidden_notice_attempts = 0,
+              wishlist_hidden_notice_sent_at = NULL
           WHERE discord_user_id = ?
             AND EXISTS (
               SELECT 1 FROM user_config

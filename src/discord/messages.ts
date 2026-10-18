@@ -141,7 +141,7 @@ const catalog: Record<Language, MessageCatalog> = {
     steamWebApiKeyMissing: 'Profil adıyla arama şu an kapalı. Onun yerine SteamID64\'ünü ya da /profiles/ ile başlayan bağlantını kullanabilirsin.',
     notConfigured: 'Önce Steam hesabını bağlaman gerekiyor. /setup ile bir dakikada hallederiz.',
     unavailable: 'Steam\'e şu an ulaşamıyorum. Biraz sonra yeniden deneyelim.',
-    wishlistInaccessible: 'İstek listeni göremiyorum. Steam gizlilik ayarlarında profilinin ve "Oyun ayrıntıları"nın Herkese Açık olduğundan emin ol.',
+    wishlistInaccessible: 'Steam wishlist’ini göremiyorum 😞 Profilin gizli görünüyor. [Steam gizlilik ayarlarında](https://steamcommunity.com/my/edit/settings) **Profilim** ve **Oyun ayrıntıları**nı **Herkese Açık** yapman yeterli, sonra yeniden dene.',
     setupValidationUnavailable: 'İstek listene şu an ulaşamadım. Ayarlarına dokunmadım; biraz sonra yeniden dene.',
     alreadyRunning: 'Zaten istek listene bakıyorum, birazdan biter.',
     cooldown: (retryAfterSeconds) =>
@@ -234,7 +234,7 @@ const catalog: Record<Language, MessageCatalog> = {
     steamWebApiKeyMissing: 'Looking up profiles by name is off right now. Use your SteamID64 or a /profiles/ link instead.',
     notConfigured: 'Connect your Steam account first. /setup takes about a minute.',
     unavailable: 'I can’t reach Steam right now. Let’s try again in a bit.',
-    wishlistInaccessible: 'I can’t see your wishlist. In Steam’s privacy settings, make sure both your profile and “Game details” are set to Public.',
+    wishlistInaccessible: 'I can’t see your Steam wishlist 😞 Your profile looks private. In [Steam’s privacy settings](https://steamcommunity.com/my/edit/settings), set **My profile** and **Game details** to **Public**, then try again.',
     setupValidationUnavailable: 'I couldn’t reach your wishlist just now. Your settings are unchanged; try again in a bit.',
     alreadyRunning: 'I’m already checking your wishlist. It’ll be done in a moment.',
     cooldown: (retryAfterSeconds) =>
@@ -327,7 +327,7 @@ const catalog: Record<Language, MessageCatalog> = {
     steamWebApiKeyMissing: 'Die Suche nach Profilnamen ist gerade nicht verfügbar. Nutze stattdessen deine SteamID64 oder einen /profiles/-Link.',
     notConfigured: 'Verbinde zuerst dein Steam-Konto. Mit /setup dauert das etwa eine Minute.',
     unavailable: 'Ich erreiche Steam gerade nicht. Versuchen wir es gleich noch mal.',
-    wishlistInaccessible: 'Ich kann deine Wunschliste nicht sehen. Stell in den Steam-Privatsphäre-Einstellungen dein Profil und „Spieldetails“ auf „Öffentlich“.',
+    wishlistInaccessible: 'Ich kann deine Steam-Wunschliste nicht sehen 😞 Dein Profil sieht privat aus. Stell in den [Steam-Privatsphäre-Einstellungen](https://steamcommunity.com/my/edit/settings) **Mein Profil** und **Spieldetails** auf **Öffentlich** und versuch es dann noch mal.',
     setupValidationUnavailable: 'Ich komme gerade nicht an deine Wunschliste. Deine Einstellungen bleiben unverändert; versuch es gleich noch mal.',
     alreadyRunning: 'Ich prüfe deine Wunschliste schon. Gleich fertig.',
     cooldown: (retryAfterSeconds) =>
@@ -420,7 +420,7 @@ const catalog: Record<Language, MessageCatalog> = {
     steamWebApiKeyMissing: 'La recherche par nom de profil est indisponible pour l’instant. Utilise plutôt ton SteamID64 ou un lien /profiles/.',
     notConfigured: 'Connecte d’abord ton compte Steam. Avec /setup, ça prend environ une minute.',
     unavailable: 'Je n’arrive pas à joindre Steam pour l’instant. On réessaie dans un moment.',
-    wishlistInaccessible: 'Je ne vois pas ta liste de souhaits. Dans les paramètres de confidentialité Steam, mets ton profil et « Détails des jeux » en « Public ».',
+    wishlistInaccessible: 'Je ne vois pas ta liste de souhaits Steam 😞 Ton profil semble privé. Dans les [paramètres de confidentialité Steam](https://steamcommunity.com/my/edit/settings), mets **Mon profil** et **Détails des jeux** en **Public**, puis réessaie.',
     setupValidationUnavailable: 'Je n’arrive pas à accéder à ta liste de souhaits pour l’instant. Tes réglages n’ont pas changé ; réessaie dans un moment.',
     alreadyRunning: 'Je vérifie déjà ta liste de souhaits, ça arrive.',
     cooldown: (retryAfterSeconds) =>

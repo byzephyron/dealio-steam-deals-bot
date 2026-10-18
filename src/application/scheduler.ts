@@ -17,6 +17,11 @@ export interface SchedulerNotificationService {
   }>;
 }
 
+/** Tells a user once that Steam hides their wishlist (see WishlistHiddenNoticeService). */
+export interface SchedulerWishlistHiddenNotices {
+  notify(discordUserId: string): Promise<'sent' | 'skipped' | 'failed' | 'dm-blocked'>;
+}
+
 export interface SchedulerClock {
   setTimeout(callback: () => void, delayMs: number): ReturnType<typeof setTimeout>;
   clearTimeout(handle: ReturnType<typeof setTimeout>): void;
@@ -43,6 +48,7 @@ export interface SchedulerOptions {
   readonly userConfigRepository: Pick<UserConfigRepository, 'findEnabled'>;
   readonly checkService: SchedulerCheckService;
   readonly notificationService: SchedulerNotificationService;
+  readonly wishlistHiddenNotices?: SchedulerWishlistHiddenNotices;
   readonly scheduleRepository: Pick<
     PollScheduleRepository,
     'findNextScheduledAt' | 'setNextScheduledAt'
@@ -83,6 +89,8 @@ export interface SchedulerRunReport extends SchedulerRunSummary {
   readonly unavailable: number;
   readonly dmSent: number;
   readonly dmFailed: number;
+  /** Users told this run that Steam hides their wishlist. */
+  readonly hiddenNoticesSent: number;
 }
 
 export interface SchedulerStatus {
@@ -250,6 +258,7 @@ export class WishlistScheduler {
     let unavailableCount = 0;
     let dmSent = 0;
     let dmFailed = 0;
+    let hiddenNoticesSent = 0;
 
     let nextUserIndex = 0;
     const processNextUser = async (): Promise<void> => {
@@ -280,6 +289,14 @@ export class WishlistScheduler {
             this.logger.error(
               `Check completed (${index + 1}/${users.length}): status=unavailable code=${result.errorCode}.`,
             );
+            if (result.errorCode === 'STEAM_WISHLIST_INACCESSIBLE' && this.options.wishlistHiddenNotices) {
+              const notice = await this.options.wishlistHiddenNotices.notify(user.discordUserId)
+                .catch(() => 'failed' as const);
+              if (notice === 'sent') hiddenNoticesSent += 1;
+              if (notice !== 'skipped') {
+                this.logger.info(`Hidden-wishlist notice (${index + 1}/${users.length}): ${notice}.`);
+              }
+            }
           } else if (result.status === 'failed') {
             errorCount += 1;
             this.logger.error(
@@ -310,7 +327,7 @@ export class WishlistScheduler {
       `Run completed: users=${users.length} completed=${completedCount} errors=${errorCount} `
       + `durationMs=${Math.max(0, this.now().getTime() - runStartedMs)} checkedGames=${checkedGames} `
       + `steamItemErrors=${steamItemErrors} unknownPrices=${unknownPrices} `
-      + `unavailable=${unavailableCount} dmSent=${dmSent} dmFailed=${dmFailed}.`,
+      + `unavailable=${unavailableCount} dmSent=${dmSent} dmFailed=${dmFailed} hiddenNotices=${hiddenNoticesSent}.`,
     );
     const completedMs = this.now().getTime();
     this.lastRun = {
@@ -326,6 +343,7 @@ export class WishlistScheduler {
       unavailable: unavailableCount,
       dmSent,
       dmFailed,
+      hiddenNoticesSent,
     };
     return { userCount: users.length, completedCount, errorCount };
   }

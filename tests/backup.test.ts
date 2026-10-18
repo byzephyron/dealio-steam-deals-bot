@@ -13,7 +13,7 @@ it('backs up an open database, restores independently, and detects damaged conte
  try{
   new UserConfigRepository(db).upsert('u','76561198000000000','tr','TR',new Date().toISOString());
   const manifest=await createConsistentBackup(source,copy);
-  expect(manifest.users).toBe(1);expect(manifest.schemaVersion).toBe(15);expect(manifest.sha256).toMatch(/^[a-f0-9]{64}$/);
+  expect(manifest.users).toBe(1);expect(manifest.schemaVersion).toBe(16);expect(manifest.sha256).toMatch(/^[a-f0-9]{64}$/);
   db.prepare("DELETE FROM user_config WHERE discord_user_id='u'").run();
   expect((await verifyDatabase(copy)).users).toBe(1);
   expect((await readFile(copy)).includes(Buffer.from('DISCORD_TOKEN'))).toBe(false);

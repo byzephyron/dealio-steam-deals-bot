@@ -133,13 +133,14 @@ function checkPresentation(
     return { kind: 'warning', title: text.checkCooldownTitle, description: messages.cooldown(result.retryAfterSeconds) };
   }
   if (result.status === 'unavailable') {
-    return {
-      kind: 'warning',
-      title: text.checkUnavailableTitle,
-      description: result.errorCode === 'STEAM_WISHLIST_INACCESSIBLE'
-        ? messages.wishlistInaccessible
-        : messages.unavailable,
-    };
+    // A private wishlist is the user's own setting, not a Steam outage.
+    return result.errorCode === 'STEAM_WISHLIST_INACCESSIBLE'
+      ? {
+          kind: 'warning',
+          title: t({ tr: 'Profilin gizli görünüyor', en: 'Your profile looks private', de: 'Dein Profil sieht privat aus', fr: 'Ton profil semble privé' }),
+          description: messages.wishlistInaccessible,
+        }
+      : { kind: 'warning', title: text.checkUnavailableTitle, description: messages.unavailable };
   }
   if (result.status === 'failed') {
     return { kind: 'danger', title: text.checkFailedTitle, description: messages.failed };
