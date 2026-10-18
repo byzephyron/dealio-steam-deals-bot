@@ -115,7 +115,7 @@ export async function handleSetup(
   const legacyProfile = safeGetString(interaction, 'steam-profile')
     ?? safeGetString(interaction, 'steamid64');
   if (legacyProfile) {
-    await handleLegacySetup(interaction, service, legacyProfile);
+    await handleLegacySetup(interaction, service, legacyProfile, presentation);
     return;
   }
 
@@ -166,6 +166,7 @@ export async function handleSetup(
     } catch (_replyError: unknown) {
       safeLogger.error('Discord setup wizard error response failed.');
     }
+    hintIfWishlistHidden(error, interaction.user.id, language, presentation);
   };
   let completedPanel: { readonly prepared: PreparedUserConfiguration; readonly status: Parameters<typeof buildSetupCompletePanel>[1] } | null = null;
   let handedOff = false;
@@ -352,6 +353,7 @@ export async function handleSetup(
             await editPanel({
               components: [buildSetupErrorPanel(error, language, interaction.id)],
             });
+            hintIfWishlistHidden(error, interaction.user.id, language, presentation);
           }
         }
       })().catch((error: unknown) => safeLogger.error('Discord setup country selection failed', error));
@@ -443,6 +445,7 @@ export async function handleSetup(
             : {
                 components: [buildSetupErrorPanel(error, language, interaction.id)],
               });
+          hintIfWishlistHidden(error, interaction.user.id, language, presentation);
           return;
         }
         await editPanel({
@@ -645,6 +648,7 @@ async function handleLegacySetup(
   interaction: ChatInputCommandInteraction,
   service: Pick<SetupService, 'configure'>,
   profileInput: string,
+  presentation: SetupPresentationOptions,
 ): Promise<void> {
   const rawLanguage = safeGetString(interaction, 'language');
   const language: Language = rawLanguage && isLanguage(rawLanguage) ? rawLanguage : 'tr';
@@ -672,6 +676,22 @@ async function handleLegacySetup(
       flags: dealioV2Flags,
       components: [buildSetupErrorPanel(error, language, interaction.id)],
     });
+    hintIfWishlistHidden(error, interaction.user.id, language, presentation);
+  }
+}
+
+/** After the error panel is up: a hidden wishlist also gets the fix by DM, so it outlives the panel. */
+function hintIfWishlistHidden(
+  error: unknown,
+  discordUserId: string,
+  language: Language,
+  presentation: SetupPresentationOptions,
+): void {
+  if (!(error instanceof SteamWishlistError) || error.code !== 'STEAM_WISHLIST_INACCESSIBLE') return;
+  try {
+    presentation.onWishlistHidden?.(discordUserId, language);
+  } catch (hintError: unknown) {
+    safeLogger.error('Hidden-wishlist setup hint failed', hintError);
   }
 }
 

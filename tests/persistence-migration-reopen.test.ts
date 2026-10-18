@@ -26,7 +26,7 @@ it('reopens a current database any number of times without changing it', () => {
   for (let restart = 0; restart < 3; restart += 1) {
     const database = createDatabase(path);
     try {
-      expect(database.prepare('PRAGMA user_version').get()).toEqual({ user_version: 15 });
+      expect(database.prepare('PRAGMA user_version').get()).toEqual({ user_version: 16 });
       expect(database.prepare('PRAGMA foreign_keys').get()).toEqual({ foreign_keys: 1 });
       expect(database.prepare("SELECT type, name, sql FROM sqlite_schema ORDER BY name").all()).toEqual(schema);
       expect(new UserConfigRepository(database).findByDiscordUserId('reopen-user')?.language).toBe('de');
@@ -48,7 +48,7 @@ it('adds the admin tables to a version 12 database and keeps its users', () => {
 
   const upgraded = createDatabase(path);
   try {
-    expect(upgraded.prepare('PRAGMA user_version').get()).toEqual({ user_version: 15 });
+    expect(upgraded.prepare('PRAGMA user_version').get()).toEqual({ user_version: 16 });
     expect(upgraded.prepare("SELECT COUNT(*) AS n FROM sqlite_schema WHERE type = 'table' AND name = 'broadcast_recipient'")
       .get()).toEqual({ n: 1 });
     expect(new UserConfigRepository(upgraded).deleteByDiscordUserId('v12-user')).toBe(true);

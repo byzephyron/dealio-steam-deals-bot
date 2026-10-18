@@ -150,7 +150,7 @@ export function wishlistHidden(checkState: Pick<CheckState, 'lastStatus' | 'last
   return checkState?.lastStatus === 'unavailable' && checkState.lastErrorCode === 'STEAM_WISHLIST_INACCESSIBLE';
 }
 
-const steamPrivacyUrl = 'https://steamcommunity.com/my/edit/settings';
+export const steamPrivacyUrl = 'https://steamcommunity.com/my/edit/settings';
 
 /** "🔒 I can't see your wishlist…", with a link to Steam's privacy settings; Home and Settings show the same text. */
 export function wishlistHiddenNotice(language: Language): string {

@@ -2,6 +2,7 @@ import { migrateAdmin } from './admin-schema.js';
 import { migrateAssistant } from './assistant-schema.js';
 import { migrateSupport } from './support-schema.js';
 import { migrateLegacyDmBlocks } from './dm-block-schema.js';
+import { migrateWishlistHiddenNotice } from './wishlist-hidden-schema.js';
 import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
@@ -103,6 +104,7 @@ export function createDatabase(databasePath: string): DatabaseSync {
     migrateAdmin(database);
     migrateSupport(database);
     migrateLegacyDmBlocks(database);
+    migrateWishlistHiddenNotice(database);
     return database;
   } catch (error: unknown) {
     try {

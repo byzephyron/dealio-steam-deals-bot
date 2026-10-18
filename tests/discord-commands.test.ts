@@ -106,8 +106,10 @@ describe('Discord slash commands', () => {
       notificationService as never,
     );
 
-    expect(componentText(interaction.editReply.mock.calls.at(-1)?.[0]))
-      .toContain('“Game details” are set to Public');
+    const panel = componentText(interaction.editReply.mock.calls.at(-1)?.[0]);
+    expect(panel).toContain('Your profile looks private');
+    expect(panel).toContain('**Game details** to **Public**');
+    expect(panel).not.toContain('isn’t responding');
     expect(notificationService.deliverPending).not.toHaveBeenCalled();
   });
 
@@ -199,11 +201,34 @@ describe('Discord slash commands', () => {
       ),
     };
 
-    await handleSetup(interaction as never, service as never);
+    const onWishlistHidden = vi.fn(() => {
+      // The DM never runs ahead of the panel that already shows the fix.
+      expect(interaction.editReply).toHaveBeenCalled();
+    });
+
+    await handleSetup(interaction as never, service as never, undefined, { onWishlistHidden });
 
     expect(interaction.deferReply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral });
-    expect(componentText(interaction.editReply.mock.calls.at(-1)?.[0]))
-      .toContain('“Game details” are set to Public');
+    const panel = componentText(interaction.editReply.mock.calls.at(-1)?.[0]);
+    expect(panel).toContain('I can’t see your Steam wishlist');
+    expect(panel).toContain('https://steamcommunity.com/my/edit/settings');
+    expect(onWishlistHidden).toHaveBeenCalledTimes(1);
+    expect(onWishlistHidden).toHaveBeenCalledWith('discord-user', 'en');
+  });
+
+  it('sends no hidden-wishlist DM when setup fails for another reason', async () => {
+    const interaction = {
+      user: { id: 'discord-user' },
+      options: { getString: vi.fn((name: string) => (name === 'language' ? 'en' : name === 'store-country' ? 'US' : '76561198000000000')) },
+      deferReply: vi.fn().mockResolvedValue(undefined),
+      editReply: vi.fn().mockResolvedValue(undefined),
+    };
+    const service = { configure: vi.fn().mockRejectedValue(new SteamWishlistError('STEAM_TIMEOUT', 'timed out')) };
+    const onWishlistHidden = vi.fn();
+
+    await handleSetup(interaction as never, service as never, undefined, { onWishlistHidden });
+
+    expect(onWishlistHidden).not.toHaveBeenCalled();
   });
 
   it.each([
