@@ -32,6 +32,7 @@ export interface WishlistItemStateRow {
   last_seen_at: SQLOutputValue;
   observation_status: SQLOutputValue;
   alerted_discount_percent: SQLOutputValue;
+  sale_ended_at: SQLOutputValue;
 }
 
 export interface NotificationLogRow {
@@ -131,6 +132,7 @@ export function toState(row: WishlistItemStateRow): WishlistItemState {
     lastSeenAt: textValue(row.last_seen_at, 'last_seen_at'),
     observationStatus: observationStatusValue(row.observation_status),
     alertedDiscountPercent: nullableInteger(row.alerted_discount_percent, 'alerted_discount_percent'),
+    saleEndedAt: nullableText(row.sale_ended_at, 'sale_ended_at'),
   };
 }
 
@@ -156,7 +158,7 @@ export function toNotificationCandidate(row: NotificationLogRow): NotificationCa
 
 export const stateColumns = `discord_user_id, steam_id64, config_version, store_country_code, app_id, on_sale,
   sale_episode_id, sale_started_at, sale_key, currency, normal_price_minor,
-  final_price_minor, discount_percent, last_seen_at, observation_status, alerted_discount_percent`;
+  final_price_minor, discount_percent, last_seen_at, observation_status, alerted_discount_percent, sale_ended_at`;
 
 export const notificationColumns = `
   notification.discord_user_id AS discord_user_id,

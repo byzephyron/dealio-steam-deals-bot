@@ -50,7 +50,7 @@ describe('v15 legacy DM block migration', () => {
   it('marks only users whose latest alert failed because Discord refused the DM', () => {
     const database = createDatabase(legacyDatabase());
     try {
-      expect(database.prepare('PRAGMA user_version').get()).toEqual({ user_version: 16 });
+      expect(database.prepare('PRAGMA user_version').get()).toEqual({ user_version: 17 });
       const users = new UserConfigRepository(database);
       expect(users.findByDiscordUserId('100000000000000001')).toMatchObject({
         enabled: false, dmDeliveryBlockedAt: '2026-10-12T18:02:05.000Z', dmDeliveryErrorCode: 'DISCORD_NO_MUTUAL_GUILD',

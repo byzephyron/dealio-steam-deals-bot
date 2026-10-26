@@ -25,7 +25,9 @@ function fixture(){
  const send=vi.fn().mockResolvedValue({messageId:'123',channelId:'456',deliveredAt:'2026-09-12T13:00:00Z'});
  const sender:NotificationSender={send,plan:items=>items.map(i=>({notifications:[i]}))};
  const notification=new NotificationService(users,states,sender,{now:()=>new Date(clock)});
- return {db,users,states,config,item,observe,target,send,notification,clock:()=>new Date(clock)};
+ // Moves past the next Steam price change (10:00 Pacific) without an observation.
+ const nextDay=()=>{clock+=86400000;};
+ return {db,users,states,config,item,observe,target,send,notification,nextDay,clock:()=>new Date(clock)};
 }
 describe('personal assistant durable rules',()=>{
  it('notifies only on target crossings, survives service recreation, and crosses again after rising',async()=>{
@@ -34,10 +36,23 @@ describe('personal assistant durable rules',()=>{
    expect(await f.notification.deliverPending('u')).toMatchObject({sentCount:1});
    // A small further drop under the target is not a new alert.
    f.observe(560);expect((await f.notification.deliverPending('u')).sentCount).toBe(0);
-   f.observe(900);f.observe(600);
+   f.observe(900);f.nextDay();f.observe(600);
    expect((await f.notification.deliverPending('u')).sentCount).toBe(1);
    expect(f.send).toHaveBeenCalledTimes(2);
    expect(f.states.assistant.history('u',f.clock())[0]).toMatchObject({discord_message_id:'123',reason:'target:700:USD'});
+  }finally{f.db.close();}
+ });
+ it('treats a target that is missed on one read and met again before the next price change as the same deal',async()=>{
+  const f=fixture();try{
+   f.observe(1000);f.target();f.observe(600);
+   expect((await f.notification.deliverPending('u')).sentCount).toBe(1);
+   // Steam answers one read with the price from before the daily change, then the deal again.
+   f.observe(1000);f.observe(600);
+   expect((await f.notification.deliverPending('u')).sentCount).toBe(0);
+   // A clearly lower price is still a new alert, measured from the delivered 600.
+   f.observe(1000);f.observe(540);
+   expect((await f.notification.deliverPending('u')).sentCount).toBe(1);
+   expect(f.send).toHaveBeenCalledTimes(2);
   }finally{f.db.close();}
  });
  it('does not send an initial DM for an already matching price or an unknown baseline',async()=>{

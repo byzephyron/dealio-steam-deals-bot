@@ -30,7 +30,10 @@ function fixture(minimumDiscountPercent = 30) {
     `UPDATE notification_log SET status = 'sent' WHERE app_id = ? AND sale_episode_id = ?`,
   ).run(candidate.appId, candidate.saleEpisodeId);
   const status = (candidate: NonNullable<ReturnType<typeof observe>>) => states.findNotificationStatus(candidate);
-  return { database, users, states, config, observe, markSent, status };
+  /** Moves the clock without an observation, e.g. past the next Steam price change. */
+  const advance = (ms: number) => { clock += ms; };
+  const now = () => new Date(clock).toISOString();
+  return { database, users, states, config, observe, markSent, status, advance, now };
 }
 
 describe('alerts within one sale', () => {
@@ -148,6 +151,78 @@ describe('changing a rule mid-sale', () => {
       const waiting = f.observe(35);
       f.users.setMinimumDiscountPercent('u', 60, '2026-09-12T13:00:00.000Z');
       expect(f.status(waiting!)).toBe('candidate');
+    } finally {
+      f.database.close();
+    }
+  });
+});
+
+describe('a sale that drops out for one read', () => {
+  it('does not alert again when Steam shows the old price once after the daily change (2026-10-26)', () => {
+    const f = fixture();
+    try {
+      const at = (iso: string, discountPercent: number) => f.states.recordObservation(f.config(), {
+        item: {
+          appId: 10, name: 'A Game', priority: null, dateAdded: null, onSale: discountPercent > 0,
+          price: { currency: 'USD', initialMinor: 1000, finalMinor: 1000 - discountPercent * 10, discountPercent, isFree: false },
+        },
+        saleKey: discountPercent > 0 ? `USD:1000:${1000 - discountPercent * 10}:${discountPercent}` : null,
+        observedAt: iso,
+      }).notificationCandidate;
+      at('2026-10-26T16:32:00.000Z', 0);
+      // The sale starts at 10:00 Pacific; 10:02, 10:32 (stale, full price) and 11:02.
+      const first = at('2026-10-26T17:02:00.000Z', 80);
+      expect(first).toMatchObject({ discountPercent: 80 });
+      f.markSent(first!);
+      expect(at('2026-10-26T17:32:00.000Z', 0)).toBeNull();
+      expect(at('2026-10-26T18:02:00.000Z', 80)).toBeNull();
+      expect(f.database.prepare('SELECT COUNT(*) AS count FROM notification_log').get()).toEqual({ count: 1 });
+      // A clearly deeper discount is still worth its own alert.
+      expect(at('2026-10-26T18:32:00.000Z', 90)).toMatchObject({ discountPercent: 90 });
+    } finally {
+      f.database.close();
+    }
+  });
+
+  it('alerts for a sale that starts again after the next Steam price change', () => {
+    const f = fixture();
+    try {
+      f.observe(0);
+      f.markSent(f.observe(35)!);
+      expect(f.observe(0)).toBeNull();
+      f.advance(24 * 60 * 60 * 1000);
+      expect(f.observe(35)).toMatchObject({ discountPercent: 35 });
+    } finally {
+      f.database.close();
+    }
+  });
+
+  it('keeps an alert that never reached the user for the returning sale', () => {
+    const f = fixture();
+    try {
+      f.observe(0);
+      const waiting = f.observe(35);
+      expect(f.observe(0)).toBeNull();
+      const again = f.observe(35);
+      expect(again).toMatchObject({ discountPercent: 35 });
+      expect(again!.saleEpisodeId).not.toBe(waiting!.saleEpisodeId);
+    } finally {
+      f.database.close();
+    }
+  });
+
+  it('does not alert again for a game that Steam leaves out past the grace period on the same day', () => {
+    const f = fixture();
+    try {
+      f.observe(0);
+      f.markSent(f.observe(35)!);
+      const scope = f.config();
+      f.advance(5 * 60 * 1000);
+      f.states.markMissingItemsInactive(scope, [], f.now());
+      f.advance(25 * 60 * 1000);
+      f.states.markMissingItemsInactive(scope, [], f.now());
+      expect(f.states.findByDiscordUserAndAppId('u', 10)).toMatchObject({ onSale: false, saleEpisodeId: null });
+      expect(f.observe(35)).toBeNull();
     } finally {
       f.database.close();
     }

@@ -189,7 +189,7 @@ Evet. `/dealio` → ⚙️ Ayarlar’da **Takibi durdur**’a bas. Ayarların ko
 <details>
 <summary><strong>Aynı bildirim iki kez gelebilir mi?</strong></summary>
 
-Dealio gönderdiği bildirimi kaydeder ve aynı teklif için normal kontrollerde tekrar mesaj atmaz. Steam bir oyunu istek listenden kısa süreliğine düşürürse oyun bir süre indirim durumunu korur; geri geldiğinde yeni indirim sayılmaz. Yine de Discord mesajı kabul edip yanıtı kaybolursa yeniden deneme çift mesaj oluşturabilir. Böyle bir durum görürsen bildirebilirsin.
+Dealio gönderdiği bildirimi kaydeder ve aynı teklif için normal kontrollerde tekrar mesaj atmaz. Steam bir oyunu istek listenden kısa süreliğine düşürürse oyun bir süre indirim durumunu korur; geri geldiğinde yeni indirim sayılmaz. Aynı şekilde, bitmiş gibi görünüp Steam'in bir sonraki günlük fiyat değişiminden önce geri gelen bir indirim de (Steam bazen bir an eski fiyatı gösterir) yeni indirim sayılmaz. Yine de Discord mesajı kabul edip yanıtı kaybolursa yeniden deneme çift mesaj oluşturabilir. Böyle bir durum görürsen bildirebilirsin.
 
 </details>
 
