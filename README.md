@@ -189,7 +189,7 @@ Yes. Press **Pause tracking** in `/dealio` → ⚙️ Settings. Your settings re
 <details>
 <summary><strong>Can an alert arrive twice?</strong></summary>
 
-Dealio records the alerts it sends and skips routine repeats for the same offer. A game that Steam briefly leaves out of your wishlist keeps its sale state for a short grace period, so its return isn't a new sale. If Discord accepts a message but its acknowledgement is lost, a retry can still produce a duplicate. Please report it if you see one.
+Dealio records the alerts it sends and skips routine repeats for the same offer. A game that Steam briefly leaves out of your wishlist keeps its sale state for a short grace period, so its return isn't a new sale. In the same way, a sale that seems to end and comes back before Steam's next daily price change (Steam sometimes shows the old price for a moment) isn't a new sale either. If Discord accepts a message but its acknowledgement is lost, a retry can still produce a duplicate. Please report it if you see one.
 
 </details>
 

@@ -7,6 +7,7 @@ import type { UserConfig } from '../domain/user-config.js';
 import type { WishlistItem, SteamWishlistResult } from '../domain/steam.js';
 import { validatePreference, localClock, type NotificationPreference } from '../domain/notification-preference.js';
 import { deeperTargetPrice, rebaselineDiscountAlerts } from './alert-levels.js';
+import { nextSteamPriceChange } from '../domain/steam-price-schedule.js';
 
 type Scope = Pick<UserConfig, 'discordUserId' | 'configVersion' | 'storeCountryCode'>;
 export interface GameRule {
@@ -60,7 +61,7 @@ export class AssistantRepository {
         ON CONFLICT(discord_user_id,config_version,app_id) DO UPDATE SET
         mode=excluded.mode,percent=excluded.percent,target_minor=excluded.target_minor,currency=excluded.currency,muted=excluded.muted,
         revision=game_rule.revision+1,eligible=excluded.eligible,initialized=excluded.initialized,event_id=NULL,
-        alerted_minor=excluded.alerted_minor,updated_at=excluded.updated_at`)
+        alerted_minor=excluded.alerted_minor,target_ended_at=NULL,updated_at=excluded.updated_at`)
         .run(appId,rule.mode,rule.percent,rule.targetMinor,rule.currency,rule.muted?1:0,now,eligible?1:0,state?.observation_status==='known'?1:0,
           eligible?state.final_price_minor as number:null,scope.discordUserId,scope.configVersion);
       preparedStatement(this.db,'DELETE FROM game_discount_threshold WHERE discord_user_id=? AND config_version=? AND app_id=?')
@@ -111,30 +112,40 @@ export class AssistantRepository {
     if (price.currency !== rule.currency) {
       if (previousTargetState(this.db, scope, item.appId).event_id !== null) {
         this.expireGame(scope,item.appId,'Target currency changed','target');
-        preparedStatement(this.db,`UPDATE game_rule SET eligible=0,event_id=NULL,alerted_minor=NULL WHERE discord_user_id=? AND config_version=? AND app_id=?`)
+        preparedStatement(this.db,`UPDATE game_rule SET eligible=0,event_id=NULL,alerted_minor=NULL,target_ended_at=NULL WHERE discord_user_id=? AND config_version=? AND app_id=?`)
           .run(scope.discordUserId,scope.configVersion,item.appId);
         preparedStatement(this.db,`UPDATE wishlist_item_state SET rule_event_id=NULL WHERE discord_user_id=? AND config_version=? AND app_id=?`)
           .run(scope.discordUserId,scope.configVersion,item.appId);
       }
       return null;
     }
-    const previous = preparedStatement(this.db,'SELECT eligible,initialized,event_id,alerted_minor FROM game_rule WHERE discord_user_id=? AND config_version=? AND app_id=?')
+    const previous = preparedStatement(this.db,'SELECT eligible,initialized,event_id,alerted_minor,target_ended_at FROM game_rule WHERE discord_user_id=? AND config_version=? AND app_id=?')
       .get(scope.discordUserId,scope.configVersion,item.appId)!;
     const eligible = !rule.muted && price.finalMinor <= rule.targetMinor!;
     const previousEvent = previous.event_id as string|null;
     const waiting = previousEvent !== null && preparedStatement(this.db,`SELECT 1 FROM notification_log WHERE discord_user_id=? AND config_version=?
       AND app_id=? AND sale_episode_id=? AND status IN ('candidate','failed')`).get(scope.discordUserId,scope.configVersion,item.appId,previousEvent) !== undefined;
+    // Like a sale, a target that stops being met on one read and is met again before the
+    // next Steam price change is the same deal (a stale read): its alerted price stands.
+    const endedAt = previous.eligible === 0 ? previous.target_ended_at as string | null : null;
+    const endedToday = endedAt !== null && Date.parse(observedAt) < nextSteamPriceChange(new Date(endedAt)).getTime();
     const tracked = !baseline && previous.initialized === 1 && eligible;
-    const crossing = tracked && previous.eligible === 0;
+    const crossing = tracked && previous.eligible === 0
+      && (!endedToday || deeperTargetPrice(price.finalMinor, previous.alerted_minor as number | null));
     // Already under the target: a clearly lower price is worth another alert.
     const deeper = tracked && previous.eligible === 1 && !waiting
       && deeperTargetPrice(price.finalMinor, previous.alerted_minor as number | null);
     const fresh = crossing || deeper;
     const event = fresh ? randomUUID() : eligible ? previousEvent : null;
-    const alertedMinor = !eligible ? null
+    // An alert still waiting when the target stops being met never reached the user,
+    // so only a delivered (or baseline) price is remembered.
+    const targetEndedAt = eligible ? null
+      : previous.eligible === 1 ? (waiting ? null : observedAt)
+      : endedToday ? endedAt : null;
+    const alertedMinor = !eligible ? (targetEndedAt === null ? null : previous.alerted_minor as number | null)
       : fresh || waiting ? price.finalMinor : (previous.alerted_minor as number | null) ?? price.finalMinor;
-    preparedStatement(this.db,`UPDATE game_rule SET eligible=?,initialized=1,event_id=?,alerted_minor=? WHERE discord_user_id=? AND config_version=? AND app_id=?`)
-      .run(eligible?1:0,event,alertedMinor,scope.discordUserId,scope.configVersion,item.appId);
+    preparedStatement(this.db,`UPDATE game_rule SET eligible=?,initialized=1,event_id=?,alerted_minor=?,target_ended_at=? WHERE discord_user_id=? AND config_version=? AND app_id=?`)
+      .run(eligible?1:0,event,alertedMinor,targetEndedAt,scope.discordUserId,scope.configVersion,item.appId);
     preparedStatement(this.db,`UPDATE wishlist_item_state SET rule_event_id=? WHERE discord_user_id=? AND config_version=? AND app_id=?`)
       .run(event,scope.discordUserId,scope.configVersion,item.appId);
     if (!eligible) this.expireGame(scope,item.appId,'Target no longer met or currency changed');

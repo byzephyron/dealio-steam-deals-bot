@@ -23,6 +23,8 @@ export interface WishlistItemState {
   readonly observationStatus: WishlistObservationStatus;
   /** The discount already alerted (or taken as a baseline) in this sale; null when none. */
   readonly alertedDiscountPercent: number | null;
+  /** When the last sale ended; it keeps its alert level if it returns before the next Steam price change. */
+  readonly saleEndedAt: string | null;
 }
 
 export interface NotificationCandidate {

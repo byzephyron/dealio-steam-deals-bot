@@ -1,6 +1,7 @@
 import { preparedStatement } from './prepared-statement.js';
 import { AssistantRepository } from './assistant-repository.js';
 import { discountAlertDue, retireWaitingDiscountAlert } from './alert-levels.js';
+import { nextSteamPriceChange } from '../domain/steam-price-schedule.js';
 // allow: SIZE_OK — Observation transitions, notification eligibility, and candidate creation form one atomic SQLite state machine.
 import { randomUUID } from 'node:crypto';
 import type { DatabaseSync, SQLOutputValue } from 'node:sqlite';
@@ -114,7 +115,17 @@ export class WishlistObservationRepository {
              sale_episode_id = NULL,
              sale_started_at = NULL,
              sale_key = NULL,
-             rule_event_id = NULL
+             rule_event_id = NULL,
+             -- A sale whose alert already went out ends when the game was last seen, so a
+             -- game that comes back before the next price change does not alert again.
+             sale_ended_at = CASE WHEN on_sale = 0 THEN sale_ended_at
+               WHEN NOT EXISTS (SELECT 1 FROM notification_log AS notification
+                 WHERE notification.discord_user_id = wishlist_item_state.discord_user_id
+                   AND notification.config_version = wishlist_item_state.config_version
+                   AND notification.app_id = wishlist_item_state.app_id
+                   AND notification.sale_episode_id = wishlist_item_state.sale_episode_id
+                   AND notification.status IN ('candidate', 'failed'))
+               THEN last_seen_at END
          WHERE discord_user_id = ? AND steam_id64 = ? AND config_version = ?
            AND observation_status = 'missing' AND last_seen_at <= ?
            ${exclusion}`,
@@ -191,6 +202,13 @@ export class WishlistObservationRepository {
       );
       const isFirstObservation = existing === null;
       const continuingSale = existing?.onSale === true && item.onSale === true;
+      // Steam's store can answer one read with the price from before the daily change,
+      // so a sale can seem to end and start again within minutes. Discounts change at
+      // that hour, so a sale that comes back before the next change is the same sale:
+      // it keeps its alert level and sends nothing unless it is clearly deeper.
+      const endedSale = existing?.onSale === false && existing.saleEndedAt !== null
+        && Date.parse(observedAt) < nextSteamPriceChange(new Date(existing.saleEndedAt)).getTime()
+        ? existing : null;
       // Setup, a newly seen game and an explicit baseline check never alert for
       // what is already true; they only record where the sale stands.
       // A target that stops applying (its currency is gone) hands the game to the
@@ -215,13 +233,28 @@ export class WishlistObservationRepository {
         && price.discountPercent > 0 && price.finalMinor < price.initialMinor ? price : null;
       const meetsRule = sale !== null && !rule?.muted && !targetActive
         && sale.discountPercent >= this.findEffectiveMinimumDiscount(scope, item.appId);
-      let alertedDiscount = continuingSale ? existing.alertedDiscountPercent : null;
-      const episodeAlert = saleEpisodeId === null ? undefined : preparedStatement(this.database,
+      let alertedDiscount = continuingSale
+        ? existing.alertedDiscountPercent
+        : item.onSale ? endedSale?.alertedDiscountPercent ?? null : null;
+      const episodeStatus = (episodeId: string | null) => episodeId === null ? undefined : (preparedStatement(this.database,
           `SELECT status FROM notification_log
            WHERE discord_user_id = ? AND config_version = ? AND app_id = ? AND sale_episode_id = ?`,
         )
-        .get(scope.discordUserId, scope.configVersion, item.appId, saleEpisodeId) as { status: string } | undefined;
-      const waitingAlert = episodeAlert?.status === 'candidate' || episodeAlert?.status === 'failed';
+        .get(scope.discordUserId, scope.configVersion, item.appId, episodeId) as { status: string } | undefined)?.status;
+      const isWaiting = (status: string | undefined) => status === 'candidate' || status === 'failed';
+      const episodeAlert = episodeStatus(saleEpisodeId);
+      const waitingAlert = isWaiting(episodeAlert);
+      let saleEndedAt: string | null = null;
+      if (!item.onSale && existing?.onSale === true) {
+        // An alert still waiting never reached the user: a returning sale gets a new one.
+        if (!isWaiting(episodeStatus(existing.saleEpisodeId))) {
+          saleEndedAt = observedAt;
+          alertedDiscount = existing.alertedDiscountPercent;
+        }
+      } else if (!item.onSale && endedSale) {
+        saleEndedAt = endedSale.saleEndedAt;
+        alertedDiscount = endedSale.alertedDiscountPercent;
+      }
       let createAlert = false;
       if (sale && meetsRule) {
         if (baseline) {
@@ -246,8 +279,8 @@ export class WishlistObservationRepository {
              (discord_user_id, steam_id64, config_version, store_country_code, app_id, on_sale,
                sale_episode_id, sale_started_at, sale_key, currency,
                normal_price_minor, final_price_minor, discount_percent, last_seen_at,
-                notification_eligible, observation_status, alerted_discount_percent)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'known', ?)
+                notification_eligible, observation_status, alerted_discount_percent, sale_ended_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'known', ?, ?)
            ON CONFLICT(discord_user_id, config_version, app_id) DO UPDATE SET
               steam_id64 = excluded.steam_id64,
               store_country_code = excluded.store_country_code,
@@ -262,7 +295,8 @@ export class WishlistObservationRepository {
               last_seen_at = excluded.last_seen_at,
                notification_eligible = excluded.notification_eligible,
                observation_status = 'known',
-               alerted_discount_percent = excluded.alerted_discount_percent`,
+               alerted_discount_percent = excluded.alerted_discount_percent,
+               sale_ended_at = excluded.sale_ended_at`,
         )
         .run(
           scope.discordUserId,
@@ -279,8 +313,9 @@ export class WishlistObservationRepository {
           price?.finalMinor ?? null,
           price?.discountPercent ?? null,
           observedAt,
-          alertedDiscount === null ? 1 : 0,
+          !item.onSale || alertedDiscount === null ? 1 : 0,
           alertedDiscount,
+          saleEndedAt,
         );
 
       if (sale && saleEpisodeId !== null && saleKey !== null && sale.currency !== null && (createAlert || (waitingAlert && meetsRule && !baseline))) {

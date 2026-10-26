@@ -28,6 +28,7 @@ function item(appId: number, discountPercent: number): WishlistItem {
 }
 
 function fixture(steamClient: ConstructorParameters<typeof CheckService>[3]) {
+  let now = Date.parse('2026-08-23T00:01:00.000Z');
   const database = createDatabase(':memory:');
   const userConfigRepository = new UserConfigRepository(database);
   const checkStateRepository = new CheckStateRepository(database);
@@ -47,7 +48,7 @@ function fixture(steamClient: ConstructorParameters<typeof CheckService>[3]) {
     wishlistStateRepository,
     steamClient,
     undefined,
-    { cooldownMs: 0, now: () => new Date('2026-08-23T00:01:00.000Z') },
+    { cooldownMs: 0, now: () => new Date(now) },
   );
   return {
     database,
@@ -58,6 +59,8 @@ function fixture(steamClient: ConstructorParameters<typeof CheckService>[3]) {
     checkService,
     sender,
     service: new InitialWishlistSummaryService(checkService, sender),
+    /** Moves past the next Steam price change (10:00 Pacific). */
+    nextDay: () => { now += 24 * 60 * 60 * 1000; },
   };
 }
 
@@ -118,6 +121,7 @@ describe('InitialWishlistSummaryService', () => {
       notificationCandidates: [],
     });
     await services.checkService.check('discord-user');
+    services.nextDay();
     await expect(services.checkService.check('discord-user')).resolves.toMatchObject({
       status: 'success',
       notificationCandidates: [{ appId: 10 }],
