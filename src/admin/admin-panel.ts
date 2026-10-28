@@ -4,7 +4,7 @@ import { safeLogger } from '../application/safe-logger.js';
 import type { AdminPanelConfig } from '../config/environment.js';
 import { AdminSessions } from './admin-auth.js';
 import type { OwnerCredentialStore } from './owner-credentials.js';
-import { AdminServer, existingDirectory, type AdminRoute } from './admin-server.js';
+import { AdminServer, existingDirectory, type AdminRoute, type AdminServerOptions } from './admin-server.js';
 import type { LogBuffer } from './log-buffer.js';
 
 export function adminUiDirectory(): string | null {
@@ -26,6 +26,7 @@ export class AdminPanel {
     private readonly logs: LogBuffer,
     private readonly logger: Pick<Console, 'log' | 'error'> = safeLogger,
     private readonly credentials: OwnerCredentialStore | null = null,
+    private readonly audit?: AdminServerOptions['audit'],
   ) {}
 
   public async start(): Promise<void> {
@@ -37,6 +38,7 @@ export class AdminPanel {
       routes: this.routes(),
       staticDirectory,
       logger: this.logger,
+      ...(this.audit ? { audit: this.audit } : {}),
     });
     try {
       const port = await server.start();

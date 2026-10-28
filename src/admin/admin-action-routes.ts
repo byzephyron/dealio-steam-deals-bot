@@ -70,7 +70,15 @@ export function actionRoutes({ actions, query, broadcasts }: AdminActionRouteDep
         return { json: guild };
       },
     },
-    { method: 'GET', path: '/api/audit', handler: () => ({ json: query.audit(300) }) },
+    {
+      method: 'GET',
+      path: '/api/audit',
+      handler: ({ query: search }) => {
+        // The trail is kept a year (auditRetentionMs); the row cap keeps one answer small.
+        const days = Math.min(365, Math.max(1, Number(search.get('days') ?? 30) || 30));
+        return { json: query.audit(days, 5000) };
+      },
+    },
     { method: 'GET', path: '/api/broadcasts', handler: () => ({ json: query.broadcastList() }) },
     {
       method: 'GET',

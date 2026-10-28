@@ -240,8 +240,11 @@ export class AdminQueryService {
     };
   }
 
-  public audit(limit: number): unknown {
-    return { entries: this.dependencies.controls.auditEntries(limit) };
+  /** The last `days` of the audit trail; `truncated` says the row cap cut older entries off. */
+  public audit(days: number, limit: number): unknown {
+    const since = new Date(this.now().getTime() - days * 86_400_000).toISOString();
+    const entries = this.dependencies.controls.auditEntriesSince(since, limit + 1);
+    return { days, entries: entries.slice(0, limit), truncated: entries.length > limit };
   }
 
   public broadcastList(): unknown {

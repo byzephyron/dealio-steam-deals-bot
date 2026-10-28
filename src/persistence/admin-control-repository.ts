@@ -91,10 +91,19 @@ export class AdminControlRepository {
   }
 
   public auditEntries(limit: number, target?: string): AuditEntry[] {
-    const rows = (target
+    return this.auditRows(target
       ? this.database.prepare('SELECT * FROM admin_audit WHERE target = ? ORDER BY id DESC LIMIT ?').all(target, limit)
-      : this.database.prepare('SELECT * FROM admin_audit ORDER BY id DESC LIMIT ?').all(limit)) as Row[];
-    return rows.map((row) => ({
+      : this.database.prepare('SELECT * FROM admin_audit ORDER BY id DESC LIMIT ?').all(limit));
+  }
+
+  /** Newest first, from `since` (ISO time) on. */
+  public auditEntriesSince(since: string, limit: number): AuditEntry[] {
+    return this.auditRows(this.database
+      .prepare('SELECT * FROM admin_audit WHERE occurred_at >= ? ORDER BY id DESC LIMIT ?').all(since, limit));
+  }
+
+  private auditRows(rows: unknown[]): AuditEntry[] {
+    return (rows as Row[]).map((row) => ({
       id: Number(row.id), action: text(row.action), target: textOrNull(row.target), detail: textOrNull(row.detail),
       outcome: text(row.outcome) as 'ok' | 'failed', occurredAt: text(row.occurred_at),
     }));

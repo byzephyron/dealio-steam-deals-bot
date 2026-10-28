@@ -78,9 +78,11 @@ describe('admin panel sign-in with the owner password', () => {
   let server: AdminServer;
   let port: number;
   let store: ReturnType<typeof memoryStore>;
+  let audit: Array<[string, string | null, string]>;
 
   beforeEach(async () => {
     store = memoryStore();
+    audit = [];
     server = new AdminServer({
       port: 0,
       sessions: new AdminSessions(token, Date.now, store),
@@ -88,6 +90,7 @@ describe('admin panel sign-in with the owner password', () => {
       failedLoginDelayMs: 1,
       logger: { log: () => undefined, error: () => undefined },
       routes: [],
+      audit: (action, detail, outcome) => { audit.push([action, detail, outcome]); },
     });
     port = await server.start();
   });
@@ -158,6 +161,46 @@ describe('admin panel sign-in with the owner password', () => {
     expect(cleared.status).toBe(200);
     expect(store.read()).toBeNull();
     expect((await signIn(port, { username: 'bilgehan', password: 'a long owner password' })).status).toBe(401);
+  });
+
+  it('writes sign-ins and credential changes to the audit trail without the secrets', async () => {
+    expect((await signIn(port, { token: 'wrong-token' })).status).toBe(401);
+    const owner = await signIn(port, { token });
+    const headers = { Cookie: owner.cookie, 'X-CSRF-Token': owner.csrf };
+    await call(port, '/api/account/credentials', {
+      method: 'POST', headers, body: { username: 'bilgehan', password: 'a long owner password' },
+    });
+    expect((await signIn(port, { username: 'bilgehan', password: 'a wrong owner password' })).status).toBe(401);
+    expect((await signIn(port, { username: 'bilgehan', password: 'a long owner password' })).status).toBe(200);
+    await call(port, '/api/account/credentials/clear', { method: 'POST', headers, body: {} });
+    await call(port, '/api/logout', { method: 'POST', headers, body: {} });
+
+    expect(audit).toEqual([
+      ['account.sign-in', 'token', 'failed'],
+      ['account.sign-in', 'token', 'ok'],
+      ['account.credentials', 'bilgehan', 'ok'],
+      ['account.sign-in', 'password', 'failed'],
+      ['account.sign-in', 'password', 'ok'],
+      ['account.credentials-clear', null, 'ok'],
+      ['account.sign-out', null, 'ok'],
+    ]);
+    expect(JSON.stringify(audit)).not.toContain('owner password');
+    expect(JSON.stringify(audit)).not.toContain(token);
+  });
+
+  it('still signs the owner in when the audit write fails', async () => {
+    await server.stop();
+    server = new AdminServer({
+      port: 0,
+      sessions: new AdminSessions(token, Date.now, store),
+      staticDirectory: null,
+      failedLoginDelayMs: 1,
+      logger: { log: () => undefined, error: () => undefined },
+      routes: [],
+      audit: () => { throw new Error('disk full'); },
+    });
+    port = await server.start();
+    expect((await signIn(port, { token })).status).toBe(200);
   });
 
   it('counts wrong passwords toward the shared lockout', async () => {

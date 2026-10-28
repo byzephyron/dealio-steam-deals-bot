@@ -45,7 +45,11 @@ export interface AdminServerOptions {
   readonly logger?: Pick<Console, 'log' | 'error'>;
   /** Wait after a wrong token; tests shorten it. */
   readonly failedLoginDelayMs?: number;
+  /** Writes sign-ins and owner account changes to the audit trail. */
+  readonly audit?: (action: string, detail: string | null, outcome: 'ok' | 'failed') => void;
 }
+
+type SignInMethod = 'password' | 'code' | 'token';
 
 const cookieName = 'dealio_admin';
 const maximumBodyBytes = 64 * 1024;
@@ -289,6 +293,7 @@ export class AdminServer {
     }
     if (url.pathname === '/api/logout' && method === 'POST') {
       this.options.sessions.logout(session.id);
+      this.record('account.sign-out', null, 'ok');
       response.setHeader('Set-Cookie', `${cookieName}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0`);
       sendJson(response, 200, { ok: true });
       return;
@@ -305,6 +310,7 @@ export class AdminServer {
     if (url.pathname === '/api/account/credentials/clear' && method === 'POST') {
       this.options.sessions.clearOwnerCredentials(session.id);
       this.logger.log(`${new Date().toISOString()} [admin] Owner removed the admin panel password.`);
+      this.record('account.credentials-clear', null, 'ok');
       sendJson(response, 200, { result: { username: null } });
       return;
     }
@@ -381,35 +387,53 @@ export class AdminServer {
       return;
     }
     if (result.status === 'invalid') {
-      await new Promise((resolveDelay) => setTimeout(resolveDelay, this.options.failedLoginDelayMs ?? 750));
-      this.logger.log(`${new Date().toISOString()} [admin] Rejected an admin panel sign-in.`);
-      sendJson(response, 401, { error: 'Invalid token' });
+      await this.rejectSignIn(response, 'token');
       return;
     }
     sendJson(response, 200, { code: result.code });
   }
 
+  /** The record never stops a sign-in: a failed write is only logged. */
+  private record(action: string, detail: string | null, outcome: 'ok' | 'failed'): void {
+    try {
+      this.options.audit?.(action, detail, outcome);
+    } catch (error: unknown) {
+      this.logger.error(`${new Date().toISOString()} [admin] Could not write ${action} to the audit trail.`, error);
+    }
+  }
+
+  /** Only the method is recorded, never the entered username, token or password. */
+  private async rejectSignIn(response: ServerResponse, method: SignInMethod): Promise<void> {
+    await new Promise((resolveDelay) => setTimeout(resolveDelay, this.options.failedLoginDelayMs ?? 750));
+    this.logger.log(`${new Date().toISOString()} [admin] Rejected an admin panel sign-in.`);
+    this.record('account.sign-in', method, 'failed');
+    sendJson(response, 401, { error: 'Invalid token' });
+  }
+
   private async login(request: IncomingMessage, response: ServerResponse): Promise<void> {
     const credentials = await this.readCredentials(request, response);
     if (!credentials) return;
-    const result = credentials.username !== undefined && credentials.password !== undefined
-      ? await this.options.sessions.loginWithPassword(credentials.username, credentials.password)
-      : credentials.code !== undefined && credentials.token === undefined
-        ? this.options.sessions.redeemLoginCode(credentials.code)
+    const signInMethod: SignInMethod = credentials.username !== undefined && credentials.password !== undefined
+      ? 'password'
+      : credentials.code !== undefined && credentials.token === undefined ? 'code' : 'token';
+    const result = signInMethod === 'password'
+      ? await this.options.sessions.loginWithPassword(credentials.username!, credentials.password!)
+      : signInMethod === 'code'
+        ? this.options.sessions.redeemLoginCode(credentials.code!)
         : this.options.sessions.login(credentials.token ?? '');
+    // Locked attempts are refused unchecked and not recorded; the failures that set the lock are.
     if (result.status === 'locked') {
       sendJson(response, 429, { error: 'Too many attempts', retryAfterMs: result.retryAfterMs });
       return;
     }
     if (result.status === 'invalid') {
-      await new Promise((resolveDelay) => setTimeout(resolveDelay, this.options.failedLoginDelayMs ?? 750));
-      this.logger.log(`${new Date().toISOString()} [admin] Rejected an admin panel sign-in.`);
-      sendJson(response, 401, { error: 'Invalid token' });
+      await this.rejectSignIn(response, signInMethod);
       return;
     }
     response.setHeader('Set-Cookie',
       `${cookieName}=${result.session.id}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${12 * 3600}`);
     this.logger.log(`${new Date().toISOString()} [admin] Owner signed in to the admin panel.`);
+    this.record('account.sign-in', signInMethod, 'ok');
     sendJson(response, 200, { authenticated: true, csrf: result.session.csrf });
   }
 
@@ -427,6 +451,7 @@ export class AdminServer {
       throw error;
     }
     this.logger.log(`${new Date().toISOString()} [admin] Owner set the admin panel username and password.`);
+    this.record('account.credentials', this.options.sessions.ownerUsername(), 'ok');
     sendJson(response, 200, { result: { username: this.options.sessions.ownerUsername() } });
   }
 

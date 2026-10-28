@@ -1,5 +1,5 @@
-import { html, type VNode } from '../vendor/preact-htm.js';
-import { dateTime, relative } from '../format.js';
+import { html, useState, type VNode } from '../vendor/preact-htm.js';
+import { dateTime, num, relative } from '../format.js';
 import type { AuditEntry } from '../types.js';
 import {
   Badge, DataTable, ErrorBox, Loading, Page, useApi, type Column, RefreshButton, live,
@@ -28,7 +28,20 @@ export const auditActionNames: Readonly<Record<string, string>> = {
   'system.settings': 'Ayarlar değişti',
   'system.restart': 'Bot yeniden başlatıldı',
   'system.stop': 'Bot durduruldu',
+  'account.sign-in': 'Panele giriş',
+  'account.sign-out': 'Panelden çıkış',
+  'account.credentials': 'Panel şifresi belirlendi',
+  'account.credentials-clear': 'Panel şifresi kaldırıldı',
 };
+
+const signInMethodNames: Readonly<Record<string, string>> = {
+  password: 'kullanıcı adı ve şifre', token: 'yönetici anahtarı', code: 'masaüstü kısayolu',
+};
+
+function detailText(entry: AuditEntry): string {
+  if (entry.action === 'account.sign-in') return signInMethodNames[entry.detail ?? ''] ?? entry.detail ?? '';
+  return entry.detail ?? '';
+}
 
 function targetLink(entry: AuditEntry): VNode | string {
   if (!entry.target) return '—';
@@ -47,7 +60,7 @@ export const auditColumns: Column<AuditEntry>[] = [
     ? Badge({ tone: 'good', label: 'Tamam' }) : Badge({ tone: 'bad', label: 'Başarısız' }),
     sort: (entry) => entry.outcome, csv: (entry) => entry.outcome },
   { key: 'target', label: 'Hedef', render: targetLink, csv: (entry) => entry.target },
-  { key: 'detail', label: 'Ayrıntı', render: (entry) => html`<span class="muted small wrap">${entry.detail ?? ''}</span>`,
+  { key: 'detail', label: 'Ayrıntı', render: (entry) => html`<span class="muted small wrap">${detailText(entry)}</span>`,
     csv: (entry) => entry.detail, hideOnMobile: true },
 ];
 
@@ -59,13 +72,22 @@ export function AuditTable(props: { entries: AuditEntry[]; csvName?: string }): 
 }
 
 export function AuditPage(): VNode {
-  const state = useApi<{ entries: AuditEntry[] }>('/api/audit', live);
+  const [days, setDays] = useState(30);
+  const state = useApi<{ entries: AuditEntry[]; truncated: boolean }>(`/api/audit?days=${days}`, live);
   return Page({
     title: 'Denetim kaydı',
-    subtitle: 'Bu panelden yapılan her işlem (başarılı ya da değil) bir yıl saklanır.',
-    actions: html`<${RefreshButton} state=${state} />`,
+    subtitle: 'Bu panelden yapılan her işlem ve panel girişleri (başarılı ya da değil) bir yıl saklanır.',
+    actions: html`
+      <select class="input" value=${String(days)} aria-label="Dönem"
+        onChange=${(event: Event) => setDays(Number((event.target as HTMLSelectElement).value))}>
+        <option value="7">Son 7 gün</option><option value="30">Son 30 gün</option>
+        <option value="90">Son 90 gün</option><option value="365">Son 1 yıl</option>
+      </select>
+      <${RefreshButton} state=${state} />`,
     children: !state.data
       ? (state.error ? ErrorBox({ message: state.error, retry: state.reload }) : Loading())
-      : html`<div class="card card-flush"><${AuditTable} entries=${state.data.entries} csvName="dealio-denetim" /></div>`,
+      : html`
+        ${state.data.truncated ? html`<p class="muted small">Bu dönemde çok kayıt var; yalnız en yeni ${num(state.data.entries.length)} işlem gösteriliyor. Daha kısa bir dönem seçin.</p>` : null}
+        <div class="card card-flush"><${AuditTable} entries=${state.data.entries} csvName="dealio-denetim" /></div>`,
   });
 }

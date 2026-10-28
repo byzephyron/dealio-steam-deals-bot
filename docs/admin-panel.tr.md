@@ -75,7 +75,7 @@ Veri sayfaları sekme açıkken 30 saniyede bir kendini sessizce yeniler (başl�
 | Kullanım | Günlük aktif kullanıcı, eylemler (“Wishlist sekmesine geçti” gibi düz cümlelerle; kayıtlı kod ipucunda ve CSV'de), kurulum hunisi ve başarısızlık sebepleri, kurulum türü, kaynak sunucular |
 | Duyurular | Dört dilde duyuru yazma, Discord önizlemesi, hedef kitle, gönderim takibi, duraklat/sürdür/iptal |
 | Sistem | Sağlık, süreç, veritabanı, tarayıcı; **şimdi tara**, **bildirimleri şimdi dene**; otomatik tarama, kayıtları aç/kapat, kullanıcı sınırı, bot durum metni; engellenen kullanıcılar |
-| Denetim | Panelden yapılan tüm işlemler (1 yıl) |
+| Denetim | Panelden yapılan tüm işlemler, panel girişleri (başarılı/başarısız, yöntemiyle), çıkışlar ve şifre değişiklikleri (1 yıl; son 7/30/90 gün veya 1 yıl seçilir, tek seferde en çok 5000 kayıt) |
 | Loglar | Bot sürecinin son 1000 satırı, canlı akış |
 
 ### Bot kontrolü
@@ -120,7 +120,9 @@ Gizlilik politikasında (`docs/privacy*.html`, 7 Ekim 2026) açıklandığı gib
   komut/düğme adı (girdi metni değil), Discord dili, zaman. 90 gün.
 - `guild_event`: botun eklendiği/çıkarıldığı sunucu, ad, üye sayısı, zaman.
 - `admin_audit`: panel işlemleri, hedef hesabın Discord kimliği (hesap silinince
-  hash'i) ve ayrıntı, 1 yıl.
+  hash'i) ve ayrıntı, 1 yıl. Sahibin panel girişleri de burada tutulur: yalnız
+  yöntem (şifre, anahtar, kısayol) ve sonuç; girilen kullanıcı adı, şifre veya
+  anahtar yazılmaz.
 - `broadcast`, `broadcast_recipient`: duyuru/mesaj metni, hedef kitle (doğrudan mesajda
   alıcı kimliği) ve teslim durumu; oluşturulmasından 90 gün sonra (gönderim bitmişse) silinir.
 - `user_block`, `guild_block`, `runtime_setting`.

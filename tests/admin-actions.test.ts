@@ -157,6 +157,16 @@ describe('AdminActionService', () => {
     ]);
   });
 
+  it('reads the audit trail by period, not by a fixed number of rows', () => {
+    controls.audit('system.scan-now', null, null, 'ok', '2026-01-01T00:00:00.000Z');
+    controls.audit('system.retry-now', null, null, 'ok', '2026-10-20T00:00:00.000Z');
+    controls.audit('system.settings', null, null, 'ok', '2026-10-27T00:00:00.000Z');
+    expect(controls.auditEntriesSince('2026-10-01T00:00:00.000Z', 10).map((entry) => entry.action))
+      .toEqual(['system.settings', 'system.retry-now']);
+    expect(controls.auditEntriesSince('2025-11-01T00:00:00.000Z', 2).map((entry) => entry.action))
+      .toEqual(['system.settings', 'system.retry-now']);
+  });
+
   it('refuses a restart where the process cannot be controlled', async () => {
     await expect(actions().restartBot()).rejects.toMatchObject({ status: 409 });
     expect(controls.auditEntries(1)[0]).toMatchObject({ action: 'system.restart', outcome: 'failed' });

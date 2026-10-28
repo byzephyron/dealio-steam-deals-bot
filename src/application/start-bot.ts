@@ -336,7 +336,8 @@ export async function startBot(
       return new AdminPanel(environment.adminPanel!, () => [
         ...readRoutes({ query, logs }),
         ...actionRoutes({ actions, query, broadcasts: broadcastService }),
-      ], logs, safeLogger, settingOwnerCredentialStore(adminControlRepository));
+      ], logs, safeLogger, settingOwnerCredentialStore(adminControlRepository),
+      (action, detail, outcome) => adminControlRepository.audit(action, null, detail, outcome, new Date().toISOString()));
     })() : null;
     registerGuildTracking({
       client,
