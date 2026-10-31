@@ -26,6 +26,7 @@
     "pretest": "npm run build",
     "test": "vitest run --passWithNoTests --maxWorkers=4",
     "preview:ui": "npm run build && node scripts/preview-ui.mjs",
+    "showcase": "npm run build && node scripts/showcase.mjs --png",
     "backup": "node scripts/backup.mjs",
     "restore:test": "node scripts/backup.mjs --restore-test",
     "monitor:preview": "node scripts/monitor.mjs --preview",

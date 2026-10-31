@@ -28,5 +28,8 @@ caddy.exe
 !.env.test.example
 .runtime-test-results.txt
 
+# Local graphify knowledge graph output
+graphify-out/
+
 # Personal Claude Code permissions
 .claude/settings.local.json
