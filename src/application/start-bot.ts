@@ -56,6 +56,7 @@ import { DiscordAnnouncementSender } from '../discord/announcement-sender.js';
 import { DiscordWishlistHiddenSender } from '../discord/wishlist-hidden-notice.js';
 import { WishlistHiddenNoticeService } from './wishlist-hidden-notice-service.js';
 import { applyPresence, registerGuildTracking } from '../discord/guild-tracking.js';
+import { TopggStatsPoster } from '../operations/topgg-stats.js';
 import { AdminControlRepository } from '../persistence/admin-control-repository.js';
 import { BroadcastRepository } from '../persistence/broadcast-repository.js';
 import { TelemetryRepository } from '../persistence/telemetry-repository.js';
@@ -345,13 +346,22 @@ export async function startBot(
       controls: adminControlRepository,
       presenceText: () => runtimeSettings.presenceText(),
     });
+    // The server count on the top.gg listing; off unless TOPGG_TOKEN is set.
+    const topggStats = environment.topggToken ? new TopggStatsPoster({
+      token: environment.topggToken,
+      botId: environment.discordClientId,
+      serverCount: () => (client.isReady() ? client.guilds.cache.size : null),
+      logger: safeLogger,
+    }) : null;
+    if (topggStats) client.once('clientReady', () => topggStats.start());
     runtime = new BotRuntime(scheduler, client, database, {
       taskTracker,
       afterDisconnect: async()=>{await cloudLease?.stop();},
       processLock,
       additionalSchedulers: [notificationRetryScheduler,{
         stop: async () => { clearInterval(retentionTimer); },
-      }, ...(broadcastService ? [broadcastService] : []), ...(adminPanel ? [adminPanel] : [])],
+      }, ...(broadcastService ? [broadcastService] : []), ...(adminPanel ? [adminPanel] : []),
+      ...(topggStats ? [topggStats] : [])],
       cancelActiveWork: () => applicationAbortController.abort(),
       health,
     });

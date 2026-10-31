@@ -69,6 +69,7 @@ describe('Dealio Components V2 UI', () => {
     for(const panel of [sale,initial]) {
       const buttons=panel.components.filter(c=>c.type===1).flatMap(row=>row.components);
       expect(buttons.filter(b=>'url' in b&&String(b.url).includes('buymeacoffee'))).toHaveLength(0);
+      expect(JSON.stringify(panel)).not.toContain('top.gg');
       expect(JSON.stringify(panel)).not.toContain(language==='tr'?'Destek ol':'Support Dealio');
       expect(countComponentsV2([panel])).toBeLessThanOrEqual(40);
     }
@@ -188,9 +189,9 @@ describe('Dealio Components V2 UI', () => {
     expect(serialized).toContain(mode === 'home' ? 'Senin istek listen, senin kuralların!' : 'Hesabın ve tercihlerin');
     expect(serialized).toContain(mode === 'home' ? 'İlk kontrol birazdan' : 'Henüz kontrol yapılmadı');
     const rows = panel.toJSON().components.filter((component) => component.type === 1);
-    // Home: check, help and support links, then the four tabs. Settings: tracking, discount, test DM;
+    // Home: check, help, support and vote links, then the four tabs. Settings: tracking, discount, test DM;
     // region, language, account, delete.
-    expect(rows.map((row) => row.components.length)).toEqual(mode === 'home' ? [3, 4] : [3, 4]);
+    expect(rows.map((row) => row.components.length)).toEqual(mode === 'home' ? [4, 4] : [3, 4]);
     expect(serialized).not.toContain('↻');
   });
 

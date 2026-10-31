@@ -2,7 +2,7 @@
 import { inspect } from 'node:util';
 
 // Exact values are redacted too: a raw token in an error message has no `token=` prefix.
-const secretEnvironmentNames = ['DISCORD_TOKEN', 'DEALIO_ADMIN_TOKEN', 'ITAD_API_KEY', 'STEAM_WEB_API_KEY'] as const;
+const secretEnvironmentNames = ['DISCORD_TOKEN', 'DEALIO_ADMIN_TOKEN', 'ITAD_API_KEY', 'STEAM_WEB_API_KEY', 'TOPGG_TOKEN'] as const;
 
 function redactSecretValues(text: string): string {
   let result = text;
