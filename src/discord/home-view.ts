@@ -8,7 +8,7 @@ import type { StatusV2Options } from './status-view-v2.js';
 import { sanitizeGameName } from './notification-messages.js';
 import { assertComponentsV2Limit, dealioFooter } from './ui/components-v2.js';
 import { dealioBrand } from './ui/brand.js';
-import { countryDisplay, dmBlockedFix, dmBlockedStatus, helpButton, hotPrefix, supportButton, noPriceText, panelHeader, priceFetched, priceLine, savingsLine, tabAccent, wishlistHidden, wishlistHiddenNotice } from './ui/design.js';
+import { countryDisplay, dmBlockedFix, dmBlockedStatus, helpButton, hotPrefix, supportButton, voteButton, noPriceText, panelHeader, priceFetched, priceLine, savingsLine, tabAccent, wishlistHidden, wishlistHiddenNotice } from './ui/design.js';
 import { buildTabBar } from './ui/tab-bar.js';
 import { localizer } from './i18n.js';
 import { staleTargetsNotice } from './assistant-view.js';
@@ -135,6 +135,7 @@ export function buildHomePanel(result: ReadyStatus, sessionId: string, options: 
     button('check', t({ tr: 'Steam’de şimdi kontrol et', en: 'Check Steam now', de: 'Jetzt bei Steam prüfen', fr: 'Vérifier Steam maintenant' }), '🔄'),
     helpButton(language),
     supportButton(language),
+    voteButton(language),
   ));
   divider();
   root.addActionRowComponents(buildTabBar('dealio', sessionId, language, { active: 'home', disabled }));

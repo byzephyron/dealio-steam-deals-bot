@@ -142,6 +142,15 @@ export function supportButton(language: Language): ButtonBuilder {
     .setLabel(localizer(language)({ tr: 'Destek ol', en: 'Support Dealio', de: 'Dealio unterstützen', fr: 'Soutenir Dealio' }));
 }
 
+/** Dealio's top.gg page, where a vote or a review helps other players find it. */
+export const topggVoteUrl = 'https://top.gg/bot/1540325119690412172/vote';
+
+/** "⭐ Vote": the top.gg vote page; shown on the Home panel only, never in alert DMs. */
+export function voteButton(language: Language): ButtonBuilder {
+  return new ButtonBuilder().setStyle(ButtonStyle.Link).setURL(topggVoteUrl).setEmoji('⭐')
+    .setLabel(localizer(language)({ tr: 'Oy ver', en: 'Vote', de: 'Abstimmen', fr: 'Voter' }));
+}
+
 /**
  * Steam answered that the wishlist cannot be read: the user's own privacy setting
  * (or a deleted account), not a Steam outage, so the panel names the fix.

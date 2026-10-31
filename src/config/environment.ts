@@ -11,6 +11,8 @@ export interface EnvironmentConfig {
   readonly maxUsers: number | null;
   readonly steamWebApiKey?: string;
   readonly isThereAnyDealApiKey?: string;
+  /** Posts the server count to the top.gg listing; absent keeps it off. */
+  readonly topggToken?: string;
   readonly dealioBannerUrl?: string;
   readonly azureLeaseContainerUrl?: string;
   readonly production?: boolean;
@@ -92,6 +94,7 @@ export function loadEnvironment(
   const discordGuildId = environment.DISCORD_GUILD_ID?.trim() || undefined;
   const steamWebApiKey = environment.STEAM_WEB_API_KEY?.trim() || undefined;
   const isThereAnyDealApiKey = environment.ITAD_API_KEY?.trim() || undefined;
+  const topggToken = environment.TOPGG_TOKEN?.trim() || undefined;
   const dealioBannerUrl = environment.DEALIO_BANNER_URL?.trim() || undefined;
 
   if (dealioBannerUrl !== undefined) {
@@ -177,6 +180,7 @@ export function loadEnvironment(
     maxUsers,
     ...(steamWebApiKey ? { steamWebApiKey } : {}),
     ...(isThereAnyDealApiKey ? { isThereAnyDealApiKey } : {}),
+    ...(topggToken ? { topggToken } : {}),
     ...(dealioBannerUrl ? { dealioBannerUrl } : {}),
     ...(adminPanel ? { adminPanel } : {}),
     ...(support ? { support } : {}),

@@ -43,8 +43,9 @@ it.each(['tr', 'en'] as const)('fits the complete home panel and disables nested
   // A fresh Steam check is the only Home action; there is no second "refresh" button.
   expect(serialized).not.toContain('dealio:session:refresh');
   // The support link lives here, on the panel, and never in alert DMs.
-  // The support server and the coffee link live on Home only.
-  expect(links).toEqual([expect.objectContaining({url: 'https://dsc.gg/dealiosupport'}), expect.objectContaining({url: 'https://buymeacoffee.com/dealio'})]);
+  // The support server, the coffee link and the top.gg vote link live on Home only.
+  expect(links).toEqual([expect.objectContaining({url: 'https://dsc.gg/dealiosupport'}), expect.objectContaining({url: 'https://buymeacoffee.com/dealio'}),
+    expect.objectContaining({url: 'https://top.gg/bot/1540325119690412172/vote'})]);
   expect(controls.every(control => control.disabled)).toBe(true);
   expect(serialized).toContain('22:00–08:00');
   expect(serialized).toContain('**6**');
