@@ -24,6 +24,7 @@
   <a href="#icerikte-neler-var"><img src="https://img.shields.io/badge/Diller-TR_%C2%B7_EN_%C2%B7_DE_%C2%B7_FR-2980B9?style=flat-square" alt="Diller: Türkçe, İngilizce, Almanca, Fransızca"></a>
   <a href="#discordda-basla"><img src="https://img.shields.io/badge/Kurulum-Steam_%C5%9Fifresi_gerekmez-238636?style=flat-square" alt="Kurulum: Steam şifresi gerekmez"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/Lisans-MIT-2980B9?style=flat-square" alt="MIT lisansı"></a>
+  <a href="https://top.gg/bot/1540325119690412172"><img src="https://img.shields.io/badge/top.gg-Dealio%E2%80%99ya_oy_ver-FF3366?style=flat-square" alt="top.gg’de Dealio’ya oy ver"></a>
 </p>
 
 ---
@@ -77,6 +78,10 @@ Her oyun için ayrı hedef belirleyebilir ya da tüm listene tek bir indirim eş
 
 ## ✨ Son gelişmeler
 
+> **31 Ekim 2026 · Artık top.gg’de**
+>
+> Dealio top.gg incelemesini geçti ve [top.gg](https://top.gg/bot/1540325119690412172) adresinde listeleniyor. Dealio sana para kazandırdıysa orada vereceğin bir oy ya da kısa bir yorum, başka oyuncuların onu bulmasına yardım eder; Ana sayfa panelinde ⭐ Oy ver bağlantısı var.
+
 > **9 Ekim 2026 · v1.0.0: herkese açık**
 >
 > Dealio artık herkesin kullanımına açık. Discord uygulamalarına ya da bir sunucuya ekle, `/setup` yaz; istek listeni izlemeye başlasın. Ücretsiz ve kaynak kodu MIT lisansıyla açık.
@@ -127,7 +132,7 @@ Dealio hesap kimliklerini, tercihlerini, oyun kurallarını, gözlemlenen wishli
 
 Bildirim geçmişi son **30 günü** gösterir; fiyat gözlemleri **90 gün** tutulur. Aktif teslimat ve devam eden tekliflerin tekrarını önleyen kayıtlar daha uzun kalabilir. `/delete-data` aktif hesap kayıtlarını siler. Mevcut yedek kopyaları yeniden yazılmaz; ancak ayrı tutulan bir silme kaydı (Discord kimliğinin tek yönlü özeti, 35 gün saklanır) yedekten geri dönülse bile verilerinin geri gelmemesini sağlar.
 
-[Gizlilik](https://byzephyron.github.io/dealio-public-pages/privacy-tr.html) · [Kullanım koşulları](https://byzephyron.github.io/dealio-public-pages/terms-tr.html) · [Yardım](https://byzephyron.github.io/dealio-public-pages/help-tr.html) · [Destek sunucusu](https://dsc.gg/dealiosupport)
+[Gizlilik](https://byzephyron.github.io/dealio-public-pages/privacy-tr.html) · [Kullanım koşulları](https://byzephyron.github.io/dealio-public-pages/terms-tr.html) · [Yardım](https://byzephyron.github.io/dealio-public-pages/help-tr.html) · [Destek sunucusu](https://dsc.gg/dealiosupport) · [top.gg](https://top.gg/bot/1540325119690412172)
 
 ## ❓ Sık sorulanlar
 
