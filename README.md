@@ -24,6 +24,7 @@
   <a href="#whats-inside"><img src="https://img.shields.io/badge/Languages-TR_%C2%B7_EN_%C2%B7_DE_%C2%B7_FR-2980B9?style=flat-square" alt="Languages: Turkish, English, German, French"></a>
   <a href="#start-in-discord"><img src="https://img.shields.io/badge/Setup-no_Steam_password-238636?style=flat-square" alt="Setup: no Steam password"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-2980B9?style=flat-square" alt="MIT license"></a>
+  <a href="https://top.gg/bot/1540325119690412172"><img src="https://img.shields.io/badge/top.gg-Vote_for_Dealio-FF3366?style=flat-square" alt="Vote for Dealio on top.gg"></a>
 </p>
 
 ---
@@ -77,6 +78,10 @@ Set a different target for each game, or use one discount threshold across your 
 
 ## ✨ Latest updates
 
+> **31 October 2026 · Now on top.gg**
+>
+> Dealio passed the top.gg review and is listed on [top.gg](https://top.gg/bot/1540325119690412172). If Dealio saved you some money, a vote or a short review there helps other players find it; the Home panel has a ⭐ Vote link.
+
 > **9 October 2026 · v1.0.0: open to everyone**
 >
 > Dealio is now available to everyone. Add it to your Discord apps or to a server, run `/setup`, and it starts watching your wishlist. It's free, and the source code is open under the MIT license.
@@ -127,7 +132,7 @@ Dealio stores your account identifiers, preferences, game rules, observed wishli
 
 Notification history displays the last **30 days**; price observations are retained for **90 days**. Active deliveries and ongoing-offer deduplication records may be kept longer. `/delete-data` removes active account records. Existing backup copies are not rewritten, but a separate deletion record (a one-way hash of your Discord ID, kept for 35 days) makes sure a restore from backup can't bring your data back.
 
-[Privacy](https://byzephyron.github.io/dealio-public-pages/privacy.html) · [Terms](https://byzephyron.github.io/dealio-public-pages/terms.html) · [Help](https://byzephyron.github.io/dealio-public-pages/help.html) · [Support server](https://dsc.gg/dealiosupport)
+[Privacy](https://byzephyron.github.io/dealio-public-pages/privacy.html) · [Terms](https://byzephyron.github.io/dealio-public-pages/terms.html) · [Help](https://byzephyron.github.io/dealio-public-pages/help.html) · [Support server](https://dsc.gg/dealiosupport) · [top.gg](https://top.gg/bot/1540325119690412172)
 
 ## ❓ A few useful answers
 
