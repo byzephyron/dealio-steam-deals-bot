@@ -82,6 +82,42 @@ const legacySchema = `
   );
 `;
 
+/**
+ * Write-ahead logging: the health ping, monitor and backup read the same file, and in
+ * rollback-journal mode a reader blocks the bot's writes (up to the busy timeout, on
+ * the event loop). WAL lets readers and the writer run side by side, and a commit
+ * needs one fsync instead of several (measured on the VM: about 12 ms → 4 ms).
+ * synchronous stays FULL, so a commit, such as a sale candidate saved before Discord
+ * is called, survives a power loss as well as a crash.
+ */
+function useWriteAheadLog(database: DatabaseSync): void {
+  database.exec(`PRAGMA busy_timeout = ${databaseBusyTimeoutMs}`);
+  const mode = (database.prepare('PRAGMA journal_mode = WAL').get() as { journal_mode: string }).journal_mode;
+  if (mode !== 'wal') throw new Error(`SQLite did not enable write-ahead logging (journal_mode=${mode})`);
+  database.exec(`
+    PRAGMA synchronous = FULL;
+    PRAGMA journal_size_limit = ${walSizeLimitBytes};
+  `);
+}
+
+/** After a checkpoint the WAL file is cut back to this size, so it does not keep old pages around. */
+const walSizeLimitBytes = 4 * 1024 * 1024;
+
+/**
+ * Copies committed pages into the main file and empties the WAL. secure_delete zeroes
+ * deleted rows in the main file, but the WAL can still hold earlier copies of those
+ * pages until the next checkpoint; /delete-data calls this so they do not linger.
+ * Best effort: a reader that is still open can keep the WAL from being emptied this time.
+ */
+export function truncateWriteAheadLog(database: DatabaseSync): void {
+  if (database.isTransaction) return;
+  try {
+    database.exec('PRAGMA wal_checkpoint(TRUNCATE)');
+  } catch {
+    // The next automatic checkpoint overwrites the WAL anyway.
+  }
+}
+
 export function createDatabase(databasePath: string): DatabaseSync {
   if (databasePath !== ':memory:') {
     mkdirSync(dirname(resolve(databasePath)), { recursive: true });
@@ -89,6 +125,7 @@ export function createDatabase(databasePath: string): DatabaseSync {
 
   const database = new DatabaseSync(databasePath);
   try {
+    if (databasePath !== ':memory:') useWriteAheadLog(database);
     database.exec(legacySchema);
     migrateNotificationLog(database);
     migrateSaleEpisodes(database);

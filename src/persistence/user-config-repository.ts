@@ -3,6 +3,7 @@ import { rebaselineDiscountAlerts } from './alert-levels.js';
 import { deleteUserFromBroadcasts } from './broadcast-repository.js';
 import { deleteUserSupportTickets } from './support-ticket-repository.js';
 import { pseudonymizeAuditUser } from './deletion-journal.js';
+import { truncateWriteAheadLog } from './database.js';
 import { randomUUID } from 'node:crypto';
 import { isLanguage, type Language, type UserConfig } from '../domain/user-config.js';
 import {
@@ -427,7 +428,10 @@ export class UserConfigRepository {
       const result = this.database
         .prepare('DELETE FROM user_config WHERE discord_user_id = ?')
         .run(discordUserId);
-      if (ownsTransaction) this.database.exec('COMMIT');
+      if (ownsTransaction) {
+        this.database.exec('COMMIT');
+        truncateWriteAheadLog(this.database);
+      }
       return Number(result.changes) === 1;
     } catch (error: unknown) {
       if (ownsTransaction && this.database.isTransaction) this.database.exec('ROLLBACK');
