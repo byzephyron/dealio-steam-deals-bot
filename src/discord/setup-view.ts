@@ -27,7 +27,7 @@ import { dealioBrand } from './ui/brand.js';
 import { assertComponentsV2Limit, dealioFooter } from './ui/components-v2.js';
 import { uiCopy } from './ui/copy.js';
 import { commonStoreCountries } from './ui/country-picker.js';
-import { countryDisplay, flagEmoji, openPanelButton } from './ui/design.js';
+import { countryDisplay, flagEmoji, openPanelButton, steamPrivacyUrl } from './ui/design.js';
 
 export interface SetupPresentationOptions {
   readonly bannerUrl?: string;
@@ -38,7 +38,7 @@ export interface SetupPresentationOptions {
   readonly onWishlistHidden?: (discordUserId: string, language: Language) => void;
 }
 
-export type SetupAction = 'start' | 'how' | 'confirm' | 'language' | 'region' | 'cancel' | 'open';
+export type SetupAction = 'start' | 'how' | 'confirm' | 'language' | 'region' | 'cancel' | 'open' | 'retry';
 
 export function buildSetupWelcomePanel(
   language: Language,
@@ -256,13 +256,83 @@ function finishSetupPanel(container: ContainerBuilder, language: Language): void
   assertComponentsV2Limit([container]);
 }
 
+/**
+ * Setup stopped because Steam hides the wishlist. Instead of a dead end that makes
+ * the user fill in the form again, it lists the two settings to change, links to
+ * them and retries with the profile and region already entered ("I've made it
+ * public, try again"). stillHidden: a retry found it hidden again; Steam can take a
+ * minute or two to show a privacy change.
+ */
+export function buildSetupWishlistHiddenPanel(
+  language: Language,
+  sessionId: string,
+  stillHidden = false,
+  disabled = false,
+): ContainerBuilder {
+  const t = localizer(language);
+  const steps = t({
+    tr: `1. [Steam gizlilik ayarlarını](${steamPrivacyUrl}) aç (aşağıdaki butonla da açılır).\n2. **Profilim** → **Herkese Açık**\n3. **Oyun ayrıntıları** → **Herkese Açık** (istek listen bu ayara bağlı)\n4. Buraya dönüp **Açtım, tekrar dene**’ye bas. Formu yeniden doldurman gerekmez.`,
+    en: `1. Open [Steam’s privacy settings](${steamPrivacyUrl}) (the button below opens them too).\n2. **My profile** → **Public**\n3. **Game details** → **Public** (your wishlist follows this one)\n4. Come back and press **I made it public, try again**. No need to fill in the form again.`,
+    de: `1. Öffne die [Steam-Privatsphäre-Einstellungen](${steamPrivacyUrl}) (auch über den Button unten).\n2. **Mein Profil** → **Öffentlich**\n3. **Spieldetails** → **Öffentlich** (deine Wunschliste folgt dieser Einstellung)\n4. Komm zurück und drück **Erledigt, noch mal prüfen**. Das Formular musst du nicht neu ausfüllen.`,
+    fr: `1. Ouvre les [paramètres de confidentialité Steam](${steamPrivacyUrl}) (le bouton ci-dessous les ouvre aussi).\n2. **Mon profil** → **Public**\n3. **Détails des jeux** → **Public** (ta liste de souhaits suit ce réglage)\n4. Reviens et appuie sur **C’est fait, réessayer**. Pas besoin de remplir le formulaire à nouveau.`,
+  });
+  const intro = stillHidden
+    ? t({
+      tr: 'Hâlâ gizli görünüyor. Steam’in değişikliği göstermesi bazen bir iki dakika sürüyor; ayarları kaydettiysen biraz bekleyip yeniden dene.',
+      en: 'It still looks hidden. Steam sometimes takes a minute or two to show the change; if you saved the settings, wait a moment and try again.',
+      de: 'Sie wirkt noch verborgen. Steam braucht manchmal ein, zwei Minuten, bis die Änderung sichtbar ist; wenn du gespeichert hast, warte kurz und versuch es noch mal.',
+      fr: 'Elle semble encore masquée. Steam met parfois une minute ou deux à montrer le changement ; si tu as enregistré, attends un peu et réessaie.',
+    })
+    : t({
+      tr: 'Profilini buldum ama Steam istek listeni gizli tutuyor. İki ayarı değiştirmen yeterli:',
+      en: 'I found your profile, but Steam keeps your wishlist hidden. Changing two settings is enough:',
+      de: 'Ich habe dein Profil gefunden, aber Steam hält deine Wunschliste verborgen. Zwei Einstellungen reichen:',
+      fr: 'J’ai trouvé ton profil, mais Steam garde ta liste de souhaits masquée. Deux réglages suffisent :',
+    });
+  const reassurance = t({
+    tr: '-# Dealio yalnızca herkese açık istek listeni okur; Steam şifreni ya da girişini asla istemez.',
+    en: '-# Dealio only reads your public wishlist; it never asks for your Steam password or sign-in.',
+    de: '-# Dealio liest nur deine öffentliche Wunschliste und fragt nie nach deinem Steam-Passwort oder Login.',
+    fr: '-# Dealio lit seulement ta liste de souhaits publique ; il ne demande jamais ton mot de passe ni ta connexion Steam.',
+  });
+  const container = new ContainerBuilder()
+    .setAccentColor(dealioBrand.colors.warning)
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(`-# ✨ DEALIO · ${setupStep(language, 1)}\n# 🔒 ${t({
+        tr: 'İstek listen gizli görünüyor', en: 'Your wishlist looks hidden', de: 'Deine Wunschliste wirkt verborgen', fr: 'Ta liste de souhaits semble masquée',
+      })}\n${intro}`),
+      new TextDisplayBuilder().setContent(`${steps}\n${reassurance}`),
+    )
+    .addActionRowComponents(new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`setup:${sessionId}:retry`)
+        .setStyle(ButtonStyle.Success)
+        .setEmoji('🔄')
+        .setLabel(t({ tr: 'Açtım, tekrar dene', en: 'I made it public, try again', de: 'Erledigt, noch mal prüfen', fr: 'C’est fait, réessayer' }))
+        .setDisabled(disabled),
+      new ButtonBuilder()
+        .setStyle(ButtonStyle.Link)
+        .setURL(steamPrivacyUrl)
+        .setEmoji('🔗')
+        .setLabel(t({ tr: 'Steam gizlilik ayarları', en: 'Steam privacy settings', de: 'Steam-Privatsphäre', fr: 'Confidentialité Steam' })),
+      new ButtonBuilder()
+        .setCustomId(`setup:${sessionId}:start`)
+        .setStyle(ButtonStyle.Secondary)
+        .setEmoji('✏️')
+        .setLabel(t({ tr: 'Başka profil gir', en: 'Use another profile', de: 'Anderes Profil', fr: 'Autre profil' }))
+        .setDisabled(disabled),
+    ));
+  finishSetupPanel(container, language);
+  return container;
+}
+
 export function parseSetupAction(customId: string, sessionId: string): SetupAction | null {
   const prefix = `setup:${sessionId}:`;
   if (!customId.startsWith(prefix)) {
     return null;
   }
   const action = customId.slice(prefix.length);
-  return ['start', 'how', 'confirm', 'language', 'region', 'cancel', 'open'].includes(action)
+  return ['start', 'how', 'confirm', 'language', 'region', 'cancel', 'open', 'retry'].includes(action)
     ? action as SetupAction
     : null;
 }

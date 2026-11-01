@@ -4,7 +4,7 @@ import { buildStatusV2Panel } from '../dist/discord/status-view-v2.js';
 import { buildSaleNotificationPanel, buildInitialWishlistV2Page } from '../dist/discord/notification-components-v2.js';
 import { buildCountryRangePanel } from '../dist/discord/ui/country-picker.js';
 import { buildWishlistHiddenDm } from '../dist/discord/wishlist-hidden-notice.js';
-import { buildSetupConfirmationPanel, buildSetupWelcomePanel } from '../dist/discord/setup-view.js';
+import { buildSetupConfirmationPanel, buildSetupWelcomePanel, buildSetupWishlistHiddenPanel } from '../dist/discord/setup-view.js';
 import { buildSupportPanel, buildTicketClosedNotice, buildTicketHeader } from '../dist/discord/support/support-view.js';
 
 /** Every preview panel as Discord JSON, keyed by language and then by screen. */
@@ -76,6 +76,7 @@ for (const language of ['tr', 'en', 'de', 'fr']) {
     partial: [buildStatusV2Panel({ ...dashboard, checkState: { ...dashboard.checkState, lastStatus: 'unavailable', lastSuccessUnknownPriceCount: 4 } }, 'preview', { mode: 'home' }).toJSON()],
     hidden: [buildStatusV2Panel({ ...dashboard, checkState: { ...dashboard.checkState, lastStatus: 'unavailable', lastErrorCode: 'STEAM_WISHLIST_INACCESSIBLE' } }, 'preview', { mode: 'home' }).toJSON(),
       buildStatusV2Panel({ ...dashboard, checkState: { ...dashboard.checkState, lastStatus: 'unavailable', lastErrorCode: 'STEAM_WISHLIST_INACCESSIBLE' } }, 'preview', { mode: 'status' }).toJSON()],
+    setupHidden: [buildSetupWishlistHiddenPanel(language, 'preview').toJSON(), buildSetupWishlistHiddenPanel(language, 'preview', true).toJSON()],
     hiddenDm: [buildWishlistHiddenDm(language, 'tracking').toJSON(), buildWishlistHiddenDm(language, 'setup').toJSON()],
     empty: personal('wishlist', { ...assistantData, items: [] }),
     expired: [buildStatusV2Panel(dashboard, 'preview', { mode: 'home', disabled: true }).toJSON()],

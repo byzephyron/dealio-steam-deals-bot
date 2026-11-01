@@ -22,6 +22,7 @@ import { SteamWishlistError } from '../../domain/steam.js';
 import { SteamIdentityError } from '../../domain/steam-identity.js';
 import {
   parseStoreCountryCode,
+  type StoreCountryCode,
 } from '../../domain/store-country.js';
 import { isLanguage, type Language } from '../../domain/user-config.js';
 import { localizer } from '../i18n.js';
@@ -41,6 +42,7 @@ import {
   buildSetupCompletePanel,
   buildSetupConfirmationPanel,
   buildSetupWelcomePanel,
+  buildSetupWishlistHiddenPanel,
   setupCompleteDetail,
   setupCompleteStatus,
 } from '../setup-view.js';
@@ -145,6 +147,12 @@ export async function handleSetup(
   let regionSelectionSource: 'discord-locale' | 'user' = 'discord-locale';
   let pendingProfileInput: string | null = null;
   let countrySelectionPurpose: 'initial' | 'change' | null = null;
+  /** What the user entered before Steam answered "hidden": "Try again" reuses it. */
+  let hiddenRetry: {
+    readonly profileInput: string;
+    readonly storeCountry: StoreCountryCode;
+    readonly regionSource: 'discord-locale' | 'user';
+  } | null = null;
   let operations = Promise.resolve();
   const concurrentOperations = new Set<Promise<void>>();
   const sessionClosed = new Promise<void>((resolve) => {
@@ -350,8 +358,13 @@ export async function handleSetup(
             }
             pendingProfileInput = null;
             countrySelectionPurpose = null;
+            hiddenRetry = isWishlistHiddenError(error)
+              ? { profileInput, storeCountry: selectedCountry, regionSource: 'user' }
+              : null;
             await editPanel({
-              components: [buildSetupErrorPanel(error, language, interaction.id)],
+              components: [hiddenRetry
+                ? buildSetupWishlistHiddenPanel(language, interaction.id)
+                : buildSetupErrorPanel(error, language, interaction.id)],
             });
             hintIfWishlistHidden(error, interaction.user.id, language, presentation);
           }
@@ -417,10 +430,10 @@ export async function handleSetup(
             messages.setupWizardPreparing,
           )],
         });
+        const selectedCountry = parseStoreCountryCode(
+          selectedValue,
+        ) ?? suggestedCountry;
         try {
-          const selectedCountry = parseStoreCountryCode(
-            selectedValue,
-          ) ?? suggestedCountry;
           const nextPrepared = await service.prepare(
             interaction.user.id,
             profileInput,
@@ -438,12 +451,21 @@ export async function handleSetup(
           if (sequence !== modalSequence || completed || !sessionActive) {
             return;
           }
+          hiddenRetry = isWishlistHiddenError(error)
+            ? {
+                profileInput,
+                storeCountry: selectedCountry,
+                regionSource: selectedCountry === suggestedCountry ? 'discord-locale' : 'user',
+              }
+            : null;
           await editPanel(error instanceof SetupAlreadyCompletedError
             ? {
                 components: [buildSetupAlreadyCompletedPanel(language, viewOptions)],
               }
             : {
-                components: [buildSetupErrorPanel(error, language, interaction.id)],
+                components: [hiddenRetry
+                  ? buildSetupWishlistHiddenPanel(language, interaction.id)
+                  : buildSetupErrorPanel(error, language, interaction.id)],
               });
           hintIfWishlistHidden(error, interaction.user.id, language, presentation);
           return;
@@ -538,6 +560,41 @@ export async function handleSetup(
             messagesFor(language).setupWizardCancelled,
           )],
         });
+        return;
+      }
+      if (action === 'retry' && hiddenRetry && !prepared) {
+        // Same profile and region as before; only Steam's privacy answer may have changed.
+        const retry = hiddenRetry;
+        await editPanel({
+          components: [buildSetupWishlistHiddenPanel(language, interaction.id, false, true)],
+        });
+        try {
+          const nextPrepared = await service.prepare(
+            interaction.user.id,
+            retry.profileInput,
+            language,
+            retry.storeCountry,
+          );
+          if (completed || !sessionActive) return;
+          prepared = nextPrepared;
+          hiddenRetry = null;
+          regionSelectionSource = retry.regionSource;
+          await editPanel({
+            components: [buildSetupConfirmationPanel(prepared, interaction.id, confirmationViewOptions())],
+          });
+        } catch (error: unknown) {
+          if (completed || !sessionActive) return;
+          if (isWishlistHiddenError(error)) {
+            await editPanel({
+              components: [buildSetupWishlistHiddenPanel(language, interaction.id, true)],
+            });
+            return;
+          }
+          hiddenRetry = null;
+          await editPanel(error instanceof SetupAlreadyCompletedError
+            ? { components: [buildSetupAlreadyCompletedPanel(language, viewOptions)] }
+            : { components: [buildSetupErrorPanel(error, language, interaction.id)] });
+        }
         return;
       }
       if (action === 'confirm' && prepared) {
@@ -678,6 +735,10 @@ async function handleLegacySetup(
     });
     hintIfWishlistHidden(error, interaction.user.id, language, presentation);
   }
+}
+
+function isWishlistHiddenError(error: unknown): boolean {
+  return error instanceof SteamWishlistError && error.code === 'STEAM_WISHLIST_INACCESSIBLE';
 }
 
 /** After the error panel is up: a hidden wishlist also gets the fix by DM, so it outlives the panel. */
