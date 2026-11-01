@@ -64,7 +64,7 @@ describe('setup on a hidden wishlist', () => {
     const start = startWithModal('https://steamcommunity.com/id/someone', 'DE');
     collector.emit('collect', start);
 
-    await vi.waitFor(() => expect(lastPayload(interaction)).toContain('İstek listen gizli görünüyor'));
+    await vi.waitFor(() => expect(lastPayload(interaction)).toContain('Steam wishlist’ini göremiyorum'));
     let payload = lastPayload(interaction);
     expect(payload).toContain('setup:setup-session:retry');
     expect(payload).toContain('https://steamcommunity.com/my/edit/settings');
@@ -74,7 +74,7 @@ describe('setup on a hidden wishlist', () => {
 
     // Still hidden: the same panel, saying Steam can take a moment.
     collector.emit('collect', retryClick());
-    await vi.waitFor(() => expect(lastPayload(interaction)).toContain('Hâlâ gizli görünüyor'));
+    await vi.waitFor(() => expect(lastPayload(interaction)).toContain('hâlâ gizli görünüyor'));
     payload = lastPayload(interaction);
     expect(payload).toContain('setup:setup-session:retry');
 

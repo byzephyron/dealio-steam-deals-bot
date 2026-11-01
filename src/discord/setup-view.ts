@@ -271,35 +271,38 @@ export function buildSetupWishlistHiddenPanel(
 ): ContainerBuilder {
   const t = localizer(language);
   const steps = t({
-    tr: `1. [Steam gizlilik ayarlarını](${steamPrivacyUrl}) aç (aşağıdaki butonla da açılır).\n2. **Profilim** → **Herkese Açık**\n3. **Oyun ayrıntıları** → **Herkese Açık** (istek listen bu ayara bağlı)\n4. Buraya dönüp **Açtım, tekrar dene**’ye bas. Formu yeniden doldurman gerekmez.`,
-    en: `1. Open [Steam’s privacy settings](${steamPrivacyUrl}) (the button below opens them too).\n2. **My profile** → **Public**\n3. **Game details** → **Public** (your wishlist follows this one)\n4. Come back and press **I made it public, try again**. No need to fill in the form again.`,
-    de: `1. Öffne die [Steam-Privatsphäre-Einstellungen](${steamPrivacyUrl}) (auch über den Button unten).\n2. **Mein Profil** → **Öffentlich**\n3. **Spieldetails** → **Öffentlich** (deine Wunschliste folgt dieser Einstellung)\n4. Komm zurück und drück **Erledigt, noch mal prüfen**. Das Formular musst du nicht neu ausfüllen.`,
-    fr: `1. Ouvre les [paramètres de confidentialité Steam](${steamPrivacyUrl}) (le bouton ci-dessous les ouvre aussi).\n2. **Mon profil** → **Public**\n3. **Détails des jeux** → **Public** (ta liste de souhaits suit ce réglage)\n4. Reviens et appuie sur **C’est fait, réessayer**. Pas besoin de remplir le formulaire à nouveau.`,
+    tr: `1. [Steam gizlilik ayarlarını](${steamPrivacyUrl}) aç (aşağıdaki butonla da açabilirsin)\n2. **Profilim** → **Herkese Açık**\n3. **Oyun ayrıntıları** → **Herkese Açık** (istek listen bu ayara bağlı)\n4. Sonra buraya dönüp **Açtım, tekrar dene**’ye dokun. Bilgilerini hatırlıyorum, formu baştan doldurman gerekmiyor 💙`,
+    en: `1. Open [Steam’s privacy settings](${steamPrivacyUrl}) (or use the button below)\n2. **My profile** → **Public**\n3. **Game details** → **Public** (your wishlist follows this one)\n4. Then come back and tap **I made it public, try again**. I remember what you entered, so no need to fill in the form again 💙`,
+    de: `1. Öffne die [Steam-Privatsphäre-Einstellungen](${steamPrivacyUrl}) (oder nimm den Button unten)\n2. **Mein Profil** → **Öffentlich**\n3. **Spieldetails** → **Öffentlich** (deine Wunschliste folgt dieser Einstellung)\n4. Komm dann zurück und tipp auf **Erledigt, noch mal prüfen**. Ich habe mir deine Angaben gemerkt, du musst nichts neu ausfüllen 💙`,
+    fr: `1. Ouvre les [paramètres de confidentialité Steam](${steamPrivacyUrl}) (ou utilise le bouton ci-dessous)\n2. **Mon profil** → **Public**\n3. **Détails des jeux** → **Public** (ta liste de souhaits suit ce réglage)\n4. Puis reviens et appuie sur **C’est fait, réessayer**. Je me souviens de ce que tu as saisi, pas besoin de tout remplir à nouveau 💙`,
   });
   const intro = stillHidden
     ? t({
-      tr: 'Hâlâ gizli görünüyor. Steam’in değişikliği göstermesi bazen bir iki dakika sürüyor; ayarları kaydettiysen biraz bekleyip yeniden dene.',
-      en: 'It still looks hidden. Steam sometimes takes a minute or two to show the change; if you saved the settings, wait a moment and try again.',
-      de: 'Sie wirkt noch verborgen. Steam braucht manchmal ein, zwei Minuten, bis die Änderung sichtbar ist; wenn du gespeichert hast, warte kurz und versuch es noch mal.',
-      fr: 'Elle semble encore masquée. Steam met parfois une minute ou deux à montrer le changement ; si tu as enregistré, attends un peu et réessaie.',
+      tr: 'Hmm, hâlâ gizli görünüyor 🤔 Dert etme, Steam’in değişikliği fark etmesi bazen bir iki dakika sürüyor. Ayarları kaydettiysen biraz bekleyip tekrar dokun, ben buradayım.',
+      en: 'Hmm, it still looks hidden 🤔 Don’t worry, Steam sometimes takes a minute or two to notice the change. If you saved the settings, give it a moment and tap again; I’m right here.',
+      de: 'Hmm, sie wirkt noch verborgen 🤔 Keine Sorge, Steam braucht manchmal ein, zwei Minuten, bis es die Änderung bemerkt. Wenn du gespeichert hast, warte kurz und tipp noch mal; ich bin da.',
+      fr: 'Hmm, elle semble encore masquée 🤔 Pas d’inquiétude, Steam met parfois une minute ou deux à voir le changement. Si tu as enregistré, attends un peu et réessaie ; je suis là.',
     })
     : t({
-      tr: 'Profilini buldum ama Steam istek listeni gizli tutuyor. İki ayarı değiştirmen yeterli:',
-      en: 'I found your profile, but Steam keeps your wishlist hidden. Changing two settings is enough:',
-      de: 'Ich habe dein Profil gefunden, aber Steam hält deine Wunschliste verborgen. Zwei Einstellungen reichen:',
-      fr: 'J’ai trouvé ton profil, mais Steam garde ta liste de souhaits masquée. Deux réglages suffisent :',
+      tr: 'Selam! Profilini buldum ama Steam istek listeni gizli tutuyor, o yüzden içine bakamıyorum. Çözümü çok kolay, iki ayar yeter:',
+      en: 'Hi! I found your profile, but Steam keeps your wishlist hidden, so I can’t look inside. The fix is quick, just two settings:',
+      de: 'Hallo! Ich habe dein Profil gefunden, aber Steam hält deine Wunschliste verborgen, deshalb kann ich nicht hineinschauen. Das ist schnell behoben, zwei Einstellungen reichen:',
+      fr: 'Salut ! J’ai trouvé ton profil, mais Steam garde ta liste de souhaits masquée, donc je ne peux pas la voir. C’est vite réglé, deux réglages suffisent :',
     });
   const reassurance = t({
-    tr: '-# Dealio yalnızca herkese açık istek listeni okur; Steam şifreni ya da girişini asla istemez.',
-    en: '-# Dealio only reads your public wishlist; it never asks for your Steam password or sign-in.',
-    de: '-# Dealio liest nur deine öffentliche Wunschliste und fragt nie nach deinem Steam-Passwort oder Login.',
-    fr: '-# Dealio lit seulement ta liste de souhaits publique ; il ne demande jamais ton mot de passe ni ta connexion Steam.',
+    tr: '-# Merak etme: yalnızca herkese açık istek listene bakıyorum, Steam şifreni ya da girişini asla istemem.',
+    en: '-# No worries: I only look at your public wishlist and never ask for your Steam password or sign-in.',
+    de: '-# Keine Sorge: Ich schaue nur auf deine öffentliche Wunschliste und frage nie nach deinem Steam-Passwort oder Login.',
+    fr: '-# Pas d’inquiétude : je regarde seulement ta liste de souhaits publique et je ne demande jamais ton mot de passe ni ta connexion Steam.',
   });
   const container = new ContainerBuilder()
     .setAccentColor(dealioBrand.colors.warning)
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`-# ✨ DEALIO · ${setupStep(language, 1)}\n# 🔒 ${t({
-        tr: 'İstek listen gizli görünüyor', en: 'Your wishlist looks hidden', de: 'Deine Wunschliste wirkt verborgen', fr: 'Ta liste de souhaits semble masquée',
+      new TextDisplayBuilder().setContent(`-# ✨ DEALIO · ${setupStep(language, 1)}\n# ${t({
+        tr: 'Steam wishlist’ini göremiyorum 😞',
+        en: 'I can’t see your Steam wishlist 😞',
+        de: 'Ich kann deine Steam-Wunschliste nicht sehen 😞',
+        fr: 'Je ne vois pas ta liste de souhaits Steam 😞',
       })}\n${intro}`),
       new TextDisplayBuilder().setContent(`${steps}\n${reassurance}`),
     )
