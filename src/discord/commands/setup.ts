@@ -153,11 +153,15 @@ export async function handleSetup(
     readonly storeCountry: StoreCountryCode;
     readonly regionSource: 'discord-locale' | 'user';
   } | null = null;
+  /** Steam last answered "hidden": if the user leaves without finishing, the fix follows by DM. */
+  let wishlistHiddenOnLeave = false;
+  let endReason = '';
   let operations = Promise.resolve();
   const concurrentOperations = new Set<Promise<void>>();
   const sessionClosed = new Promise<void>((resolve) => {
-    collector.once('end', () => {
+    collector.once('end', (_collected: unknown, reason: string) => {
       sessionActive = false;
+      endReason = reason;
       resolve();
     });
   });
@@ -174,7 +178,7 @@ export async function handleSetup(
     } catch (_replyError: unknown) {
       safeLogger.error('Discord setup wizard error response failed.');
     }
-    hintIfWishlistHidden(error, interaction.user.id, language, presentation);
+    if (isWishlistHiddenError(error)) wishlistHiddenOnLeave = true;
   };
   let completedPanel: { readonly prepared: PreparedUserConfiguration; readonly status: Parameters<typeof buildSetupCompletePanel>[1] } | null = null;
   let handedOff = false;
@@ -343,6 +347,7 @@ export async function handleSetup(
               return;
             }
             prepared = nextPrepared;
+            wishlistHiddenOnLeave = false;
             pendingProfileInput = null;
             countrySelectionPurpose = null;
             await editPanel({
@@ -366,7 +371,7 @@ export async function handleSetup(
                 ? buildSetupWishlistHiddenPanel(language, interaction.id)
                 : buildSetupErrorPanel(error, language, interaction.id)],
             });
-            hintIfWishlistHidden(error, interaction.user.id, language, presentation);
+            if (hiddenRetry) wishlistHiddenOnLeave = true;
           }
         }
       })().catch((error: unknown) => safeLogger.error('Discord setup country selection failed', error));
@@ -444,6 +449,7 @@ export async function handleSetup(
             return;
           }
           prepared = nextPrepared;
+          wishlistHiddenOnLeave = false;
           regionSelectionSource = selectedCountry === suggestedCountry
             ? 'discord-locale'
             : 'user';
@@ -467,7 +473,7 @@ export async function handleSetup(
                   ? buildSetupWishlistHiddenPanel(language, interaction.id)
                   : buildSetupErrorPanel(error, language, interaction.id)],
               });
-          hintIfWishlistHidden(error, interaction.user.id, language, presentation);
+          if (hiddenRetry) wishlistHiddenOnLeave = true;
           return;
         }
         await editPanel({
@@ -578,6 +584,7 @@ export async function handleSetup(
           if (completed || !sessionActive) return;
           prepared = nextPrepared;
           hiddenRetry = null;
+          wishlistHiddenOnLeave = false;
           regionSelectionSource = retry.regionSource;
           await editPanel({
             components: [buildSetupConfirmationPanel(prepared, interaction.id, confirmationViewOptions())],
@@ -591,6 +598,7 @@ export async function handleSetup(
             return;
           }
           hiddenRetry = null;
+          wishlistHiddenOnLeave = false;
           await editPanel(error instanceof SetupAlreadyCompletedError
             ? { components: [buildSetupAlreadyCompletedPanel(language, viewOptions)] }
             : { components: [buildSetupErrorPanel(error, language, interaction.id)] });
@@ -657,6 +665,13 @@ export async function handleSetup(
     } catch (_error: unknown) {
       // Expired Discord interactions cannot be edited.
     }
+  }
+  // The panel already showed the fix while the session was open, so the DM is only the
+  // reminder that outlives it: sent once the user leaves with the wishlist still hidden,
+  // never alongside the panel. Not after a cancel, a restart, or a setup finished elsewhere.
+  if (wishlistHiddenOnLeave && !completed && endReason !== 'cancelled' && endReason !== 'shutdown'
+    && !service.hasExistingConfiguration?.(interaction.user.id)) {
+    remindWishlistHidden(interaction.user.id, language, presentation);
   }
 }
 
@@ -741,14 +756,21 @@ function isWishlistHiddenError(error: unknown): boolean {
   return error instanceof SteamWishlistError && error.code === 'STEAM_WISHLIST_INACCESSIBLE';
 }
 
-/** After the error panel is up: a hidden wishlist also gets the fix by DM, so it outlives the panel. */
+/** Slash-option setup has no panel session to wait for: after its error panel, the fix also goes by DM. */
 function hintIfWishlistHidden(
   error: unknown,
   discordUserId: string,
   language: Language,
   presentation: SetupPresentationOptions,
 ): void {
-  if (!(error instanceof SteamWishlistError) || error.code !== 'STEAM_WISHLIST_INACCESSIBLE') return;
+  if (isWishlistHiddenError(error)) remindWishlistHidden(discordUserId, language, presentation);
+}
+
+function remindWishlistHidden(
+  discordUserId: string,
+  language: Language,
+  presentation: SetupPresentationOptions,
+): void {
   try {
     presentation.onWishlistHidden?.(discordUserId, language);
   } catch (hintError: unknown) {

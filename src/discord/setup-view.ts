@@ -34,7 +34,7 @@ export interface SetupPresentationOptions {
   readonly avatarUrl?: string;
   readonly pollIntervalHours?: number;
   readonly regionSelectionSource?: 'discord-locale' | 'user';
-  /** Setup stopped because Steam hides the wishlist: also tell the user by DM. Never awaited. */
+  /** The user left setup while Steam still hid the wishlist: send the fix by DM. Never awaited. */
   readonly onWishlistHidden?: (discordUserId: string, language: Language) => void;
 }
 
