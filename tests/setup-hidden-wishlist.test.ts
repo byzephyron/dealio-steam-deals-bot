@@ -70,7 +70,8 @@ describe('setup on a hidden wishlist', () => {
     expect(payload).toContain('https://steamcommunity.com/my/edit/settings');
     expect(payload).toContain('setup:setup-session:start');
     expect(payload).toContain('Oyun ayrıntıları');
-    expect(onWishlistHidden).toHaveBeenCalledWith('discord-user', 'tr');
+    // The panel shows the fix; no DM alongside it.
+    expect(onWishlistHidden).not.toHaveBeenCalled();
 
     // Still hidden: the same panel, saying Steam can take a moment.
     collector.emit('collect', retryClick());
@@ -89,6 +90,44 @@ describe('setup on a hidden wishlist', () => {
     expect(service.confirm).not.toHaveBeenCalled();
     collector.emit('end', [], 'time');
     await handling;
+    // Left after the wishlist became public: nothing to remind.
+    expect(onWishlistHidden).not.toHaveBeenCalled();
+  });
+
+  async function leaveWhileHidden(reason: string, configuredElsewhere = false) {
+    const collector = new SetupCollectorFake();
+    const interaction = setupInteraction(collector);
+    const service = {
+      hasExistingConfiguration: vi.fn().mockReturnValue(false),
+      prepare: vi.fn().mockRejectedValue(hidden()),
+      confirm: vi.fn(), configure: vi.fn(),
+    };
+    const onWishlistHidden = vi.fn();
+    const handling = handleSetup(interaction as never, service as never, undefined, { onWishlistHidden });
+    await vi.waitFor(() => expect(interaction.editReply).toHaveBeenCalledOnce());
+    collector.emit('collect', startWithModal('76561198000000000', 'TR'));
+    await vi.waitFor(() => expect(lastPayload(interaction)).toContain('setup:setup-session:retry'));
+    collector.emit('collect', retryClick());
+    await vi.waitFor(() => expect(lastPayload(interaction)).toContain('hâlâ gizli görünüyor'));
+    expect(onWishlistHidden).not.toHaveBeenCalled();
+    if (configuredElsewhere) service.hasExistingConfiguration.mockReturnValue(true);
+    collector.emit('end', [], reason);
+    await handling;
+    return onWishlistHidden;
+  }
+
+  it('sends the DM once, when the user leaves setup with the wishlist still hidden', async () => {
+    const onWishlistHidden = await leaveWhileHidden('time');
+    expect(onWishlistHidden).toHaveBeenCalledOnce();
+    expect(onWishlistHidden).toHaveBeenCalledWith('discord-user', 'tr');
+  });
+
+  it.each(['cancelled', 'shutdown'])('sends no DM when the session ends by %s', async (reason) => {
+    expect(await leaveWhileHidden(reason)).not.toHaveBeenCalled();
+  });
+
+  it('sends no DM when the user finished setup in another session meanwhile', async () => {
+    expect(await leaveWhileHidden('time', true)).not.toHaveBeenCalled();
   });
 
   it('keeps the general error panel for other Steam failures, and ignores a stray retry', async () => {
