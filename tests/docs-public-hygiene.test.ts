@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 
@@ -24,6 +24,23 @@ describe('public site hygiene', () => {
         const hash = createHash('sha256').update(scripts[0]!).digest('base64');
         expect(/script-src [^;]+/.exec(policy!)?.[0], page).toBe(`script-src 'sha256-${hash}'`);
       }
+    }
+  });
+
+  it('gives every homepage a link preview and structured data that match the visible page', () => {
+    for (const [page, lang] of [['index.html', 'en'], ['index-tr.html', 'tr'], ['index-de.html', 'de'], ['index-fr.html', 'fr']]) {
+      const text = read(`docs/${page}`);
+      const meta = (property: string): string | undefined =>
+        new RegExp(`<meta property="${property}" content="([^"]*)">`).exec(text)?.[1];
+      expect(meta('og:url'), page).toBe(`https://byzephyron.github.io/dealio-public-pages/${page}`);
+      expect(meta('og:image'), page).toBe(`https://byzephyron.github.io/dealio-public-pages/og-${lang}.png`);
+      expect(existsSync(resolve(`docs/og-${lang}.png`)), page).toBe(true);
+      const data = JSON.parse(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(text)![1]!) as {
+        '@graph': Array<{ '@type': string; mainEntity?: Array<{ name: string }> }>;
+      };
+      const faq = data['@graph'].find((entry) => entry['@type'] === 'FAQPage')!;
+      const visible = [...text.matchAll(/<details><summary>([\s\S]*?)<\/summary>/g)].map((match) => match[1]);
+      expect(faq.mainEntity!.map((question) => question.name), page).toEqual(visible);
     }
   });
 
