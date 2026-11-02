@@ -81,14 +81,16 @@ p{margin:0}
 .c-target-label{fill:var(--ink);font-size:17px;font-weight:600;opacity:.85}
 .c-area{fill:var(--blue);opacity:.07}
 .c-price{fill:none;stroke:var(--blue);stroke-width:4;stroke-linejoin:round;stroke-linecap:round}
-.c-dot{fill:var(--night);stroke:var(--green);stroke-width:4}
+.c-dot{fill:var(--green);stroke:var(--night);stroke-width:3}
 .c-ring{fill:none;stroke:var(--green);stroke-width:2;opacity:0;transform-box:fill-box;transform-origin:center}
 .c-tag{fill:var(--green);font-weight:800;font-stretch:var(--narrow);font-size:30px;font-variant-numeric:tabular-nums}
 .c-tag-sub{fill:var(--ink);font-size:16px;font-weight:600}
 .c-low-label{fill:var(--green);font-size:15px}
 .c-quiet{fill:var(--muted);font-size:15px}
-.c-step{fill:var(--panel);stroke:var(--line)}
-.c-step-n{fill:var(--muted);font-size:14px;font-weight:700;text-anchor:middle;dominant-baseline:central}
+.c-step{fill:var(--muted);stroke:var(--night);stroke-width:3}
+.c-step-n{fill:var(--night);font-size:14px;font-weight:800;text-anchor:middle;dominant-baseline:central}
+.c-cover{filter:drop-shadow(0 8px 14px rgb(0 0 0 / .35))}
+.c-cover-label{fill:var(--ink);font-size:15px;font-weight:600}
 @media(prefers-reduced-motion:no-preference){
   .c-price{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 2.4s cubic-bezier(.5,0,.2,1) .2s forwards}
   .c-area{opacity:0;animation:area .8s ease 2.2s forwards}
