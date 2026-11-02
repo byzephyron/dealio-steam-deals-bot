@@ -163,6 +163,12 @@ export function OverviewPage(): VNode {
               left: `${num(counts.enabled)} kullanıcı`, right: `${num(counts.paused)} duraklatıldı · ${num(counts.dmBlocked)} DM engelli` })}
             ${Meter({ label: 'Şu an indirimde', value: counts.gamesOnSale, max: Math.max(1, counts.trackedGames), tone: 'info',
               left: `${num(counts.gamesOnSale)} / ${compact(counts.trackedGames)} oyun`, right: `${num(counts.rules)} özel kural` })}
+            ${Meter({ label: 'İlk 14 günde uyarı alan', value: data.activation.activated, max: Math.max(1, data.activation.cohort), tone: 'good',
+              left: data.activation.cohort === 0 ? '14–30 gün önce kayıt yok'
+                : `${num(data.activation.activated)} / ${num(data.activation.cohort)} kullanıcı · 14–30 gün önce kaydolan`,
+              right: [data.activation.medianDaysToFirstAlert === null ? null
+                : data.activation.medianDaysToFirstAlert < 1 ? 'ilk uyarı ilk gün' : `ilk uyarı ~${data.activation.medianDaysToFirstAlert} gün`,
+                data.activation.immature > 0 ? `${num(data.activation.immature)} yeni kayıt bekliyor` : null].filter(Boolean).join(' · ') })}
           </div>
           <div class="mini-stats">
             <div title=${`${num(counts.queuePending)} bekliyor · ${num(counts.queueRetry)} tekrar · ${num(counts.queueSending)} gönderiliyor`}>

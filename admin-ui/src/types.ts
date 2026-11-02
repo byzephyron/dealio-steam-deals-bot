@@ -87,6 +87,13 @@ export interface Overview extends TelemetryCoverage {
     readonly gamesOnSale: number;
     readonly rules: number;
   };
+  /** Sign-ups 14–30 days old that had a sale alert within their first 14 days. */
+  readonly activation: {
+    readonly cohort: number;
+    readonly activated: number;
+    readonly medianDaysToFirstAlert: number | null;
+    readonly immature: number;
+  };
   /** Null means sign-ups have no cap. */
   readonly maxUsers: number | null;
   readonly activity: { readonly active24h: number; readonly active7d: number; readonly active30d: number };

@@ -88,6 +88,7 @@ export class AdminQueryService {
         ...repository.overviewCounts(now),
         ...this.wishlistAggregate('wishlist-games', () => repository.wishlistGameCounts()),
       },
+      activation: repository.activation(now),
       telemetrySince: telemetry.firstEventAt(),
       activity: {
         active24h: telemetry.activeUsersSince(day(1)),

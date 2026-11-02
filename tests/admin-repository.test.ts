@@ -33,6 +33,17 @@ describe('AdminRepository', () => {
     expect(repository.wishlistGameCounts()).toEqual({ trackedGames: 2, gamesOnSale: 1 });
   });
 
+  it('counts sign-ups 14–30 days old that had an alert within their first 14 days', () => {
+    seedUser(database, { id: '100000000000000010', createdAt: '2026-09-20T12:00:00.000Z' });
+    seedNotification(database, '100000000000000010', 10, 'sent', '2026-09-25T12:00:00.000Z');
+    seedUser(database, { id: '100000000000000011', createdAt: '2026-09-15T12:00:00.000Z' });
+    // An alert after day 14 does not count as activation.
+    seedUser(database, { id: '100000000000000012', createdAt: '2026-09-10T12:00:00.000Z' });
+    seedNotification(database, '100000000000000012', 10, 'sent', '2026-09-30T12:00:00.000Z');
+    // The 35-day-old seed user is outside the window; the two from this week are still inside theirs.
+    expect(repository.activation(now)).toEqual({ cohort: 3, activated: 1, medianDaysToFirstAlert: 5, immature: 2 });
+  });
+
   it('lists users with wishlist, sale and alert summaries', () => {
     const users = repository.users();
     expect(users.map((user) => user.discordUserId)).toEqual([
