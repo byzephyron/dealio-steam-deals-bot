@@ -1,13 +1,14 @@
 <!doctype html>
 <html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; font-src 'self'; script-src 'sha256-6xXDzFqhrnIQX9vknNh0umrvmCQPD5XzA9qKkMQbsiU='; base-uri 'none'; form-action 'none'">
 <meta name="description" content="Dealio herkese açık Steam istek listeni takip eder; bir oyun belirlediğin fiyata ya da indirime ulaşınca sana Discord’dan DM atar. Ücretsiz, Steam şifresi istemez.">
 <meta name="color-scheme" content="dark light"><title>Dealio · Discord’da Steam istek listesi fiyat bildirimleri</title>
 <link rel="preload" href="archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="icon" href="dealio-icon.webp" type="image/webp"><link rel="stylesheet" href="styles.css"></head>
+<link rel="icon" href="dealio-icon.webp" type="image/webp"><link rel="stylesheet" href="styles.css"><script>(function(){var d=document.documentElement,k='dealio-theme',m=matchMedia('(prefers-color-scheme: light)');try{var s=localStorage.getItem(k);if(s==='light'||s==='dark')d.setAttribute('data-theme',s)}catch(e){}addEventListener('DOMContentLoaded',function(){var b=document.getElementById('theme');if(!b)return;b.hidden=false;b.addEventListener('click',function(){var n=(d.getAttribute('data-theme')||(m.matches?'light':'dark'))==='dark'?'light':'dark';d.setAttribute('data-theme',n);try{localStorage.setItem(k,n)}catch(e){}})})})();</script></head>
 <body><header class="topbar"><a class="brand" href="index.html"><img class="mark" src="dealio-icon.webp" alt="" width="32" height="32">Dealio</a>
 <nav aria-label="Gezinme"><a class="help" href="help-tr.html">Nasıl çalışır?</a>
 <a href="index-en.html" lang="en">English</a>
+<button id="theme" class="theme" type="button" hidden aria-label="Koyu veya açık tema" title="Koyu veya açık tema"><svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg><svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg></button>
 <a class="add" href="https://discord.com/oauth2/authorize?client_id=1540325119690412172">Discord’a ekle</a></nav></header>
 <main>
 <div class="wrap hero">
@@ -20,32 +21,27 @@
 
 <div class="wrap">
 <figure class="chart">
-<svg viewBox="0 0 1100 400" role="img" aria-labelledby="chart-title chart-desc">
+<svg viewBox="0 0 1100 380" role="img" aria-labelledby="chart-title chart-desc">
 <title id="chart-title">Bir oyunun 30 günlük fiyatı ve Dealio’nun sana yazdığı anlar</title>
-<desc id="chart-desc">Fiyat $39,99’dan başlıyor. %20 indirimle $31,99 olunca hâlâ $15,00 hedefinin üstünde, mesaj yok. Sonra fiyat hedefin altına, $13,99’a iniyor ve Dealio DM atıyor. Aynı indirim tarihi en düşük fiyat olan $9,99’a derinleşiyor ve Dealio bir DM daha atıyor.</desc>
-<line class="c-grid" x1="70" y1="350" x2="1080" y2="350"/><line class="c-grid" x1="70" y1="208" x2="1080" y2="208"/><line class="c-grid" x1="70" y1="66" x2="1080" y2="66"/>
-<text class="c-axis" x="56" y="355" text-anchor="end">$0</text><text class="c-axis" x="56" y="213" text-anchor="end">$20</text><text class="c-axis" x="56" y="71" text-anchor="end">$40</text>
-<text class="c-axis c-minor" x="70" y="388">1. gün</text><text class="c-axis c-minor" x="1080" y="388" text-anchor="end">30. gün</text>
+<desc id="chart-desc">Fiyat $39,99’dan başlıyor. $31,99’a küçük bir indirim hâlâ $15 hedefinin üstünde, Dealio sessiz kalıyor. Sonra fiyat hedefin altına, $13,99’a iniyor ve Dealio DM atıyor. Aynı indirim $9,99’a inince Dealio bir DM daha atıyor.</desc>
 <path class="c-area" d="M70 66H306V123H440V66H676V251H844V279H1080V350H70Z"/>
 <line class="c-target" x1="70" y1="243" x2="1080" y2="243"/>
-<text class="c-target-label" x="80" y="233">Hedefin: $15,00</text>
+<text class="c-target-label" x="80" y="231">Hedefin: $15</text>
+<text class="c-start" x="80" y="50">$39,99</text>
 <path class="c-price" pathLength="1" d="M70 66H306V123H440V66H676V251H844V279H1080"/>
-<circle class="c-step" cx="188" cy="66" r="14"/><text class="c-step-n" x="188" y="66">1</text>
-<circle class="c-step" cx="373" cy="123" r="14"/><text class="c-step-n" x="373" y="123">2</text>
-<text class="c-quiet c-minor" x="320" y="160">−%20, hâlâ hedefinin üstünde: DM yok</text>
-<g class="c-hit h1"><circle class="c-ring" cx="676" cy="251" r="14"/><circle class="c-dot" cx="676" cy="251" r="14"/><text class="c-step-n" x="676" y="251">3</text>
-<text class="c-tag" x="664" y="306" text-anchor="end">$13,99</text><text class="c-tag-sub" x="664" y="328" text-anchor="end">DM: hedefe ulaştı</text></g>
-<g class="c-hit h2"><circle class="c-ring" cx="844" cy="279" r="14"/><circle class="c-dot" cx="844" cy="279" r="14"/><text class="c-step-n" x="844" y="279">4</text>
-<text class="c-tag" x="1080" y="318" text-anchor="end">$9,99</text><text class="c-tag-sub" x="1080" y="340" text-anchor="end">DM: belirgin şekilde düştü</text>
-<text class="c-low-label c-minor" x="1080" y="362" text-anchor="end">= tarihi en düşük (IsThereAnyDeal)</text></g>
+<text class="c-quiet c-minor" x="373" y="160" text-anchor="middle">Küçük indirim, hâlâ hedefin üstünde: mesaj yok</text>
+<g class="c-hit h1"><circle class="c-ring" cx="676" cy="251" r="11"/><circle class="c-dot" cx="676" cy="251" r="11"/>
+<text class="c-tag" x="660" y="300" text-anchor="end">$13,99</text><text class="c-tag-sub" x="660" y="324" text-anchor="end">Dealio sana yazar</text></g>
+<g class="c-hit h2"><circle class="c-ring" cx="844" cy="279" r="11"/><circle class="c-dot" cx="844" cy="279" r="11"/>
+<text class="c-tag" x="1080" y="318" text-anchor="end">$9,99</text><text class="c-tag-sub" x="1080" y="342" text-anchor="end">Daha da düştü: bir mesaj daha</text></g>
 </svg>
 <figcaption>Örnek: istek listesindeki bir oyunun 30 günü, hedef $15,00. Fiyatlar temsilidir. Türkiye’de Steam fiyatları 2023’ten beri dolar cinsinden.</figcaption>
 </figure>
 <ol class="events">
 <li><b>$39,99</b><p>Dealio listeni yaklaşık 30 dakikada bir ve Steam’in günlük fiyat değişiminden hemen sonra kontrol eder.</p></li>
-<li><b>−%20</b><p>İndirim başladı ama $31,99 hâlâ hedefinin üstünde. Mesaj yok.</p></li>
+<li><b>$31,99</b><p>Küçük bir indirim ama hâlâ hedefinin üstünde. Mesaj yok.</p></li>
 <li class="sent"><b>$13,99</b><p>Hedefinin altında. Fiyat, tarihi en düşük ve Steam bağlantısıyla sana DM gelir.</p></li>
-<li class="sent"><b>$9,99</b><p>Aynı indirim belirgin şekilde derinleşti, Dealio bir kez daha yazar. Üstelik tarihi en düşük fiyat.</p></li>
+<li class="sent"><b>$9,99</b><p>Aynı indirim belirgin şekilde daha da düştü, bir DM daha gelir.</p></li>
 </ol>
 </div>
 
@@ -69,8 +65,8 @@
 <div class="rules">
 <div class="lists">
 <div><h3>Neye fırsat denir</h3><ul>
-<li><i>−%30</i><div><b>Varsayılan indirim</b><span>Tüm istek listen için tek bir eşik.</span></div></li>
-<li><i>−%75</i><div><b>Oyuna özel indirim</b><span>Önem verdiğin bir oyun için daha sıkı ya da daha gevşek bir kural.</span></div></li>
+<li><i>%30</i><div><b>Varsayılan indirim</b><span>Tüm istek listen için tek bir eşik.</span></div></li>
+<li><i>%75</i><div><b>Oyuna özel indirim</b><span>Önem verdiğin bir oyun için daha sıkı ya da daha gevşek bir kural.</span></div></li>
 <li><i>$15</i><div><b>Hedef fiyat</b><span>Fiyat senin rakamına ya da altına inince bildirim, mağaza para biriminde.</span></div></li>
 <li><i>Kapalı</i><div><b>Sessize al</b><span>Oyun istek listende kalsın, bildirimi gelmesin.</span></div></li>
 </ul></div>

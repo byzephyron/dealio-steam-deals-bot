@@ -3,7 +3,7 @@
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "X-Frame-Options": "DENY",
-    "Content-Security-Policy": "default-src 'self'; img-src 'self' https:; style-src 'self'; script-src 'none'; frame-ancestors 'none'; base-uri 'none'"
+    "Content-Security-Policy": "default-src 'self'; img-src 'self' https:; style-src 'self'; script-src 'sha256-6xXDzFqhrnIQX9vknNh0umrvmCQPD5XzA9qKkMQbsiU='; frame-ancestors 'none'; base-uri 'none'"
   },
   "routes": [
     {
