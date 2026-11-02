@@ -46,7 +46,7 @@ p{margin:0}
 /* Hero */
 .hero{padding-top:72px;padding-bottom:28px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:40px 64px;align-items:end}
 .hero h1{font-size:clamp(42px,6.4vw,84px);line-height:.98;letter-spacing:-.035em}
-.hero h1 span{display:block;color:var(--muted)}
+.hero h1 span{display:block}
 .lede{font-size:19px;color:var(--muted);max-width:44ch}
 .lede strong{color:var(--ink);font-weight:600}
 .actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;margin-top:26px}
@@ -115,15 +115,15 @@ section{padding-top:112px}
 .parts dt{font-stretch:var(--narrow);font-weight:800;font-size:22px;line-height:1.15;color:var(--ink)}
 .parts dd{margin:0;color:var(--muted)}
 
-/* Rules and rhythm */
-.split{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
-.box{background:var(--panel);border:1px solid var(--grid);border-radius:20px;padding:34px 36px}
-.box h3{font-size:22px;margin-bottom:22px}
-.box ul{list-style:none;margin:0;padding:0;display:grid;gap:18px}
-.box li{display:grid;grid-template-columns:76px 1fr;gap:14px;align-items:baseline}
-.box li b{display:block;font-weight:700;color:var(--ink)}
-.box li span{color:var(--muted);font-size:15px}
-.box li i{font-style:normal;font-stretch:var(--narrow);font-weight:800;color:var(--blue);font-size:20px;font-variant-numeric:tabular-nums}
+/* Rules and rhythm: the lists, then the real Alerts tab (mirrors the alert section) */
+.rules{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:64px;align-items:start}
+.lists{display:grid;gap:52px}
+.lists h3{font-size:22px;margin-bottom:20px}
+.lists ul{list-style:none;margin:0;padding:0;display:grid;gap:18px}
+.lists li{display:grid;grid-template-columns:76px 1fr;gap:14px;align-items:baseline}
+.lists li b{display:block;font-weight:700;color:var(--ink)}
+.lists li span{color:var(--muted);font-size:15px}
+.lists li i{font-style:normal;font-stretch:var(--narrow);font-weight:800;color:var(--blue);font-size:20px;font-variant-numeric:tabular-nums}
 
 /* Honest limits */
 .honest{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:64px}
@@ -146,6 +146,7 @@ details p{color:var(--muted);margin-top:12px;max-width:var(--measure)}
 .closing{padding-bottom:40px}
 .closing .inner{border-top:1px solid var(--line);padding-top:64px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:28px}
 .closing h2{font-size:clamp(30px,4.2vw,56px);line-height:1.02;max-width:16ch}
+.mascot{width:72px;height:72px;border-radius:18px;margin-bottom:24px}
 
 /* Article pages: help, privacy, terms, open */
 article{max-width:760px;margin:56px auto 96px}
@@ -166,13 +167,12 @@ footer nav a:hover{color:var(--ink)}
 footer p{grid-column:1/-1;font-size:12px}
 
 @media(max-width:900px){
-  .hero,.alert,.honest{grid-template-columns:1fr}
+  .hero,.alert,.honest,.rules{grid-template-columns:1fr}
   .hero{padding-top:44px;gap:24px}
   .events{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 22px}
-  .split{grid-template-columns:1fr}
   .shot{position:static}
   section{padding-top:84px}
-  .alert,.honest{gap:40px}
+  .alert,.honest,.rules{gap:40px}
 }
 @media(max-width:600px){
   .wrap,.topbar,footer{padding-left:20px;padding-right:20px}
@@ -187,7 +187,6 @@ footer p{grid-column:1/-1;font-size:12px}
   .c-target{stroke-width:3}
   .events b{font-size:22px}
   .parts div{grid-template-columns:1fr}
-  .box{padding:26px 22px}
   footer{grid-template-columns:1fr}
   body{font-size:16px}
   .lede{font-size:17px}

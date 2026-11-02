@@ -34,7 +34,7 @@ jobs:
           cp .runtime/public-site/* "$RUNNER_TEMP/public-pages/"
           touch "$RUNNER_TEMP/public-pages/.nojekyll"
           cd "$RUNNER_TEMP/public-pages"
-          git add -- index.html index-en.html help.html help-tr.html privacy.html privacy-tr.html terms.html terms-tr.html styles.css staticwebapp.config.json open.html archivo-latin.woff2 archivo-latin-ext.woff2 dealio-icon.webp alert-en.webp alert-tr.webp .nojekyll
+          git add -- index.html index-en.html help.html help-tr.html privacy.html privacy-tr.html terms.html terms-tr.html styles.css staticwebapp.config.json open.html archivo-latin.woff2 archivo-latin-ext.woff2 dealio-icon.webp alert-en.webp alert-tr.webp alerts-panel-en.webp alerts-panel-tr.webp .nojekyll
           if git diff --cached --quiet; then exit 0; fi
           git -c user.name='Dealio pages publisher' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "Publish approved public pages"
           git push origin HEAD:main

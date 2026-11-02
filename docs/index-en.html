@@ -28,7 +28,7 @@
 <text class="c-axis c-minor" x="70" y="388">Day 1</text><text class="c-axis c-minor" x="1080" y="388" text-anchor="end">Day 30</text>
 <path class="c-area" d="M70 66H306V123H440V66H676V251H844V279H1080V350H70Z"/>
 <line class="c-target" x1="70" y1="243" x2="1080" y2="243"/>
-<text class="c-target-label" x="80" y="233">Your target · $15.00</text>
+<text class="c-target-label" x="80" y="233">Your target: $15.00</text>
 <path class="c-price" pathLength="1" d="M70 66H306V123H440V66H676V251H844V279H1080"/>
 <circle class="c-step" cx="188" cy="66" r="14"/><text class="c-step-n" x="188" y="66">1</text>
 <circle class="c-step" cx="373" cy="123" r="14"/><text class="c-step-n" x="373" y="123">2</text>
@@ -66,18 +66,21 @@
 <section class="wrap" aria-labelledby="rules-title">
 <div class="head"><h2 id="rules-title">Your wishlist. Your rules.</h2>
 <p>Set one default for everything, then change it game by game from the Dealio panel.</p></div>
-<div class="split">
-<div class="box"><h3>What counts as a deal</h3><ul>
-<li><i>−50%</i><div><b>Default discount</b><span>One threshold for your whole wishlist.</span></div></li>
+<div class="rules">
+<div class="lists">
+<div><h3>What counts as a deal</h3><ul>
+<li><i>−30%</i><div><b>Default discount</b><span>One threshold for your whole wishlist.</span></div></li>
 <li><i>−75%</i><div><b>Per-game discount</b><span>A stricter or looser rule for a game you care about.</span></div></li>
 <li><i>$15</i><div><b>Target price</b><span>An alert when the price is at or below your number, in your Store currency.</span></div></li>
 <li><i>Off</i><div><b>Mute</b><span>Keep a game on your wishlist without hearing about it.</span></div></li>
 </ul></div>
-<div class="box"><h3>When you hear about it</h3><ul>
+<div><h3>When you hear about it</h3><ul>
 <li><i>Now</i><div><b>Right away</b><span>A DM as soon as a check finds the deal.</span></div></li>
 <li><i>23–08</i><div><b>Quiet hours</b><span>Held overnight in your time zone and delivered when they end.</span></div></li>
 <li><i>1×</i><div><b>Daily digest</b><span>The day’s deals in one message, at the time you choose.</span></div></li>
 </ul></div>
+</div>
+<figure class="shot"><img src="alerts-panel-en.webp" width="1000" height="743" alt="The Alerts tab of the Dealio panel: do not disturb from 23:00 to 08:00 in the Istanbul time zone, with buttons for Right away, Night 23:00–08:00, Every evening 19:00, My own hours, My digest time and Alert history."><figcaption>The Alerts tab in the Dealio panel, drawn from demo data.</figcaption></figure>
 </div>
 </section>
 
@@ -101,11 +104,11 @@
 </section>
 
 <section class="wrap closing"><div class="inner">
-<h2>Your wishlist is already full. Let Dealio watch the prices.</h2>
+<div><img class="mascot" src="dealio-icon.webp" alt="" width="72" height="72"><h2>Your wishlist is already full. Let Dealio watch the prices.</h2></div>
 <a class="cta" href="https://discord.com/oauth2/authorize?client_id=1540325119690412172">Add Dealio to Discord</a>
 </div></section>
 </main>
-<footer><span>Dealio · Free Steam wishlist alerts</span><nav>
+<footer><span>Dealio, free Steam wishlist alerts on Discord</span><nav>
 <a href="help.html">Help</a>
 <a href="terms.html">Terms</a>
 <a href="privacy.html">Privacy</a>
