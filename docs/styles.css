@@ -49,10 +49,10 @@ p{margin:0}
 .topbar nav a:hover{color:var(--ink)}
 .topbar nav .add{color:var(--ink);border:1px solid var(--line);padding:7px 14px;border-radius:8px}
 .topbar nav .add:hover{border-color:var(--blurple)}
-.theme{display:inline-grid;place-items:center;width:38px;height:38px;padding:0;border:1px solid var(--line);border-radius:10px;background:none;color:var(--muted);cursor:pointer}
+.theme{display:inline-grid;place-items:center;width:38px;height:38px;padding:0;border:1px solid var(--faint);border-radius:10px;background:var(--panel);color:var(--ink);cursor:pointer}
 .theme[hidden]{display:none}
-.theme:hover{color:var(--ink);border-color:var(--muted)}
-.theme svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.theme:hover{border-color:var(--blue);color:var(--blue)}
+.theme svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .theme .moon{display:none}
 :root[data-theme=light] .theme .sun{display:none}
 :root[data-theme=light] .theme .moon{display:block}
@@ -74,8 +74,9 @@ p{margin:0}
 /* The price chart: Dealio's whole job on one line */
 .chart{margin:0;padding-top:12px}
 .chart svg{width:100%;overflow:visible}
-.chart figcaption{font-size:13px;color:var(--faint);margin-top:6px}
-.c-start{fill:var(--muted);font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+.chart figcaption{font-size:13px;color:var(--faint);margin-top:6px;margin-bottom:36px}
+.c-grid{stroke:var(--grid);stroke-width:1}
+.c-axis{fill:var(--faint);font-size:15px;font-variant-numeric:tabular-nums}
 .c-target{stroke:var(--ink);stroke-width:2;stroke-dasharray:8 8;opacity:.55}
 .c-target-label{fill:var(--ink);font-size:17px;font-weight:600;opacity:.85}
 .c-area{fill:var(--blue);opacity:.07}
@@ -84,7 +85,10 @@ p{margin:0}
 .c-ring{fill:none;stroke:var(--green);stroke-width:2;opacity:0;transform-box:fill-box;transform-origin:center}
 .c-tag{fill:var(--green);font-weight:800;font-stretch:var(--narrow);font-size:30px;font-variant-numeric:tabular-nums}
 .c-tag-sub{fill:var(--ink);font-size:16px;font-weight:600}
-.c-quiet{fill:var(--muted);font-size:16px}
+.c-low-label{fill:var(--green);font-size:15px}
+.c-quiet{fill:var(--muted);font-size:15px}
+.c-step{fill:var(--panel);stroke:var(--line)}
+.c-step-n{fill:var(--muted);font-size:14px;font-weight:700;text-anchor:middle;dominant-baseline:central}
 @media(prefers-reduced-motion:no-preference){
   .c-price{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 2.4s cubic-bezier(.5,0,.2,1) .2s forwards}
   .c-area{opacity:0;animation:area .8s ease 2.2s forwards}
@@ -99,9 +103,11 @@ p{margin:0}
 }
 
 /* The four events under the chart */
-.events{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:28px}
-.events li{border-top:2px solid var(--line);padding-top:16px}
+.events{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:28px;counter-reset:ev}
+.events li{counter-increment:ev;border-top:2px solid var(--line);padding-top:16px}
 .events li.sent{border-top-color:var(--green)}
+.events li::before{content:counter(ev);display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--panel);border:1px solid var(--line);color:var(--muted);font-size:13px;font-weight:700;margin-bottom:10px}
+.events li.sent::before{background:var(--green);border-color:var(--green);color:var(--night)}
 .events b{display:block;font-stretch:var(--narrow);font-weight:800;font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
 .events p{color:var(--muted);font-size:15px;margin-top:6px}
 .events li.sent p{color:var(--ink)}
@@ -187,8 +193,9 @@ footer p{grid-column:1/-1;font-size:12px}
   .topbar nav{gap:16px;font-size:14px}
   .topbar nav .help,.topbar nav .add{display:none}
   .c-minor,.c-tag,.c-tag-sub{display:none}
-  .c-dot,.c-ring{r:22px}
-  .c-start{font-size:34px}
+  .c-step,.c-dot,.c-ring{r:26px}
+  .c-step-n{font-size:28px}
+  .c-axis{font-size:30px}
   .c-target-label{font-size:34px}
   .c-price{stroke-width:7}
   .c-target{stroke-width:3}
