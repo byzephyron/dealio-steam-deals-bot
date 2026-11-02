@@ -1,119 +1,119 @@
 <!doctype html>
-<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; font-src 'self'; script-src 'sha256-6xXDzFqhrnIQX9vknNh0umrvmCQPD5XzA9qKkMQbsiU='; base-uri 'none'; form-action 'none'">
-<meta name="description" content="Steam istek listendeki bir oyun istediğin fiyata düşünce Dealio sana Discord’dan yazar. Tamamen ücretsiz, Steam şifreni hiç sormaz.">
-<meta name="color-scheme" content="dark light"><title>Dealio · İstediğin oyun, istediğin fiyata</title>
+<meta name="description" content="When a game on your Steam wishlist drops to the price you want, Dealio messages you on Discord. Completely free, and it never asks for your Steam password.">
+<meta name="color-scheme" content="dark light"><title>Dealio · The game you want, at the price you want</title>
 <link rel="preload" href="archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="icon" href="dealio-icon.webp" type="image/webp"><link rel="alternate" hreflang="tr" href="index.html"><link rel="alternate" hreflang="en" href="index-en.html"><link rel="alternate" hreflang="de" href="index-de.html"><link rel="alternate" hreflang="fr" href="index-fr.html"><link rel="stylesheet" href="styles.css"><script>(function(){var d=document.documentElement,k='dealio-theme',m=matchMedia('(prefers-color-scheme: light)');try{var s=localStorage.getItem(k);if(s==='light'||s==='dark')d.setAttribute('data-theme',s)}catch(e){}addEventListener('DOMContentLoaded',function(){var b=document.getElementById('theme');if(!b)return;b.hidden=false;b.addEventListener('click',function(){var n=(d.getAttribute('data-theme')||(m.matches?'light':'dark'))==='dark'?'light':'dark';d.setAttribute('data-theme',n);try{localStorage.setItem(k,n)}catch(e){}})})})();</script></head>
+<link rel="icon" href="dealio-icon.webp" type="image/webp"><link rel="alternate" hreflang="en" href="index.html"><link rel="alternate" hreflang="tr" href="index-tr.html"><link rel="alternate" hreflang="de" href="index-de.html"><link rel="alternate" hreflang="fr" href="index-fr.html"><link rel="alternate" hreflang="x-default" href="index.html"><link rel="stylesheet" href="styles.css"><script>(function(){var d=document.documentElement,k='dealio-theme',m=matchMedia('(prefers-color-scheme: light)');try{var s=localStorage.getItem(k);if(s==='light'||s==='dark')d.setAttribute('data-theme',s)}catch(e){}addEventListener('DOMContentLoaded',function(){var b=document.getElementById('theme');if(!b)return;b.hidden=false;b.addEventListener('click',function(){var n=(d.getAttribute('data-theme')||(m.matches?'light':'dark'))==='dark'?'light':'dark';d.setAttribute('data-theme',n);try{localStorage.setItem(k,n)}catch(e){}})})})();</script></head>
 <body><header class="topbar"><a class="brand" href="index.html"><img class="mark" src="dealio-icon.webp" alt="" width="32" height="32">Dealio</a>
-<nav aria-label="Gezinme"><a class="help" href="help-tr.html">Nasıl çalışır?</a>
-<span class="langs" role="group" aria-label="Dil"><a class="flag" href="index.html" hreflang="tr" lang="tr" title="Türkçe" aria-current="page"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#e30a17"/><circle cx="11.5" cy="10" r="5" fill="#fff"/><circle cx="12.75" cy="10" r="4" fill="#e30a17"/><polygon points="17.60,7.50 18.16,9.23 19.98,9.23 18.51,10.30 19.07,12.02 17.60,10.96 16.13,12.02 16.69,10.30 15.22,9.23 17.04,9.23" fill="#fff" transform="rotate(-18 17.6 10)"/></svg><span class="sr">Türkçe</span></a><a class="flag" href="index-en.html" hreflang="en" lang="en" title="English"><svg viewBox="0 0 60 40" aria-hidden="true"><rect width="60" height="40" fill="#012169"/><path d="M0 0L60 40M60 0L0 40" stroke="#fff" stroke-width="8"/><path d="M0 0L60 40M60 0L0 40" stroke="#c8102e" stroke-width="2.6"/><path d="M30 0V40M0 20H60" stroke="#fff" stroke-width="12"/><path d="M30 0V40M0 20H60" stroke="#c8102e" stroke-width="7"/></svg><span class="sr">English</span></a><a class="flag" href="index-de.html" hreflang="de" lang="de" title="Deutsch"><svg viewBox="0 0 30 18" aria-hidden="true"><rect width="30" height="6" fill="#000"/><rect y="6" width="30" height="6" fill="#dd0000"/><rect y="12" width="30" height="6" fill="#ffce00"/></svg><span class="sr">Deutsch</span></a><a class="flag" href="index-fr.html" hreflang="fr" lang="fr" title="Français"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="10" height="20" fill="#0055a4"/><rect x="10" width="10" height="20" fill="#fff"/><rect x="20" width="10" height="20" fill="#ef4135"/></svg><span class="sr">Français</span></a></span>
-<button id="theme" class="theme" type="button" hidden aria-label="Koyu veya açık tema" title="Koyu veya açık tema"><svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg><svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg></button></nav></header>
+<nav aria-label="Navigation"><a class="help" href="help.html">How it works</a>
+<span class="langs" role="group" aria-label="Language"><a class="flag" href="index.html" hreflang="en" lang="en" title="English" aria-current="page"><svg viewBox="0 0 60 40" aria-hidden="true"><rect width="60" height="40" fill="#012169"/><path d="M0 0L60 40M60 0L0 40" stroke="#fff" stroke-width="8"/><path d="M0 0L60 40M60 0L0 40" stroke="#c8102e" stroke-width="2.6"/><path d="M30 0V40M0 20H60" stroke="#fff" stroke-width="12"/><path d="M30 0V40M0 20H60" stroke="#c8102e" stroke-width="7"/></svg><span class="sr">English</span></a><a class="flag" href="index-tr.html" hreflang="tr" lang="tr" title="Türkçe"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#e30a17"/><circle cx="11.5" cy="10" r="5" fill="#fff"/><circle cx="12.75" cy="10" r="4" fill="#e30a17"/><polygon points="17.60,7.50 18.16,9.23 19.98,9.23 18.51,10.30 19.07,12.02 17.60,10.96 16.13,12.02 16.69,10.30 15.22,9.23 17.04,9.23" fill="#fff" transform="rotate(-18 17.6 10)"/></svg><span class="sr">Türkçe</span></a><a class="flag" href="index-de.html" hreflang="de" lang="de" title="Deutsch"><svg viewBox="0 0 30 18" aria-hidden="true"><rect width="30" height="6" fill="#000"/><rect y="6" width="30" height="6" fill="#dd0000"/><rect y="12" width="30" height="6" fill="#ffce00"/></svg><span class="sr">Deutsch</span></a><a class="flag" href="index-fr.html" hreflang="fr" lang="fr" title="Français"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="10" height="20" fill="#0055a4"/><rect x="10" width="10" height="20" fill="#fff"/><rect x="20" width="10" height="20" fill="#ef4135"/></svg><span class="sr">Français</span></a></span>
+<button id="theme" class="theme" type="button" hidden aria-label="Dark or light theme" title="Dark or light theme"><svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg><svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg></button></nav></header>
 <main>
 <div class="wrap hero">
-<h1>Fiyatı sen söyle.<span>Gerisini bana bırak.</span></h1>
-<div><p class="lede">Steam istek listene ben göz kulak oluyorum. Bir oyun <strong>senin seçtiğin fiyata ya da indirime</strong> düştüğü an Discord’dan sana yazıyorum. Öncesinde rahatsız etmem, aynı indirim için de seni darlamam.</p>
-<div class="actions"><a class="cta" href="https://discord.com/oauth2/authorize?client_id=1540325119690412172">Dealio’yu Discord’a ekle</a>
-<a href="help-tr.html">Nasıl çalışıyor?</a></div>
-<ul class="facts"><li>Tamamen ücretsiz</li><li>Steam şifreni hiç sormam</li><li>Türkçe, English, Deutsch ve Français</li></ul></div>
+<h1>Name your price.<span>I’ll keep watch.</span></h1>
+<div><p class="lede">I keep an eye on your Steam wishlist. The moment a game drops to <strong>the price or discount you picked</strong>, I’ll message you on Discord. No nagging before that, and no pestering you about the same sale.</p>
+<div class="actions"><a class="cta" href="https://discord.com/oauth2/authorize?client_id=1540325119690412172">Add Dealio to Discord</a>
+<a href="help.html">How does it work?</a></div>
+<ul class="facts"><li>Completely free</li><li>I never ask for your Steam password</li><li>English, Türkçe, Deutsch and Français</li></ul></div>
 </div>
 
 <div class="wrap">
 <figure class="chart">
 <svg viewBox="0 0 1100 400" role="img" aria-labelledby="chart-title chart-desc">
-<title id="chart-title">Bir oyunun bir aylık fiyatı ve sana yazdığım anlar</title>
-<desc id="chart-desc">Fiyat $39,99’dan başlıyor. $31,99’a küçük bir indirim geliyor ama hâlâ $15 hedefinin üstünde, sessiz kalıyorum. Fiyat $13,99’a, hedefin altına inince sana yazıyorum. Aynı indirim $9,99’a, tarihi en düşük fiyata inince bir kez daha yazıyorum.</desc>
+<title id="chart-title">One game’s price over a month, and the moments I message you</title>
+<desc id="chart-desc">The price starts at $39.99. A small sale to $31.99 is still above the $15 target, so I stay quiet. When it drops to $13.99, below your target, I message you. When the same sale drops to $9.99, the all-time low, I message you once more.</desc>
 <line class="c-grid" x1="70" y1="350" x2="1080" y2="350"/><line class="c-grid" x1="70" y1="208" x2="1080" y2="208"/><line class="c-grid" x1="70" y1="66" x2="1080" y2="66"/>
 <text class="c-axis" x="56" y="355" text-anchor="end">$0</text><text class="c-axis" x="56" y="213" text-anchor="end">$20</text><text class="c-axis" x="56" y="71" text-anchor="end">$40</text>
-<text class="c-axis c-minor" x="70" y="388">1. gün</text><text class="c-axis c-minor" x="1080" y="388" text-anchor="end">30. gün</text>
+<text class="c-axis c-minor" x="70" y="388">Day 1</text><text class="c-axis c-minor" x="1080" y="388" text-anchor="end">Day 30</text>
 <path class="c-area" d="M70 66H306V123H440V66H676V251H844V279H1080V350H70Z"/>
 <line class="c-target" x1="70" y1="243" x2="1080" y2="243"/>
-<text class="c-target-label" x="80" y="233">Senin hedefin: $15</text>
-<svg class="c-cover" x="86" y="86" width="168" height="78" viewBox="0 0 184 86" aria-hidden="true"><defs><linearGradient id="cover-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#27507a"/><stop offset="1" stop-color="#0e1c2b"/></linearGradient><clipPath id="cover-clip"><rect width="184" height="86" rx="8"/></clipPath></defs><g clip-path="url(#cover-clip)"><rect width="184" height="86" fill="url(#cover-sky)"/><circle cx="138" cy="26" r="13" fill="#ffd98a"/><circle cx="133" cy="22" r="13" fill="#27507a" opacity=".35"/><circle cx="28" cy="18" r="1.4" fill="#fff"/><circle cx="62" cy="10" r="1" fill="#fff"/><circle cx="96" cy="24" r="1.2" fill="#fff"/><circle cx="168" cy="12" r="1" fill="#fff"/><circle cx="12" cy="40" r="1" fill="#fff"/><path d="M0 64L30 40L52 56L84 28L118 60L146 44L184 66V86H0Z" fill="#2c5f8a"/><path d="M0 74L24 60L50 72L78 52L104 70L132 58L162 72L184 64V86H0Z" fill="#132a40"/><path d="M84 28L92 36L86 35L80 40L76 36Z" fill="#e8f0f4" opacity=".85"/></g></svg><text class="c-cover-label c-minor" x="86" y="188">Göz koyduğun oyun</text>
+<text class="c-target-label" x="80" y="233">Your target: $15</text>
+<svg class="c-cover" x="86" y="86" width="168" height="78" viewBox="0 0 184 86" aria-hidden="true"><defs><linearGradient id="cover-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#27507a"/><stop offset="1" stop-color="#0e1c2b"/></linearGradient><clipPath id="cover-clip"><rect width="184" height="86" rx="8"/></clipPath></defs><g clip-path="url(#cover-clip)"><rect width="184" height="86" fill="url(#cover-sky)"/><circle cx="138" cy="26" r="13" fill="#ffd98a"/><circle cx="133" cy="22" r="13" fill="#27507a" opacity=".35"/><circle cx="28" cy="18" r="1.4" fill="#fff"/><circle cx="62" cy="10" r="1" fill="#fff"/><circle cx="96" cy="24" r="1.2" fill="#fff"/><circle cx="168" cy="12" r="1" fill="#fff"/><circle cx="12" cy="40" r="1" fill="#fff"/><path d="M0 64L30 40L52 56L84 28L118 60L146 44L184 66V86H0Z" fill="#2c5f8a"/><path d="M0 74L24 60L50 72L78 52L104 70L132 58L162 72L184 64V86H0Z" fill="#132a40"/><path d="M84 28L92 36L86 35L80 40L76 36Z" fill="#e8f0f4" opacity=".85"/></g></svg><text class="c-cover-label c-minor" x="86" y="188">The game you’ve had your eye on</text>
 <path class="c-price" pathLength="1" d="M70 66H306V123H440V66H676V251H844V279H1080"/>
 <circle class="c-step" cx="188" cy="66" r="14"/><text class="c-step-n" x="188" y="66">1</text>
 <circle class="c-step" cx="373" cy="123" r="14"/><text class="c-step-n" x="373" y="123">2</text>
-<text class="c-quiet c-minor" x="320" y="160">Küçük bir indirim ama hâlâ pahalı. Sessizim.</text>
+<text class="c-quiet c-minor" x="320" y="160">A small sale, still too pricey. I stay quiet.</text>
 <g class="c-hit h1"><circle class="c-ring" cx="676" cy="251" r="14"/><circle class="c-dot" cx="676" cy="251" r="14"/><text class="c-step-n" x="676" y="251">3</text>
-<text class="c-tag" x="664" y="306" text-anchor="end">$13,99</text><text class="c-tag-sub" x="664" y="328" text-anchor="end">Hedefin tuttu, sana yazdım</text></g>
+<text class="c-tag" x="664" y="306" text-anchor="end">$13.99</text><text class="c-tag-sub" x="664" y="328" text-anchor="end">Target hit, I message you</text></g>
 <g class="c-hit h2"><circle class="c-ring" cx="844" cy="279" r="14"/><circle class="c-dot" cx="844" cy="279" r="14"/><text class="c-step-n" x="844" y="279">4</text>
-<text class="c-tag" x="1080" y="318" text-anchor="end">$9,99</text><text class="c-tag-sub" x="1080" y="340" text-anchor="end">Daha da ucuzladı, yine yazdım</text>
-<text class="c-low-label c-minor" x="1080" y="362" text-anchor="end">Üstelik tarihi en düşük fiyat</text></g>
+<text class="c-tag" x="1080" y="318" text-anchor="end">$9.99</text><text class="c-tag-sub" x="1080" y="340" text-anchor="end">Even cheaper, one more message</text>
+<text class="c-low-label c-minor" x="1080" y="362" text-anchor="end">That’s the all-time low, too</text></g>
 </svg>
-<figcaption>Sadece bir örnek: istek listendeki bir oyunun 30 günü, hedefin $15. Fiyatlar temsili; Türkiye’de Steam 2023’ten beri dolarla satıyor.</figcaption>
+<figcaption>Just an example: one game on your wishlist over 30 days, with a $15 target. Prices are made up.</figcaption>
 </figure>
 <ol class="events">
-<li><b>$39,99</b><p>Listene yaklaşık yarım saatte bir bakıyorum. Steam her gün fiyatları güncellediğinde de hemen kontrol ediyorum.</p></li>
-<li><b>$31,99</b><p>Ufak bir indirim geldi ama hâlâ hedefinin üstünde. Seni boşuna rahatsız etmiyorum.</p></li>
-<li class="sent"><b>$13,99</b><p>İşte bu! Fiyatı, tarihi en düşüğü ve Steam bağlantısıyla sana bir DM atıyorum.</p></li>
-<li class="sent"><b>$9,99</b><p>Aynı indirim iyice derinleşti. Kaçırma diye bir kez daha yazıyorum.</p></li>
+<li><b>$39.99</b><p>I check your wishlist about every half hour, and again right after Steam’s daily price update.</p></li>
+<li><b>$31.99</b><p>A small sale shows up, but it’s still above your target. No need to bother you.</p></li>
+<li class="sent"><b>$13.99</b><p>There it is! I send you a DM with the price, its all-time low and a link to Steam.</p></li>
+<li class="sent"><b>$9.99</b><p>The same sale drops even further, so you get one more heads-up.</p></li>
 </ol>
 </div>
 
 <section class="wrap alert" aria-labelledby="alert-title">
-<figure class="shot"><img src="alert-tr.webp" width="1080" height="956" alt="“İstek listendeki 3 oyun indirimde!” başlıklı bir Dealio DM’i: Portal 2 $1,99, Cyberpunk 2077 $20,99 ve Baldur’s Gate 3 $44,99; her birinde cebinde kalan tutar, Steam inceleme puanı, Steam Deck durumu, platformlar ve Steam düğmesi.">
-<figcaption>Demo verilerle çizilmiş gerçek bir Dealio mesajı.</figcaption></figure>
-<div><div class="head"><h2 id="alert-title"><span class="emo" aria-hidden="true">📬</span> Her mesajda ihtiyacın olan her şey.</h2>
-<p>Steam’i açıp tek tek bakmana gerek kalmasın diye. Steam’de ve IsThereAnyDeal’de ne bilgi varsa mesaja koyuyorum:</p></div>
+<figure class="shot"><img src="alert-en.webp" width="1080" height="989" alt="A Dealio DM titled “3 games on your wishlist are on sale!” listing Portal 2 at $1.99, Cyberpunk 2077 at $20.99 and Baldur’s Gate 3 at $44.99, each with the saving, Steam review score, Steam Deck status, platforms and a Steam button.">
+<figcaption>A real Dealio message, drawn from demo data.</figcaption></figure>
+<div><div class="head"><h2 id="alert-title"><span class="emo" aria-hidden="true">📬</span> Everything you need, right in the message.</h2>
+<p>So you don’t have to open Steam and dig around. Whatever Steam and IsThereAnyDeal know, I put in the message:</p></div>
 <dl class="parts">
-<div><dt>Fiyat</dt><dd>Kendi mağaza bölgendeki fiyat, eski fiyat ve cebinde ne kalacağı. Kur çevirmem, tahmin yürütmem.</dd></div>
-<div><dt>Tarihi en düşük</dt><dd>Oyunun senin bölgende gördüğü en düşük fiyat, IsThereAnyDeal’den. Bölgen para birimi değiştirdiyse o günden beri en düşüğü.</dd></div>
-<div><dt>Alınır mı?</dt><dd>Steam incelemeleri, Steam Deck uyumu ve platformlar. Karar vermek kolaylaşsın.</dd></div>
-<div><dt>Ne zamana kadar?</dt><dd>Steam söylüyorsa indirimin ne zaman biteceği.</dd></div>
-<div><dt>Tek tık</dt><dd>Oyunu doğrudan Steam uygulamasında ya da sitesinde açarsın.</dd></div>
+<div><dt>Price</dt><dd>The price in your own store region, the original price and how much you save. No currency conversion, no guessing.</dd></div>
+<div><dt>All-time low</dt><dd>The lowest price the game has had in your region, from IsThereAnyDeal. If your region switched currency, the lowest since then.</dd></div>
+<div><dt>Worth it?</dt><dd>Steam reviews, Steam Deck support and platforms, to make the call easier.</dd></div>
+<div><dt>Until when?</dt><dd>When the sale ends, if Steam says.</dd></div>
+<div><dt>One tap</dt><dd>Open the game straight in the Steam app or on the website.</dd></div>
 </dl></div>
 </section>
 
 <section class="wrap" aria-labelledby="rules-title">
-<div class="head"><h2 id="rules-title"><span class="emo" aria-hidden="true">🎯</span> Senin listen, senin kuralların.</h2>
-<p>Tüm listen için tek bir ayar seç, istediğin oyunda değiştir. Hepsi Dealio panelinde, birkaç dokunuş uzağında.</p></div>
+<div class="head"><h2 id="rules-title"><span class="emo" aria-hidden="true">🎯</span> Your list, your rules.</h2>
+<p>Pick one setting for your whole list, then tweak it game by game. It’s all a few taps away in the Dealio panel.</p></div>
 <div class="rules">
 <div class="lists">
-<div><h3>Neyi fırsat sayayım?</h3><ul>
-<li><i>%30</i><div><b>Varsayılan indirim</b><span>Tüm listen için tek bir eşik. Dilediğin zaman değiştirebilirsin.</span></div></li>
-<li><i>%75</i><div><b>Oyuna özel indirim</b><span>Gözünün üstünde olduğu bir oyun için daha sıkı ya da daha rahat bir kural.</span></div></li>
-<li><i>$15</i><div><b>Hedef fiyat</b><span>Fiyat bu rakama ya da altına inince haber veririm.</span></div></li>
-<li><i>Kapalı</i><div><b>Sessize al</b><span>Oyun listende kalsın ama onun için sana yazmayayım.</span></div></li>
+<div><h3>What counts as a deal?</h3><ul>
+<li><i>30%</i><div><b>Default discount</b><span>One threshold for your whole list. Change it whenever you like.</span></div></li>
+<li><i>75%</i><div><b>Per-game discount</b><span>A stricter or looser rule for a game you’ve got your eye on.</span></div></li>
+<li><i>$15</i><div><b>Target price</b><span>I’ll tell you when the price hits this number or goes below it.</span></div></li>
+<li><i>Off</i><div><b>Mute</b><span>Keep the game on your list without hearing from me about it.</span></div></li>
 </ul></div>
-<div><h3>Ne zaman yazayım?</h3><ul>
-<li><i>Hemen</i><div><b>Anında</b><span>Fırsatı bulduğum an DM atarım.</span></div></li>
-<li><i>23–08</i><div><b>Sessiz saatler</b><span>Gece seni uyandırmam. Biriken ne varsa sessiz saatlerin bitince gönderirim.</span></div></li>
-<li><i>1×</i><div><b>Günlük özet</b><span>Günün fırsatlarını seçtiğin saatte tek mesajda toplarım.</span></div></li>
+<div><h3>When should I message you?</h3><ul>
+<li><i>Now</i><div><b>Right away</b><span>A DM the moment I find the deal.</span></div></li>
+<li><i>23–08</i><div><b>Quiet hours</b><span>I won’t wake you up. Whatever comes in overnight arrives when your quiet hours end.</span></div></li>
+<li><i>1×</i><div><b>Daily digest</b><span>The day’s deals in one message, at the time you pick.</span></div></li>
 </ul></div>
 </div>
-<figure class="shot"><img src="alerts-panel-tr.webp" width="1000" height="750" alt="Dealio panelinin Bildirimler sekmesi: İstanbul saat diliminde 23:00–08:00 arası rahatsız etme; Hemen, Gece 23:00–08:00, Her akşam 19:00, Kendi saatlerim, Özet saatim ve Bildirim geçmişi düğmeleri."><figcaption>Dealio panelindeki Bildirimler sekmesi, demo verilerle.</figcaption></figure>
+<figure class="shot"><img src="alerts-panel-en.webp" width="1000" height="743" alt="The Alerts tab of the Dealio panel: do not disturb from 23:00 to 08:00 in the Istanbul time zone, with buttons for Right away, Night 23:00–08:00, Every evening 19:00, My own hours, My digest time and Alert history."><figcaption>The Alerts tab in the Dealio panel, with demo data.</figcaption></figure>
 </div>
 </section>
 
 <section class="wrap honest" aria-labelledby="honest-title">
-<div class="head"><h2 id="honest-title"><span class="emo" aria-hidden="true">🤝</span> Asla yapmayacağım şeyler.</h2><p>İçin rahat olsun diye birkaç söz.</p></div>
+<div class="head"><h2 id="honest-title"><span class="emo" aria-hidden="true">🤝</span> Things I’ll never do.</h2><p>A few promises, so you know where you stand.</p></div>
 <ul>
-<li><b>Steam şifreni sormam.</b> Sadece herkese açık istek listeni okurum, başka hiçbir şeye dokunmam. Profilinin ve oyun ayrıntılarının herkese açık olması yeterli.</li>
-<li><b>Anlık olduğumu iddia etmem.</b> Yaklaşık yarım saatte bir ve Steam’in her gün Pasifik saatiyle 10:00’daki fiyat güncellemesinden hemen sonra bakarım. Steam ya da Discord yavaşlarsa biraz gecikebilirim.</li>
-<li><b>Fiyat uydurmam.</b> Kur çevirmem. Steam cevap vermezse bunu indirim sanmam, bir sonraki kontrolde yeniden bakarım.</li>
-<li><b>Aynı indirim için seni darlamam.</b> Bir indirim için ikinci kez ancak belirgin şekilde ucuzlarsa yazarım: 10 puan daha fazla indirim ya da tutmuş bir hedefin %10 altı.</li>
-<li><b>Gidince verini tutmam.</b> <code>/delete-data</code> yazman yeterli, her şeyi silerim. Ayrıntılar <a href="privacy-tr.html">gizlilik politikasında</a>.</li>
+<li><b>Ask for your Steam password.</b> I only read your public wishlist, nothing else. Your profile and game details just need to be public.</li>
+<li><b>Pretend to be instant.</b> I check about every half hour, and right after Steam’s daily price update at 10:00 Pacific. If Steam or Discord are slow, I might be a little late.</li>
+<li><b>Make up a price.</b> No currency conversion. If Steam doesn’t answer, I don’t mistake that for a sale; I just look again next time.</li>
+<li><b>Pester you about the same sale.</b> I only write again if it gets clearly cheaper: 10 more points off, or 10% under a target you already hit.</li>
+<li><b>Hold on to your data when you leave.</b> Just type <code>/delete-data</code> and I’ll delete everything. The <a href="privacy.html">privacy policy</a> has the details.</li>
 </ul>
 </section>
 
 <section class="wrap faq" aria-labelledby="faq-title">
-<div class="head"><h2 id="faq-title"><span class="emo" aria-hidden="true">💬</span> Aklına takılanlar</h2></div>
-<details><summary>Ücretsiz mi?</summary><p>Evet, tamamen. Ücretli bir sürümüm yok. İşine yararsam Dealio panelinde beni destekleyebileceğin bir bağlantı var.</p></details>
-<details><summary>Mesajlar nereye geliyor?</summary><p>Discord’da sana özel mesaj (DM) olarak. DM’lerin bana kapalıysa bildirimleri durdururum, panelde nasıl açacağını da gösteririm.</p></details>
-<details><summary>Tüm zamanların en düşük fiyatını gösteriyor musun?</summary><p>Evet, IsThereAnyDeal’in Steam kayıtlarından. Bölgen para birimi değiştirdiyse (Türkiye 2023’te dolara geçti) sadece yeni para birimindeki en düşüğü “… sonrası en düşük” diye gösteririm. Kur çevirmem.</p></details>
-<details><summary>Verilerimi silebilir miyim?</summary><p>Tabii. Discord’da <code>/delete-data</code> yazıp onaylaman yeterli. Saklama ve yedekleme ayrıntıları <a href="privacy-tr.html">gizlilik sayfasında</a>.</p></details>
+<div class="head"><h2 id="faq-title"><span class="emo" aria-hidden="true">💬</span> Questions you might have</h2></div>
+<details><summary>Is it free?</summary><p>Yep, completely. There’s no paid version. If I save you some money, there’s a link in the Dealio panel to support me.</p></details>
+<details><summary>Where do the messages show up?</summary><p>As direct messages from me on Discord. If your DMs are closed to me, I pause your alerts and the panel shows you how to open them.</p></details>
+<details><summary>Do you show all-time lows?</summary><p>Yes, from IsThereAnyDeal’s Steam records. If your region switched currency (Turkey moved to USD in 2023), I only show the low in the current currency, labelled “lowest since …”. I never convert prices.</p></details>
+<details><summary>Can I delete my data?</summary><p>Of course. Type <code>/delete-data</code> in Discord and confirm, that’s it. Retention and backup details are in the <a href="privacy.html">privacy policy</a>.</p></details>
 </section>
 
 <section class="wrap closing"><div class="inner">
-<div><img class="mascot" src="dealio-icon.webp" alt="" width="72" height="72"><h2>İstek listen hazır. Ben de hazırım.</h2></div>
-<a class="cta" href="https://discord.com/oauth2/authorize?client_id=1540325119690412172">Dealio’yu Discord’a ekle</a>
+<div><img class="mascot" src="dealio-icon.webp" alt="" width="72" height="72"><h2>Your wishlist is ready. So am I.</h2></div>
+<a class="cta" href="https://discord.com/oauth2/authorize?client_id=1540325119690412172">Add Dealio to Discord</a>
 </div></section>
 </main>
-<footer><span>Dealio, Discord’daki Steam fırsat arkadaşın</span><nav>
-<a href="help-tr.html">Yardım</a>
-<a href="terms-tr.html">Koşullar</a>
-<a href="privacy-tr.html">Gizlilik</a>
-<a href="https://dsc.gg/dealiosupport">Destek sunucusu</a>
+<footer><span>Dealio, your Steam deal buddy on Discord</span><nav>
+<a href="help.html">Help</a>
+<a href="terms.html">Terms</a>
+<a href="privacy.html">Privacy</a>
+<a href="https://dsc.gg/dealiosupport">Support server</a>
 <a href="https://top.gg/bot/1540325119690412172">top.gg</a>
-<a href="mailto:blghnboz17@gmail.com">İletişim</a></nav>
-<p>Valve, Discord veya IsThereAnyDeal ile bağlantılı değildir.</p></footer></body></html>
+<a href="mailto:blghnboz17@gmail.com">Contact</a></nav>
+<p>Not affiliated with Valve, Discord or IsThereAnyDeal.</p></footer></body></html>

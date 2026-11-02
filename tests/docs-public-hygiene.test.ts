@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 
-const pages = ['index.html', 'index-en.html', 'help.html', 'help-tr.html', 'privacy.html', 'privacy-tr.html',
+const pages = ['index.html', 'index-tr.html', 'help.html', 'help-tr.html', 'privacy.html', 'privacy-tr.html',
   'terms.html', 'terms-tr.html', 'open.html', 'index-de.html', 'index-fr.html', 'help-de.html', 'help-fr.html',
   'privacy-de.html', 'privacy-fr.html', 'terms-de.html', 'terms-fr.html'];
 const read = (path: string): string => readFileSync(resolve(path), 'utf8');
@@ -25,6 +25,14 @@ describe('public site hygiene', () => {
         expect(/script-src [^;]+/.exec(policy!)?.[0], page).toBe(`script-src 'sha256-${hash}'`);
       }
     }
+  });
+
+  it('keeps the old English address as a script-free redirect to the English homepage', () => {
+    const text = read('docs/index-en.html');
+    expect(text).toContain('<meta http-equiv="refresh" content="0; url=index.html">');
+    expect(text).toContain("default-src 'none'");
+    expect(text).not.toContain('<script');
+    expect(read('docs/index.html')).toContain('<html lang="en">');
   });
 
   it('keeps the hosting header policy for open.html in step with its inline script', () => {
