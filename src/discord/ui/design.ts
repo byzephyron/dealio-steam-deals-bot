@@ -151,6 +151,22 @@ export function voteButton(language: Language): ButtonBuilder {
     .setLabel(localizer(language)({ tr: 'Oy ver', en: 'Vote', de: 'Abstimmen', fr: 'Voter' }));
 }
 
+/** Dealio's public homepage in each language; its link preview shows a card in that language. */
+export function publicHomeUrl(language: Language): string {
+  const page = localizer(language)({ tr: 'index-tr.html', en: '', de: 'index-de.html', fr: 'index-fr.html' });
+  return 'https://byzephyron.github.io/dealio-public-pages/' + page;
+}
+
+/** The message "💌 Tell a friend" offers to copy, in the user's own words; it carries no personal data. */
+export function recommendMessage(language: Language): string {
+  return localizer(language)({
+    tr: 'Steam istek listemi Dealio ile takip ediyorum, bir oyun belirlediğim fiyata düşünce Discord’dan DM atıyor. Ücretsiz, Steam şifresi istemiyor:',
+    en: 'I use Dealio to track my Steam wishlist. It sends me a Discord DM when a game hits the price I set. Free, no Steam password:',
+    de: 'Ich nutze Dealio für meine Steam-Wunschliste. Es schickt mir eine Discord-DM, wenn ein Spiel meinen Preis erreicht. Kostenlos, ohne Steam-Passwort:',
+    fr: 'J’utilise Dealio pour ma liste de souhaits Steam. Il m’envoie un MP sur Discord quand un jeu atteint mon prix. Gratuit, sans mot de passe Steam :',
+  }) + ' ' + publicHomeUrl(language);
+}
+
 /**
  * Steam answered that the wishlist cannot be read: the user's own privacy setting
  * (or a deleted account), not a Steam outage, so the panel names the fix.

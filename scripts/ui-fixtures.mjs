@@ -1,6 +1,7 @@
 import { buildAssistantView } from '../dist/discord/assistant-view.js';
 // Local design review from the production component builders. All values are demo fixtures.
 import { buildStatusV2Panel } from '../dist/discord/status-view-v2.js';
+import { buildRecommendPanel } from '../dist/discord/home-view.js';
 import { buildSaleNotificationPanel, buildInitialWishlistV2Page } from '../dist/discord/notification-components-v2.js';
 import { buildCountryRangePanel } from '../dist/discord/ui/country-picker.js';
 import { buildWishlistHiddenDm } from '../dist/discord/wishlist-hidden-notice.js';
@@ -80,6 +81,7 @@ for (const language of ['tr', 'en', 'de', 'fr']) {
     hiddenDm: [buildWishlistHiddenDm(language, 'tracking').toJSON(), buildWishlistHiddenDm(language, 'setup').toJSON()],
     empty: personal('wishlist', { ...assistantData, items: [] }),
     expired: [buildStatusV2Panel(dashboard, 'preview', { mode: 'home', disabled: true }).toJSON()],
+    recommend: [buildRecommendPanel(language).toJSON()],
     region: [buildCountryRangePanel(language, 'preview', { selected: 'TR' }).toJSON()],
     supportPanel: [buildSupportPanel(language, { faqChannelId: 'faq' }).toJSON()],
     ticket: [buildTicketHeader(ticket, 'I set a target price for Hades but got no DM when it dropped to $9.99. My DMs are open.', language).toJSON(),

@@ -22,6 +22,7 @@ import { messagesFor } from '../messages.js';
 import { uiCopy } from '../ui/copy.js';
 import type { SetupPresentationOptions } from '../setup-view.js';
 import { buildStatusV2Panel } from '../status-view-v2.js';
+import { buildRecommendPanel } from '../home-view.js';
 import {
   buildNoticePanel,
   dealioUiSessionTimeoutMs,
@@ -181,6 +182,13 @@ export async function handleDealio(
     if (target && target !== 'home') {
       handedOff = true;
       handOffPanel({ component, target, navigate, stop: () => collector.stop('handoff'), settle: () => operations.drain() });
+      return;
+    }
+    if (action === 'recommend') {
+      // A separate private message, so the panel stays as it is.
+      void measureDiscordOperation(component, 'recommend.open', () => component.reply({
+        flags: dealioEphemeralV2Flags, components: [buildRecommendPanel(current.language)],
+      })).catch((error: unknown) => safeLogger.error('Dealio recommend message failed', error));
       return;
     }
     if (action === 'setup') {
