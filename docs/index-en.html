@@ -4,12 +4,11 @@
 <meta name="description" content="When a game on your Steam wishlist drops to the price you want, Dealio messages you on Discord. Completely free, and it never asks for your Steam password.">
 <meta name="color-scheme" content="dark light"><title>Dealio · The game you want, at the price you want</title>
 <link rel="preload" href="archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="icon" href="dealio-icon.webp" type="image/webp"><link rel="stylesheet" href="styles.css"><script>(function(){var d=document.documentElement,k='dealio-theme',m=matchMedia('(prefers-color-scheme: light)');try{var s=localStorage.getItem(k);if(s==='light'||s==='dark')d.setAttribute('data-theme',s)}catch(e){}addEventListener('DOMContentLoaded',function(){var b=document.getElementById('theme');if(!b)return;b.hidden=false;b.addEventListener('click',function(){var n=(d.getAttribute('data-theme')||(m.matches?'light':'dark'))==='dark'?'light':'dark';d.setAttribute('data-theme',n);try{localStorage.setItem(k,n)}catch(e){}})})})();</script></head>
+<link rel="icon" href="dealio-icon.webp" type="image/webp"><link rel="alternate" hreflang="tr" href="index.html"><link rel="alternate" hreflang="en" href="index-en.html"><link rel="alternate" hreflang="de" href="index-de.html"><link rel="alternate" hreflang="fr" href="index-fr.html"><link rel="stylesheet" href="styles.css"><script>(function(){var d=document.documentElement,k='dealio-theme',m=matchMedia('(prefers-color-scheme: light)');try{var s=localStorage.getItem(k);if(s==='light'||s==='dark')d.setAttribute('data-theme',s)}catch(e){}addEventListener('DOMContentLoaded',function(){var b=document.getElementById('theme');if(!b)return;b.hidden=false;b.addEventListener('click',function(){var n=(d.getAttribute('data-theme')||(m.matches?'light':'dark'))==='dark'?'light':'dark';d.setAttribute('data-theme',n);try{localStorage.setItem(k,n)}catch(e){}})})})();</script></head>
 <body><header class="topbar"><a class="brand" href="index-en.html"><img class="mark" src="dealio-icon.webp" alt="" width="32" height="32">Dealio</a>
 <nav aria-label="Navigation"><a class="help" href="help.html">How it works</a>
-<a href="index.html" lang="tr">Türkçe</a>
-<button id="theme" class="theme" type="button" hidden aria-label="Dark or light theme" title="Dark or light theme"><svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg><svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg></button>
-<a class="add" href="https://discord.com/oauth2/authorize?client_id=1540325119690412172">Add to Discord</a></nav></header>
+<span class="langs" role="group" aria-label="Language"><a class="flag" href="index.html" hreflang="tr" lang="tr" title="Türkçe"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#e30a17"/><circle cx="11.5" cy="10" r="5" fill="#fff"/><circle cx="12.75" cy="10" r="4" fill="#e30a17"/><polygon points="17.60,7.50 18.16,9.23 19.98,9.23 18.51,10.30 19.07,12.02 17.60,10.96 16.13,12.02 16.69,10.30 15.22,9.23 17.04,9.23" fill="#fff" transform="rotate(-18 17.6 10)"/></svg><span class="sr">Türkçe</span></a><a class="flag" href="index-en.html" hreflang="en" lang="en" title="English" aria-current="page"><svg viewBox="0 0 60 40" aria-hidden="true"><rect width="60" height="40" fill="#012169"/><path d="M0 0L60 40M60 0L0 40" stroke="#fff" stroke-width="8"/><path d="M0 0L60 40M60 0L0 40" stroke="#c8102e" stroke-width="2.6"/><path d="M30 0V40M0 20H60" stroke="#fff" stroke-width="12"/><path d="M30 0V40M0 20H60" stroke="#c8102e" stroke-width="7"/></svg><span class="sr">English</span></a><a class="flag" href="index-de.html" hreflang="de" lang="de" title="Deutsch"><svg viewBox="0 0 30 18" aria-hidden="true"><rect width="30" height="6" fill="#000"/><rect y="6" width="30" height="6" fill="#dd0000"/><rect y="12" width="30" height="6" fill="#ffce00"/></svg><span class="sr">Deutsch</span></a><a class="flag" href="index-fr.html" hreflang="fr" lang="fr" title="Français"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="10" height="20" fill="#0055a4"/><rect x="10" width="10" height="20" fill="#fff"/><rect x="20" width="10" height="20" fill="#ef4135"/></svg><span class="sr">Français</span></a></span>
+<button id="theme" class="theme" type="button" hidden aria-label="Dark or light theme" title="Dark or light theme"><svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg><svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg></button></nav></header>
 <main>
 <div class="wrap hero">
 <h1>Name your price.<span>I’ll keep watch.</span></h1>
@@ -54,7 +53,7 @@
 <section class="wrap alert" aria-labelledby="alert-title">
 <figure class="shot"><img src="alert-en.webp" width="1080" height="989" alt="A Dealio DM titled “3 games on your wishlist are on sale!” listing Portal 2 at $1.99, Cyberpunk 2077 at $20.99 and Baldur’s Gate 3 at $44.99, each with the saving, Steam review score, Steam Deck status, platforms and a Steam button.">
 <figcaption>A real Dealio message, drawn from demo data.</figcaption></figure>
-<div><div class="head"><h2 id="alert-title">Everything you need, right in the message.</h2>
+<div><div class="head"><h2 id="alert-title"><span class="emo" aria-hidden="true">📬</span> Everything you need, right in the message.</h2>
 <p>So you don’t have to open Steam and dig around. Whatever Steam and IsThereAnyDeal know, I put in the message:</p></div>
 <dl class="parts">
 <div><dt>Price</dt><dd>The price in your own store region, the original price and how much you save. No currency conversion, no guessing.</dd></div>
@@ -66,7 +65,7 @@
 </section>
 
 <section class="wrap" aria-labelledby="rules-title">
-<div class="head"><h2 id="rules-title">Your list, your rules.</h2>
+<div class="head"><h2 id="rules-title"><span class="emo" aria-hidden="true">🎯</span> Your list, your rules.</h2>
 <p>Pick one setting for your whole list, then tweak it game by game. It’s all a few taps away in the Dealio panel.</p></div>
 <div class="rules">
 <div class="lists">
@@ -87,7 +86,7 @@
 </section>
 
 <section class="wrap honest" aria-labelledby="honest-title">
-<div class="head"><h2 id="honest-title">Things I’ll never do.</h2><p>A few promises, so you know where you stand.</p></div>
+<div class="head"><h2 id="honest-title"><span class="emo" aria-hidden="true">🤝</span> Things I’ll never do.</h2><p>A few promises, so you know where you stand.</p></div>
 <ul>
 <li><b>Ask for your Steam password.</b> I only read your public wishlist, nothing else. Your profile and game details just need to be public.</li>
 <li><b>Pretend to be instant.</b> I check about every half hour, and right after Steam’s daily price update at 10:00 Pacific. If Steam or Discord are slow, I might be a little late.</li>
@@ -98,7 +97,7 @@
 </section>
 
 <section class="wrap faq" aria-labelledby="faq-title">
-<div class="head"><h2 id="faq-title">Questions you might have</h2></div>
+<div class="head"><h2 id="faq-title"><span class="emo" aria-hidden="true">💬</span> Questions you might have</h2></div>
 <details><summary>Is it free?</summary><p>Yep, completely. There’s no paid version. If I save you some money, there’s a link in the Dealio panel to support me.</p></details>
 <details><summary>Where do the messages show up?</summary><p>As direct messages from me on Discord. If your DMs are closed to me, I pause your alerts and the panel shows you how to open them.</p></details>
 <details><summary>Do you show all-time lows?</summary><p>Yes, from IsThereAnyDeal’s Steam records. If your region switched currency (Turkey moved to USD in 2023), I only show the low in the current currency, labelled “lowest since …”. I never convert prices.</p></details>

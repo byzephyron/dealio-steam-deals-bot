@@ -4,7 +4,8 @@ import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 
 const pages = ['index.html', 'index-en.html', 'help.html', 'help-tr.html', 'privacy.html', 'privacy-tr.html',
-  'terms.html', 'terms-tr.html', 'open.html'];
+  'terms.html', 'terms-tr.html', 'open.html', 'index-de.html', 'index-fr.html', 'help-de.html', 'help-fr.html',
+  'privacy-de.html', 'privacy-fr.html', 'terms-de.html', 'terms-fr.html'];
 const read = (path: string): string => readFileSync(resolve(path), 'utf8');
 
 describe('public site hygiene', () => {
