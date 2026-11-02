@@ -7,7 +7,7 @@ import {createHash} from 'node:crypto';
 it('publishes only reviewed public files and resolves every local page link',()=>{
  execFileSync(process.execPath,['scripts/build-public-site.mjs']);
  const root=resolve('.runtime/public-site'),files=readdirSync(root);
- expect(files).toHaveLength(30);expect(files.some(f=>f.endsWith('.md'))).toBe(false);
+ expect(files).toHaveLength(31);expect(files.some(f=>f.endsWith('.md'))).toBe(false);
  for(const file of files.filter(f=>f.endsWith('.html'))){
   const text=readFileSync(resolve(root,file),'utf8');
   expect(text).toContain('lang=');
