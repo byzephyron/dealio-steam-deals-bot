@@ -83,13 +83,9 @@ it.each([
   expect(home + settings).not.toContain(otherFix);
 });
 
-/** "💌 Tell a friend" offers a ready text with the homepage in the user's language and nothing about the user. */
-it.each([
-  ['tr', 'https://byzephyron.github.io/dealio-public-pages/index-tr.html'],
-  ['en', 'https://byzephyron.github.io/dealio-public-pages/'],
-  ['de', 'https://byzephyron.github.io/dealio-public-pages/index-de.html'],
-  ['fr', 'https://byzephyron.github.io/dealio-public-pages/index-fr.html'],
-] as const)('gives a %s message to copy for Tell a friend', (language, url) => {
+/** "💌 Tell a friend" offers a ready text in the user's language, ending in Dealio's App Directory page, with nothing about the user. */
+it.each(['tr', 'en', 'de', 'fr'] as const)('gives a %s message to copy for Tell a friend', (language) => {
+  const url = 'https://discord.com/discovery/applications/1540325119690412172';
   const panel = buildRecommendPanel(language);
   expect(() => assertComponentsV2Limit([panel])).not.toThrow();
   const texts: string[] = [];
