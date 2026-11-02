@@ -4,11 +4,12 @@ import {
   SeparatorBuilder, SeparatorSpacingSize, TextDisplayBuilder,
 } from 'discord.js';
 import type { StatusDashboardResult } from '../application/status-service.js';
+import type { Language } from '../domain/user-config.js';
 import type { StatusV2Options } from './status-view-v2.js';
 import { sanitizeGameName } from './notification-messages.js';
 import { assertComponentsV2Limit, dealioFooter } from './ui/components-v2.js';
 import { dealioBrand } from './ui/brand.js';
-import { countryDisplay, dmBlockedFix, dmBlockedStatus, helpButton, hotPrefix, supportButton, voteButton, noPriceText, panelHeader, priceFetched, priceLine, savingsLine, tabAccent, wishlistHidden, wishlistHiddenNotice } from './ui/design.js';
+import { countryDisplay, dmBlockedFix, dmBlockedStatus, helpButton, hotPrefix, supportButton, voteButton, noPriceText, panelHeader, priceFetched, priceLine, recommendMessage, savingsLine, tabAccent, wishlistHidden, wishlistHiddenNotice } from './ui/design.js';
 import { buildTabBar } from './ui/tab-bar.js';
 import { localizer } from './i18n.js';
 import { staleTargetsNotice } from './assistant-view.js';
@@ -133,6 +134,10 @@ export function buildHomePanel(result: ReadyStatus, sessionId: string, options: 
     ...(deals ? [deals] : []),
     // A fresh Steam check, whose result screen leads back to an up-to-date Home.
     button('check', t({ tr: 'Steam’de şimdi kontrol et', en: 'Check Steam now', de: 'Jetzt bei Steam prüfen', fr: 'Vérifier Steam maintenant' }), '🔄'),
+    button('recommend', t({ tr: 'Arkadaşına öner', en: 'Tell a friend', de: 'Freunden empfehlen', fr: 'Recommander' }), '💌'),
+  ));
+  // The links about Dealio itself, on Home only: help, the coffee link and the top.gg vote.
+  root.addActionRowComponents(new ActionRowBuilder<ButtonBuilder>().addComponents(
     helpButton(language),
     supportButton(language),
     voteButton(language),
@@ -142,4 +147,20 @@ export function buildHomePanel(result: ReadyStatus, sessionId: string, options: 
   root.addTextDisplayComponents(display(dealioFooter(language)));
   assertComponentsV2Limit([root]);
   return root;
+}
+
+/** "💌 Tell a friend": a private message with a ready text to copy and send; Dealio never sends it itself. */
+export function buildRecommendPanel(language: Language): ContainerBuilder {
+  const t = localizer(language);
+  return new ContainerBuilder().setAccentColor(tabAccent.home).addTextDisplayComponents(
+    display('### 💌 ' + t({ tr: 'Dealio’yu bir arkadaşına öner', en: 'Tell a friend about Dealio',
+      de: 'Empfiehl Dealio weiter', fr: 'Recommande Dealio à un ami' })),
+    display(t({
+      tr: 'Aşağıdaki mesajı kopyalayıp istediğin kişiye gönder. Linkten Dealio’yu ekleyip `/setup` yazması yeterli.',
+      en: 'Copy the message below and send it to anyone you like. They add Dealio from the link and type `/setup`.',
+      de: 'Kopier die Nachricht unten und schick sie, wem du willst. Über den Link fügt man Dealio hinzu und tippt `/setup`.',
+      fr: 'Copie le message ci-dessous et envoie-le à qui tu veux. Il suffit d’ajouter Dealio depuis le lien et de taper `/setup`.',
+    })),
+    display('```\n' + recommendMessage(language) + '\n```'),
+  );
 }

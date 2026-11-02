@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { buildHomePanel } from '../src/discord/home-view.js';
+import { buildHomePanel, buildRecommendPanel } from '../src/discord/home-view.js';
 import { buildStatusV2Panel } from '../src/discord/status-view-v2.js';
 import { assertComponentsV2Limit } from '../src/discord/ui/components-v2.js';
 import type { StatusDashboardResult } from '../src/application/status-service.js';
@@ -29,7 +29,7 @@ it.each(['tr', 'en'] as const)('fits the complete home panel and disables nested
   });
   expect(() => assertComponentsV2Limit([panel])).not.toThrow();
   const serialized = JSON.stringify(panel.toJSON());
-  for (const action of ['tab-home', 'tab-games', 'tab-alerts', 'tab-settings', 'check']) {
+  for (const action of ['tab-home', 'tab-games', 'tab-alerts', 'tab-settings', 'check', 'recommend']) {
     expect(serialized).toContain('dealio:session:' + action);
   }
   const controls: {disabled?:boolean}[] = [];
@@ -38,8 +38,8 @@ it.each(['tr', 'en'] as const)('fits the complete home panel and disables nested
     if (value && value.type === 2) (value.style === 5 ? links : controls).push(value);
     return value;
   });
-  // Four tabs, the manual check and the Matching deals shortcut.
-  expect(controls).toHaveLength(6);
+  // Four tabs, the manual check, the Matching deals shortcut and Tell a friend.
+  expect(controls).toHaveLength(7);
   // A fresh Steam check is the only Home action; there is no second "refresh" button.
   expect(serialized).not.toContain('dealio:session:refresh');
   // The support link lives here, on the panel, and never in alert DMs.
@@ -81,4 +81,24 @@ it.each([
   expect(settings).toContain(status);
   const otherFix = code === 'DISCORD_DM_BLOCKED' ? 'Add Dealio to your apps' : 'Allow DMs in Discord';
   expect(home + settings).not.toContain(otherFix);
+});
+
+/** "💌 Tell a friend" offers a ready text with the homepage in the user's language and nothing about the user. */
+it.each([
+  ['tr', 'https://byzephyron.github.io/dealio-public-pages/index-tr.html'],
+  ['en', 'https://byzephyron.github.io/dealio-public-pages/'],
+  ['de', 'https://byzephyron.github.io/dealio-public-pages/index-de.html'],
+  ['fr', 'https://byzephyron.github.io/dealio-public-pages/index-fr.html'],
+] as const)('gives a %s message to copy for Tell a friend', (language, url) => {
+  const panel = buildRecommendPanel(language);
+  expect(() => assertComponentsV2Limit([panel])).not.toThrow();
+  const texts: string[] = [];
+  JSON.stringify(panel.toJSON(), (_key, value) => {
+    if (value && value.type === 10) texts.push(value.content);
+    return value;
+  });
+  const block = texts.find(text => text.startsWith('```'))!;
+  expect(block.endsWith(url + '\n```')).toBe(true);
+  expect(block).toContain('Dealio');
+  expect(texts.join('\n')).toContain('/setup');
 });
