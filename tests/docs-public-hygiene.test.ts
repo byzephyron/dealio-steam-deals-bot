@@ -15,7 +15,14 @@ describe('public site hygiene', () => {
       expect(policy, page).toBeDefined();
       expect(policy).toContain("default-src 'none'");
       expect(policy).toContain("base-uri 'none'");
-      if (page !== 'open.html') expect(policy).not.toContain('script-src');
+      if (page !== 'open.html') {
+        // The only script on these pages is the theme toggle, allowed by its exact hash.
+        const scripts = [...text.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((match) => match[1]!);
+        expect(scripts, page).toHaveLength(1);
+        expect(scripts[0]).toContain("localStorage.setItem(k,n)");
+        const hash = createHash('sha256').update(scripts[0]!).digest('base64');
+        expect(/script-src [^;]+/.exec(policy!)?.[0], page).toBe(`script-src 'sha256-${hash}'`);
+      }
     }
   });
 
