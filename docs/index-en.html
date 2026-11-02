@@ -1,29 +1,112 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
-<meta name="description" content="The game you want. The price you waited for. · Dealio, personal Steam wishlist alerts">
-<meta name="color-scheme" content="dark light"><title>The game you want. The price you waited for. · Dealio</title><link rel="stylesheet" href="styles.css"></head>
-<body><header class="topbar"><a class="brand" href="index-en.html"><span class="mark">d.</span> dealio</a>
-<nav aria-label="Navigation"><a href="help.html">How it works</a>
-<a href="index.html" lang="tr">Türkçe</a></nav></header>
-<main><section class="hero"><div><div class="eyebrow">Your personal Steam sale assistant</div>
-<h1>The game you want.<br><em>The price you waited for.</em></h1>
-<p class="lede">Connect your wishlist. Choose your target. When a price matches your rule, Dealio lets you know on Discord.</p>
-<a class="cta" href="https://discord.com/oauth2/authorize?client_id=1540325119690412172">Add Dealio to Discord →</a>
-<p class="note">Free · Add it to your apps or a server · Never asks for your Steam password.</p></div>
-<div class="mock" aria-label="Example Dealio card; not a live price">
-<div class="eyebrow">DEALIO / YOUR WISHLIST</div><h2>Something good happened.</h2>
-<div class="game"><div><strong>Portal 2</strong><small>Your target: $2.99 · Example price</small></div><span class="badge">Target reached</span></div>
-<div class="game"><div><strong>$1.99</strong><small>Steam · Store currency</small></div><strong>−90%</strong></div>
-<div class="rule">Why this alert? The price dropped below your target.</div>
-<p class="note">Design example. Not an actual offer or price guarantee.</p></div></section>
-<section class="section features"><div><span class="number">01 / CONTROL</span><h2>Your list,<br>your rules.</h2><p>Choose a target price or discount threshold. Mute any game you do not want to hear about.</p></div>
-<div><span class="number">02 / TIMING</span><h2>Time to play.<br>Room to unplug.</h2><p>Set do-not-disturb hours or choose a daily digest. Your time zone is suggested from your Store region, and you can change it.</p></div>
-<div><span class="number">03 / CLARITY</span><h2>A price<br>with context.</h2><p>Steam price history from IsThereAnyDeal and a reason for every alert. Missing data is clearly marked.</p></div></section>
-<section class="section"><h2>Good to know</h2>
-<details><summary>Are notifications instant?</summary><p>Checks repeat about 30 minutes after a completed scan, and run right after Steam's daily price change at 10:00 Pacific time, when most sales start. Steam and Discord limits may delay delivery. Instant detection is not guaranteed.</p></details>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="description" content="Dealio follows your public Steam wishlist and sends you a Discord DM when a game reaches the price or discount you set. Free, no Steam password.">
+<meta name="color-scheme" content="dark light"><title>Dealio · Steam wishlist price alerts on Discord</title>
+<link rel="preload" href="archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="dealio-icon.webp" type="image/webp"><link rel="stylesheet" href="styles.css"></head>
+<body><header class="topbar"><a class="brand" href="index-en.html"><img class="mark" src="dealio-icon.webp" alt="" width="32" height="32">Dealio</a>
+<nav aria-label="Navigation"><a class="help" href="help.html">How it works</a>
+<a href="index.html" lang="tr">Türkçe</a>
+<a class="add" href="https://discord.com/oauth2/authorize?client_id=1540325119690412172">Add to Discord</a></nav></header>
+<main>
+<div class="wrap hero">
+<h1>Name your price.<span>Dealio waits for it.</span></h1>
+<div><p class="lede">Dealio follows your public Steam wishlist and sends you a Discord DM when a game reaches <strong>the target price or discount you set</strong>. Not before, and not twice for the same sale.</p>
+<div class="actions"><a class="cta" href="https://discord.com/oauth2/authorize?client_id=1540325119690412172">Add Dealio to Discord</a>
+<a href="help.html">How it works</a></div>
+<ul class="facts"><li>Free</li><li>Never asks for your Steam password</li><li>English, Türkçe, Deutsch, Français</li></ul></div>
+</div>
+
+<div class="wrap">
+<figure class="chart">
+<svg viewBox="0 0 1100 400" role="img" aria-labelledby="chart-title chart-desc">
+<title id="chart-title">One game's price over 30 days, and when Dealio messages you</title>
+<desc id="chart-desc">The price starts at $39.99. A 20% sale to $31.99 stays above the $15.00 target, so no message. Later the price drops to $13.99, below the target, and Dealio sends a DM. The same sale deepens to $9.99, the historical low, and Dealio sends one more DM.</desc>
+<line class="c-grid" x1="70" y1="350" x2="1080" y2="350"/><line class="c-grid" x1="70" y1="208" x2="1080" y2="208"/><line class="c-grid" x1="70" y1="66" x2="1080" y2="66"/>
+<text class="c-axis" x="56" y="355" text-anchor="end">$0</text><text class="c-axis" x="56" y="213" text-anchor="end">$20</text><text class="c-axis" x="56" y="71" text-anchor="end">$40</text>
+<text class="c-axis c-minor" x="70" y="388">Day 1</text><text class="c-axis c-minor" x="1080" y="388" text-anchor="end">Day 30</text>
+<path class="c-area" d="M70 66H306V123H440V66H676V251H844V279H1080V350H70Z"/>
+<line class="c-target" x1="70" y1="243" x2="1080" y2="243"/>
+<text class="c-target-label" x="80" y="233">Your target · $15.00</text>
+<path class="c-price" pathLength="1" d="M70 66H306V123H440V66H676V251H844V279H1080"/>
+<circle class="c-step" cx="188" cy="66" r="14"/><text class="c-step-n" x="188" y="66">1</text>
+<circle class="c-step" cx="373" cy="123" r="14"/><text class="c-step-n" x="373" y="123">2</text>
+<text class="c-quiet c-minor" x="320" y="160">−20%, still above your target: no DM</text>
+<g class="c-hit h1"><circle class="c-ring" cx="676" cy="251" r="14"/><circle class="c-dot" cx="676" cy="251" r="14"/><text class="c-step-n" x="676" y="251">3</text>
+<text class="c-tag" x="664" y="306" text-anchor="end">$13.99</text><text class="c-tag-sub" x="664" y="328" text-anchor="end">DM: target reached</text></g>
+<g class="c-hit h2"><circle class="c-ring" cx="844" cy="279" r="14"/><circle class="c-dot" cx="844" cy="279" r="14"/><text class="c-step-n" x="844" y="279">4</text>
+<text class="c-tag" x="1080" y="318" text-anchor="end">$9.99</text><text class="c-tag-sub" x="1080" y="340" text-anchor="end">DM: clearly deeper</text>
+<text class="c-low-label c-minor" x="1080" y="362" text-anchor="end">= historical low (IsThereAnyDeal)</text></g>
+</svg>
+<figcaption>Example: one game on a wishlist over 30 days, with a $15.00 target. Prices are illustrative.</figcaption>
+</figure>
+<ol class="events">
+<li><b>$39.99</b><p>Dealio checks your wishlist about every 30 minutes, and again right after Steam’s daily price change.</p></li>
+<li><b>−20%</b><p>A sale starts, but $31.99 is still above your target. No message.</p></li>
+<li class="sent"><b>$13.99</b><p>Below your target. You get a DM with the price, the historical low and a link to Steam.</p></li>
+<li class="sent"><b>$9.99</b><p>The same sale gets clearly deeper, so Dealio writes once more. It’s the historical low, too.</p></li>
+</ol>
+</div>
+
+<section class="wrap alert" aria-labelledby="alert-title">
+<figure class="shot"><img src="alert-en.webp" width="1080" height="989" alt="A Dealio DM titled “3 games on your wishlist are on sale!” listing Portal 2 at $1.99 (−90%), Cyberpunk 2077 at $20.99 (−65%) and Baldur’s Gate 3 at $44.99 (−25%), each with the saving, Steam review score, Steam Deck status, platforms and a Steam button.">
+<figcaption>A real Dealio message, drawn from demo data.</figcaption></figure>
+<div><div class="head"><h2 id="alert-title">Every alert explains itself.</h2>
+<p>Each line answers something you’d otherwise open Steam to check. Depending on what Steam and IsThereAnyDeal know, an alert can include:</p></div>
+<dl class="parts">
+<div><dt>Your price</dt><dd>The price in your Steam Store region’s currency, the original price and what you save. Never converted, never estimated.</dd></div>
+<div><dt>Historical low</dt><dd>Steam’s lowest price for your region, from IsThereAnyDeal. If your region switched currency, the low since the switch.</dd></div>
+<div><dt>Worth it?</dt><dd>Steam’s review summary, Steam Deck compatibility and platforms, straight from the Store.</dd></div>
+<div><dt>How long</dt><dd>When the discount ends, if Steam says so.</dd></div>
+<div><dt>One tap</dt><dd>Open the game in the Steam app or on the website.</dd></div>
+</dl></div>
+</section>
+
+<section class="wrap" aria-labelledby="rules-title">
+<div class="head"><h2 id="rules-title">Your wishlist. Your rules.</h2>
+<p>Set one default for everything, then change it game by game from the Dealio panel.</p></div>
+<div class="split">
+<div class="box"><h3>What counts as a deal</h3><ul>
+<li><i>−50%</i><div><b>Default discount</b><span>One threshold for your whole wishlist.</span></div></li>
+<li><i>−75%</i><div><b>Per-game discount</b><span>A stricter or looser rule for a game you care about.</span></div></li>
+<li><i>$15</i><div><b>Target price</b><span>An alert when the price is at or below your number, in your Store currency.</span></div></li>
+<li><i>Off</i><div><b>Mute</b><span>Keep a game on your wishlist without hearing about it.</span></div></li>
+</ul></div>
+<div class="box"><h3>When you hear about it</h3><ul>
+<li><i>Now</i><div><b>Right away</b><span>A DM as soon as a check finds the deal.</span></div></li>
+<li><i>23–08</i><div><b>Quiet hours</b><span>Held overnight in your time zone and delivered when they end.</span></div></li>
+<li><i>1×</i><div><b>Daily digest</b><span>The day’s deals in one message, at the time you choose.</span></div></li>
+</ul></div>
+</div>
+</section>
+
+<section class="wrap honest" aria-labelledby="honest-title">
+<div class="head"><h2 id="honest-title">What Dealio won’t do.</h2><p>Small promises you can hold it to.</p></div>
+<ul>
+<li><b>Ask for your Steam password.</b> It reads your public wishlist and nothing else. Your profile and game details need to be public.</li>
+<li><b>Pretend to be instant.</b> Checks run about every 30 minutes and right after Steam’s daily price change at 10:00 Pacific. Steam and Discord limits can add a delay.</li>
+<li><b>Guess a price.</b> No currency conversion. If Steam doesn’t answer, that’s a failed check, never a sale.</li>
+<li><b>Message you twice for the same sale.</b> Only when it gets clearly deeper: 10 more discount points, or 10% under a target that was already met.</li>
+<li><b>Keep your data after you leave.</b> <code>/delete-data</code> removes it. The <a href="privacy.html">privacy policy</a> has the details.</li>
+</ul>
+</section>
+
+<section class="wrap faq" aria-labelledby="faq-title">
+<div class="head"><h2 id="faq-title">Good to know</h2></div>
+<details><summary>Is it free?</summary><p>Yes. Dealio has no paid tier. If it saves you money, the Dealio panel has a link to support it.</p></details>
+<details><summary>Where do alerts arrive?</summary><p>As direct messages from Dealio on Discord. If your DMs are closed to Dealio, it pauses your alerts and the panel shows how to open them again.</p></details>
 <details><summary>Does it show all-time lows?</summary><p>Yes, from IsThereAnyDeal’s Steam records. If a region changed currency (Turkey moved to USD in 2023), only the low in the current currency is shown, labelled “lowest since …”; prices are never converted.</p></details>
-<details><summary>Can I delete my data?</summary><p>Use /delete-data in Discord and confirm. Retention and backup details are explained in the privacy policy.</p></details></section></main><footer><span>Dealio · Free Steam wishlist alerts</span><nav>
+<details><summary>Can I delete my data?</summary><p>Use <code>/delete-data</code> in Discord and confirm. Retention and backup details are explained in the <a href="privacy.html">privacy policy</a>.</p></details>
+</section>
+
+<section class="wrap closing"><div class="inner">
+<h2>Your wishlist is already full. Let Dealio watch the prices.</h2>
+<a class="cta" href="https://discord.com/oauth2/authorize?client_id=1540325119690412172">Add Dealio to Discord</a>
+</div></section>
+</main>
+<footer><span>Dealio · Free Steam wishlist alerts</span><nav>
+<a href="help.html">Help</a>
 <a href="terms.html">Terms</a>
 <a href="privacy.html">Privacy</a>
 <a href="https://dsc.gg/dealiosupport">Support server</a>

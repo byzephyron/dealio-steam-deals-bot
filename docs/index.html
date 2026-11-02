@@ -1,32 +1,115 @@
 <!doctype html>
 <html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
-<meta name="description" content="İstediğin oyun. Beklediğin fiyat. · Dealio, personal Steam wishlist alerts">
-<meta name="color-scheme" content="dark light"><title>İstediğin oyun. Beklediğin fiyat. · Dealio</title><link rel="stylesheet" href="styles.css"></head>
-<body><header class="topbar"><a class="brand" href="index.html"><span class="mark">d.</span> dealio</a>
-<nav aria-label="Gezinme"><a href="help-tr.html">Nasıl çalışır?</a>
-<a href="index-en.html" lang="en">English</a></nav></header>
-<main><section class="hero"><div><div class="eyebrow">Kişisel Steam indirim asistanın</div>
-<h1>İstediğin oyun.<br><em>Beklediğin fiyat.</em></h1>
-<p class="lede">Wishlistini bağla. Kendi hedefini seç. Fiyat kuralına uyduğunda Dealio, Discord’da haber versin.</p>
-<a class="cta" href="https://discord.com/oauth2/authorize?client_id=1540325119690412172">Dealio’yu Discord’a ekle →</a>
-<p class="note">Ücretsiz · Uygulamalarına ya da sunucuna ekle · Steam hesabının şifresini istemez.</p></div>
-<div class="mock" aria-label="Örnek Dealio kartı; canlı fiyat değildir">
-<div class="eyebrow">DEALIO / WISHLISTİN</div><h2>Güzel bir şey oldu.</h2>
-<div class="game"><div><strong>Portal 2</strong><small>Hedefin: $2.99 · Örnek fiyat</small></div><span class="badge">Hedefe ulaştı</span></div>
-<div class="game"><div><strong>$1.99</strong><small>Steam · Mağaza para birimi</small></div><strong>−90%</strong></div>
-<div class="rule">Neden geldi? Fiyat, seçtiğin hedefin altına indi.</div>
-<p class="note">Tasarım örneğidir. Gerçek teklif veya fiyat garantisi değildir.</p></div></section>
-<section class="section features"><div><span class="number">01 / KONTROL</span><h2>Senin listen,<br>senin kuralların.</h2><p>Hedef fiyat veya indirim yüzdesi seç. İlgilenmediğin oyunu sustur.</p></div>
-<div><span class="number">02 / ZAMANLAMA</span><h2>Oyun vakti.<br>Bildirim baskısı yok.</h2><p>Rahatsız etme saatlerini seç veya günlük özet al. Saat dilimin mağaza bölgene göre önerilir; istersen değiştirebilirsin.</p></div>
-<div><span class="number">03 / AÇIKLIK</span><h2>Fiyatın yanında<br>bağlam da var.</h2><p>IsThereAnyDeal’dan Steam fiyat geçmişi ve bildirimin neden geldiği. Eksik veri varsa açıkça söyleriz.</p></div></section>
-<section class="section"><h2>Bilmen gerekenler</h2>
-<details><summary>Bildirimler anlık mı?</summary><p>Kontroller tamamlanan taramadan yaklaşık 30 dakika sonra ve indirimlerin çoğunun başladığı, Steam'in Pasifik saatiyle 10:00'daki günlük fiyat değişiminin hemen ardından yapılır. Steam ve Discord kısıtları teslimatı geciktirebilir. Anlık algılama garantisi vermiyoruz.</p></details>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="description" content="Dealio herkese açık Steam istek listeni takip eder; bir oyun belirlediğin fiyata ya da indirime ulaşınca sana Discord’dan DM atar. Ücretsiz, Steam şifresi istemez.">
+<meta name="color-scheme" content="dark light"><title>Dealio · Discord’da Steam istek listesi fiyat bildirimleri</title>
+<link rel="preload" href="archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="dealio-icon.webp" type="image/webp"><link rel="stylesheet" href="styles.css"></head>
+<body><header class="topbar"><a class="brand" href="index.html"><img class="mark" src="dealio-icon.webp" alt="" width="32" height="32">Dealio</a>
+<nav aria-label="Gezinme"><a class="help" href="help-tr.html">Nasıl çalışır?</a>
+<a href="index-en.html" lang="en">English</a>
+<a class="add" href="https://discord.com/oauth2/authorize?client_id=1540325119690412172">Discord’a ekle</a></nav></header>
+<main>
+<div class="wrap hero">
+<h1>Fiyatı sen belirle.<span>Dealio onu bekler.</span></h1>
+<div><p class="lede">Dealio herkese açık Steam istek listeni takip eder; bir oyun <strong>belirlediğin hedef fiyata ya da indirime</strong> ulaşınca sana Discord’dan DM atar. Öncesinde değil, aynı indirim için iki kez de değil.</p>
+<div class="actions"><a class="cta" href="https://discord.com/oauth2/authorize?client_id=1540325119690412172">Dealio’yu Discord’a ekle</a>
+<a href="help-tr.html">Nasıl çalışır?</a></div>
+<ul class="facts"><li>Ücretsiz</li><li>Steam şifreni asla istemez</li><li>Türkçe, English, Deutsch, Français</li></ul></div>
+</div>
+
+<div class="wrap">
+<figure class="chart">
+<svg viewBox="0 0 1100 400" role="img" aria-labelledby="chart-title chart-desc">
+<title id="chart-title">Bir oyunun 30 günlük fiyatı ve Dealio’nun sana yazdığı anlar</title>
+<desc id="chart-desc">Fiyat $39,99’dan başlıyor. %20 indirimle $31,99 olunca hâlâ $15,00 hedefinin üstünde, mesaj yok. Sonra fiyat hedefin altına, $13,99’a iniyor ve Dealio DM atıyor. Aynı indirim tarihi en düşük fiyat olan $9,99’a derinleşiyor ve Dealio bir DM daha atıyor.</desc>
+<line class="c-grid" x1="70" y1="350" x2="1080" y2="350"/><line class="c-grid" x1="70" y1="208" x2="1080" y2="208"/><line class="c-grid" x1="70" y1="66" x2="1080" y2="66"/>
+<text class="c-axis" x="56" y="355" text-anchor="end">$0</text><text class="c-axis" x="56" y="213" text-anchor="end">$20</text><text class="c-axis" x="56" y="71" text-anchor="end">$40</text>
+<text class="c-axis c-minor" x="70" y="388">1. gün</text><text class="c-axis c-minor" x="1080" y="388" text-anchor="end">30. gün</text>
+<path class="c-area" d="M70 66H306V123H440V66H676V251H844V279H1080V350H70Z"/>
+<line class="c-target" x1="70" y1="243" x2="1080" y2="243"/>
+<text class="c-target-label" x="80" y="233">Hedefin · $15,00</text>
+<path class="c-price" pathLength="1" d="M70 66H306V123H440V66H676V251H844V279H1080"/>
+<circle class="c-step" cx="188" cy="66" r="14"/><text class="c-step-n" x="188" y="66">1</text>
+<circle class="c-step" cx="373" cy="123" r="14"/><text class="c-step-n" x="373" y="123">2</text>
+<text class="c-quiet c-minor" x="320" y="160">−%20, hâlâ hedefinin üstünde: DM yok</text>
+<g class="c-hit h1"><circle class="c-ring" cx="676" cy="251" r="14"/><circle class="c-dot" cx="676" cy="251" r="14"/><text class="c-step-n" x="676" y="251">3</text>
+<text class="c-tag" x="664" y="306" text-anchor="end">$13,99</text><text class="c-tag-sub" x="664" y="328" text-anchor="end">DM: hedefe ulaştı</text></g>
+<g class="c-hit h2"><circle class="c-ring" cx="844" cy="279" r="14"/><circle class="c-dot" cx="844" cy="279" r="14"/><text class="c-step-n" x="844" y="279">4</text>
+<text class="c-tag" x="1080" y="318" text-anchor="end">$9,99</text><text class="c-tag-sub" x="1080" y="340" text-anchor="end">DM: belirgin şekilde düştü</text>
+<text class="c-low-label c-minor" x="1080" y="362" text-anchor="end">= tarihi en düşük (IsThereAnyDeal)</text></g>
+</svg>
+<figcaption>Örnek: istek listesindeki bir oyunun 30 günü, hedef $15,00. Fiyatlar temsilidir. Türkiye’de Steam fiyatları 2023’ten beri dolar cinsinden.</figcaption>
+</figure>
+<ol class="events">
+<li><b>$39,99</b><p>Dealio listeni yaklaşık 30 dakikada bir ve Steam’in günlük fiyat değişiminden hemen sonra kontrol eder.</p></li>
+<li><b>−%20</b><p>İndirim başladı ama $31,99 hâlâ hedefinin üstünde. Mesaj yok.</p></li>
+<li class="sent"><b>$13,99</b><p>Hedefinin altında. Fiyat, tarihi en düşük ve Steam bağlantısıyla sana DM gelir.</p></li>
+<li class="sent"><b>$9,99</b><p>Aynı indirim belirgin şekilde derinleşti, Dealio bir kez daha yazar. Üstelik tarihi en düşük fiyat.</p></li>
+</ol>
+</div>
+
+<section class="wrap alert" aria-labelledby="alert-title">
+<figure class="shot"><img src="alert-tr.webp" width="1080" height="956" alt="“İstek listendeki 3 oyun indirimde!” başlıklı bir Dealio DM’i: Portal 2 $1,99 (−%90), Cyberpunk 2077 $20,99 (−%65) ve Baldur’s Gate 3 $44,99 (−%25); her birinde cebinde kalan tutar, Steam inceleme puanı, Steam Deck durumu, platformlar ve Steam düğmesi.">
+<figcaption>Demo verilerle çizilmiş gerçek bir Dealio mesajı.</figcaption></figure>
+<div><div class="head"><h2 id="alert-title">Her bildirim kendini açıklar.</h2>
+<p>Her satır, normalde Steam’i açıp bakacağın bir soruyu yanıtlar. Steam’in ve IsThereAnyDeal’in bildiklerine göre bir bildirimde şunlar olabilir:</p></div>
+<dl class="parts">
+<div><dt>Fiyatın</dt><dd>Steam mağaza bölgenin para birimiyle güncel fiyat, eski fiyat ve cebinde kalan. Asla çevrilmez, tahmin edilmez.</dd></div>
+<div><dt>Tarihi en düşük</dt><dd>Bölgen için Steam’deki en düşük fiyat, IsThereAnyDeal’den. Bölgen para birimi değiştirdiyse o tarihten bu yana en düşük.</dd></div>
+<div><dt>Alınır mı?</dt><dd>Steam inceleme özeti, Steam Deck uyumluluğu ve platformlar, doğrudan mağazadan.</dd></div>
+<div><dt>Ne zamana kadar</dt><dd>İndirimin bitiş zamanı, Steam belirtiyorsa.</dd></div>
+<div><dt>Tek dokunuş</dt><dd>Oyunu Steam uygulamasında ya da web sitesinde aç.</dd></div>
+</dl></div>
+</section>
+
+<section class="wrap" aria-labelledby="rules-title">
+<div class="head"><h2 id="rules-title">Senin listen. Senin kuralların.</h2>
+<p>Her şey için tek bir varsayılan belirle, sonra Dealio panelinden oyun oyun değiştir.</p></div>
+<div class="split">
+<div class="box"><h3>Neye fırsat denir</h3><ul>
+<li><i>−%50</i><div><b>Varsayılan indirim</b><span>Tüm istek listen için tek bir eşik.</span></div></li>
+<li><i>−%75</i><div><b>Oyuna özel indirim</b><span>Önem verdiğin bir oyun için daha sıkı ya da daha gevşek bir kural.</span></div></li>
+<li><i>$15</i><div><b>Hedef fiyat</b><span>Fiyat senin rakamına ya da altına inince bildirim, mağaza para biriminde.</span></div></li>
+<li><i>Kapalı</i><div><b>Sessize al</b><span>Oyun istek listende kalsın, bildirimi gelmesin.</span></div></li>
+</ul></div>
+<div class="box"><h3>Ne zaman haber alırsın</h3><ul>
+<li><i>Hemen</i><div><b>Anında</b><span>Kontrol fırsatı bulduğu an DM.</span></div></li>
+<li><i>23–08</i><div><b>Sessiz saatler</b><span>Gece kendi saat diliminde bekletilir, sessiz saatler bitince iletilir.</span></div></li>
+<li><i>1×</i><div><b>Günlük özet</b><span>Günün fırsatları, seçtiğin saatte tek mesajda.</span></div></li>
+</ul></div>
+</div>
+</section>
+
+<section class="wrap honest" aria-labelledby="honest-title">
+<div class="head"><h2 id="honest-title">Dealio’nun yapmadıkları.</h2><p>Arkasında durduğu küçük sözler.</p></div>
+<ul>
+<li><b>Steam şifreni istemez.</b> Yalnızca herkese açık istek listeni okur. Profilin ve oyun ayrıntıların herkese açık olmalı.</li>
+<li><b>Anlık olduğunu iddia etmez.</b> Kontroller yaklaşık 30 dakikada bir ve Steam’in Pasifik saatiyle 10:00’daki günlük fiyat değişiminin hemen ardından yapılır. Steam ve Discord kısıtları gecikme ekleyebilir.</li>
+<li><b>Fiyat tahmin etmez.</b> Kur çevrimi yok. Steam yanıt vermezse bu başarısız bir kontrol sayılır, asla indirim değil.</li>
+<li><b>Aynı indirim için iki kez yazmaz.</b> Yalnızca indirim belirgin şekilde derinleşirse: 10 puan daha fazla indirim ya da ulaşılmış hedefin %10 altı.</li>
+<li><b>Ayrıldığında verini tutmaz.</b> <code>/delete-data</code> verini siler. Ayrıntılar <a href="privacy-tr.html">gizlilik politikasında</a>.</li>
+</ul>
+</section>
+
+<section class="wrap faq" aria-labelledby="faq-title">
+<div class="head"><h2 id="faq-title">Bilmen gerekenler</h2></div>
+<details><summary>Ücretsiz mi?</summary><p>Evet. Dealio’nun ücretli bir sürümü yok. İşine yararsa Dealio panelinde destek bağlantısı var.</p></details>
+<details><summary>Bildirimler nereye gelir?</summary><p>Discord’da Dealio’dan doğrudan mesaj (DM) olarak. DM’lerin Dealio’ya kapalıysa bildirimlerin duraklatılır ve panel nasıl açacağını gösterir.</p></details>
 <details><summary>Tüm zamanların en düşük fiyatını gösteriyor mu?</summary><p>Evet, IsThereAnyDeal’ın Steam kayıtlarına göre. Bölgenin para birimi değiştiyse (Türkiye 2023’te dolara geçti) yalnız yeni para birimi dönemindeki en düşük fiyat gösterilir ve “… sonrası en düşük” diye belirtilir; kur çevrimi yapılmaz.</p></details>
-<details><summary>Verilerimi silebilir miyim?</summary><p>Discord’da /delete-data komutunu kullanıp onaylayabilirsin. Saklama ve yedek bilgileri gizlilik sayfasında açıklanır.</p></details></section></main><footer><span>Dealio · Ücretsiz Steam istek listesi bildirimleri</span><nav>
+<details><summary>Verilerimi silebilir miyim?</summary><p>Discord’da <code>/delete-data</code> komutunu kullanıp onaylayabilirsin. Saklama ve yedek bilgileri <a href="privacy-tr.html">gizlilik sayfasında</a> açıklanır.</p></details>
+</section>
+
+<section class="wrap closing"><div class="inner">
+<h2>İstek listen zaten dolu. Fiyatları Dealio izlesin.</h2>
+<a class="cta" href="https://discord.com/oauth2/authorize?client_id=1540325119690412172">Dealio’yu Discord’a ekle</a>
+</div></section>
+</main>
+<footer><span>Dealio · Ücretsiz Steam istek listesi bildirimleri</span><nav>
+<a href="help-tr.html">Yardım</a>
 <a href="terms-tr.html">Koşullar</a>
 <a href="privacy-tr.html">Gizlilik</a>
 <a href="https://dsc.gg/dealiosupport">Destek sunucusu</a>
 <a href="https://top.gg/bot/1540325119690412172">top.gg</a>
 <a href="mailto:blghnboz17@gmail.com">İletişim</a></nav>
-<p>Valve, Discord ve IsThereAnyDeal ile bağlantılı değildir.</p></footer></body></html>
+<p>Valve, Discord veya IsThereAnyDeal ile bağlantılı değildir.</p></footer></body></html>
