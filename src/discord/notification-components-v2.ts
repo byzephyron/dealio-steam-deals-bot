@@ -21,7 +21,7 @@ import type { NotificationSendOptions, SaleNotification } from '../application/n
 import { historicalLowLine, priceHistoryCredit } from './price-history-text.js';
 import {
   countryDisplay, freeToKeepLine, unavailableGamesLine, hotDealPercent, hotPrefix, openPanelButton, platformText, priceLine, reviewLine,
-  saleEndLine, savingsLine, steamAppLink,
+  saleEndLine, savingsLine, smallWishlistHint, steamAppLink,
 } from './ui/design.js';
 import { historicalLowStanding } from '../domain/price-history.js';
 import type { Language } from '../domain/user-config.js';
@@ -77,7 +77,7 @@ export function buildSaleNotificationPanel(
       new TextDisplayBuilder().setContent(saleHeader(notifications, language, options)),
       new TextDisplayBuilder().setContent(options.test
         ? `> 🧪 ${options.testSource === 'example' ? messages.testNotificationExampleDescription : messages.testNotificationDescription}`
-        : saleDescription(language, notifications.length)),
+        : saleDescription(language, notifications.length) + (options.firstAlert ? '\n-# 🎉 ' + firstAlertTip(language) : '')),
     )
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
 
@@ -208,7 +208,7 @@ export function buildInitialWishlistV2Page(
           fr: `${summary.upcomingCount} ${one(summary.upcomingCount) ? 'jeu n’est pas encore sorti' : 'jeux ne sont pas encore sortis'} ; je suivrai le prix à la sortie`,
         })}` : null,
         unavailableGamesLine(summary.unavailableItems, summary.storeCountryCode, summary.language),
-      ].filter(Boolean).join(' · ')].filter(Boolean).map((line) => `-# ${line}`),
+      ].filter(Boolean).join(' · '), smallWishlistHint(summary.totalGameCount, language)].filter(Boolean).map((line) => `-# ${line}`),
       `-# 🔄 ${messages.setupWizardFrequency(options.pollIntervalHours ?? defaultPollIntervalHours)} · ${t({
         tr: 'Oyun kuralları, bildirim saatleri ve ayarlar Dealio panelinde seni bekliyor.',
         en: 'Game rules, alert timing and settings are in the Dealio panel.',
@@ -323,5 +323,15 @@ function saleDescription(language: Language, count: number): string {
     en: `I found ${count} ${one ? 'deal' : 'deals'} matching your rules. Prices are from your Steam Store region.`,
     de: `Ich habe ${count} ${one ? 'Angebot' : 'Angebote'} nach deinen Regeln gefunden. Die Preise stammen aus deiner Steam-Shop-Region.`,
     fr: `J’ai trouvé ${count} ${one ? 'bon plan qui correspond' : 'bons plans qui correspondent'} à tes règles. Les prix viennent de ta région Steam.`,
+  });
+}
+
+/** Once, on a newcomer's first sale alert: how to wait for a game at a price of their own. */
+function firstAlertTip(language: Language): string {
+  return localizer(language)({
+    tr: 'Bu sana attığım ilk indirim mesajı. Bir oyunu belli bir fiyata mı bekliyorsun? Panelde oyunu seç ve hedef fiyatını yaz.',
+    en: 'This is your first Dealio alert. Waiting for a game to hit a certain price? Pick it in the panel and set a target price.',
+    de: 'Das ist deine erste Dealio-Nachricht. Wartest du bei einem Spiel auf einen bestimmten Preis? Wähl es im Panel aus und leg einen Wunschpreis fest.',
+    fr: 'C’est ta première alerte Dealio. Tu attends un prix précis pour un jeu ? Choisis-le dans le panneau et fixe un prix cible.',
   });
 }

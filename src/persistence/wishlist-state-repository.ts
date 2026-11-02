@@ -58,6 +58,10 @@ export class WishlistStateRepository {
     return this.queueRepository.hasPendingNotifications(discordUserId, configVersion, dueAt);
   }
 
+  public hasDeliveredNotification(discordUserId: string): boolean {
+    return this.queueRepository.hasDeliveredNotification(discordUserId);
+  }
+
   public markMissingItemsInactive(
     scope: WishlistScope,
     seenAppIds: readonly number[],

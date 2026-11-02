@@ -131,6 +131,28 @@ describe('NotificationService', () => {
     } finally { services.database.close(); }
   });
 
+  it('marks only a newcomer’s first delivered alert as the first, and never an older user’s', async () => {
+    const sender = createSender(vi.fn().mockResolvedValue({ messageId: '1', channelId: '2', deliveredAt: '2026-08-22T00:00:00.000Z' }));
+    const services = createService('en', sender);
+    try {
+      // Signed up on 21 August; a day later nothing has reached them yet.
+      const newcomer = new NotificationService(services.userConfigRepository, services.repository, sender,
+        { now: () => new Date('2026-08-22T00:00:00.000Z') });
+      await expect(newcomer.deliverPending('discord-user')).resolves.toMatchObject({ sentCount: 1 });
+      expect(sender.send.mock.calls[0]![2]).toEqual({ firstAlert: true });
+      addCandidate(services, 11);
+      await expect(newcomer.deliverPending('discord-user')).resolves.toMatchObject({ sentCount: 1 });
+      expect(sender.send.mock.calls[1]![2]).toBeUndefined();
+      // Past 30 days the pruned history is incomplete, so no alert is called the first.
+      services.database.prepare("DELETE FROM notification_log WHERE status = 'sent'").run();
+      addCandidate(services, 12);
+      const veteran = new NotificationService(services.userConfigRepository, services.repository, sender,
+        { now: () => new Date('2026-10-01T00:00:00.000Z') });
+      await expect(veteran.deliverPending('discord-user')).resolves.toMatchObject({ sentCount: 1 });
+      expect(sender.send.mock.calls[2]![2]).toBeUndefined();
+    } finally { services.database.close(); }
+  });
+
   it('plans a long queue in small windows yet sends the same DMs as one full partition', async () => {
     // Uneven game sizes, so DMs close before ten games and windows split mid-DM.
     const weight = (appId: number) => appId % 4 + 1;
