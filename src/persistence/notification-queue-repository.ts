@@ -18,6 +18,13 @@ export class NotificationQueueRepository {
    * retry scheduled for later, or an offer whose sale episode is no longer the
    * active one, is pending but not due.
    */
+  /** Whether any sale alert reached this user; sent rows are kept 30 days. */
+  public hasDeliveredNotification(discordUserId: string): boolean {
+    return this.database.prepare(`
+      SELECT 1 FROM notification_log WHERE discord_user_id = ? AND status = 'sent' LIMIT 1
+    `).get(discordUserId) !== undefined;
+  }
+
   public hasPendingNotifications(discordUserId: string, configVersion: number, dueAt?: string): boolean {
     return dueAt === undefined
       ? this.database.prepare(`

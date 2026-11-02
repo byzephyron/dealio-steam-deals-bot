@@ -58,6 +58,15 @@ export interface AdminOverviewCounts {
   readonly rules: number;
 }
 
+/** Sign-ups 14–30 days old and whether they had a sale alert within their first 14 days. */
+export interface AdminActivation {
+  readonly cohort: number;
+  readonly activated: number;
+  readonly medianDaysToFirstAlert: number | null;
+  /** Sign-ups from the last 14 days, still inside their window. */
+  readonly immature: number;
+}
+
 export interface AdminWishlistGameCounts {
   readonly trackedGames: number;
   readonly gamesOnSale: number;
@@ -219,6 +228,38 @@ export class AdminRepository {
   }
 
   /** New configurations per UTC day; deleted users are no longer counted. */
+  /**
+   * Of the users who signed up 14–30 days ago, how many had a sale alert within 14 days.
+   * Sent alerts are pruned after 30 days, so only this window has a complete history;
+   * newer sign-ups are counted apart because their 14 days are not over.
+   */
+  public activation(now: Date = new Date()): AdminActivation {
+    const ago = (days: number): string => new Date(now.getTime() - days * 86_400_000).toISOString();
+    const rows = this.database.prepare(`
+      SELECT config.created_at AS created_at,
+             (SELECT MIN(COALESCE(n.delivered_at, n.last_attempt_at)) FROM notification_log AS n
+              WHERE n.discord_user_id = config.discord_user_id AND n.status = 'sent') AS first_alert_at
+      FROM user_config AS config
+      WHERE config.created_at >= ? AND config.created_at < ?`).all(ago(30), ago(14)) as Row[];
+    const days = rows.flatMap((row) => {
+      const first = textOrNull(row.first_alert_at);
+      if (first === null) return [];
+      const elapsed = (Date.parse(first) - Date.parse(text(row.created_at))) / 86_400_000;
+      return elapsed <= 14 ? [Math.max(0, elapsed)] : [];
+    }).sort((a, b) => a - b);
+    const middle = Math.floor(days.length / 2);
+    const median = days.length === 0 ? null
+      : days.length % 2 === 1 ? days[middle]! : (days[middle - 1]! + days[middle]!) / 2;
+    const immature = this.database.prepare('SELECT COUNT(*) AS count FROM user_config WHERE created_at >= ?')
+      .get(ago(14)) as Row;
+    return {
+      cohort: rows.length,
+      activated: days.length,
+      medianDaysToFirstAlert: median === null ? null : Math.round(median * 10) / 10,
+      immature: int(immature.count),
+    };
+  }
+
   public signupsByDay(days: number, now: Date = new Date()): DayCount[] {
     const since = new Date(now.getTime() - days * 24 * 3600_000).toISOString();
     return this.dayCounts(`

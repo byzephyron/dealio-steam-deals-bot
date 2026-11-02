@@ -167,6 +167,21 @@ export function recommendMessage(language: Language): string {
   }) + ' ' + publicHomeUrl(language);
 }
 
+/** Below this many games, sales on the list are rare and the first alert can take weeks. */
+export const smallWishlistGameCount = 10;
+
+/** "🌱 Add the games you're waiting for…": Home and the setup summary show it while the wishlist is small. */
+export function smallWishlistHint(gameCount: number | undefined, language: Language): string | null {
+  if (gameCount === undefined || gameCount >= smallWishlistGameCount) return null;
+  const wishlistUrl = 'https://store.steampowered.com/wishlist/';
+  return '🌱 ' + localizer(language)({
+    tr: `Beklediğin oyunları [Steam istek listene](${wishlistUrl}) ekle, ben de takibe alayım. Liste büyüdükçe sana daha sık fırsat yazarım.`,
+    en: `Add the games you’re waiting for to your [Steam wishlist](${wishlistUrl}) and I’ll watch them too. The longer the list, the more deals I can catch for you.`,
+    de: `Setz die Spiele, auf die du wartest, auf deine [Steam-Wunschliste](${wishlistUrl}), dann behalte ich sie auch im Blick. Je länger die Liste, desto mehr Angebote finde ich für dich.`,
+    fr: `Ajoute les jeux que tu attends à ta [liste de souhaits Steam](${wishlistUrl}), je les surveillerai aussi. Plus ta liste est longue, plus je trouve de bons plans pour toi.`,
+  });
+}
+
 /**
  * Steam answered that the wishlist cannot be read: the user's own privacy setting
  * (or a deleted account), not a Steam outage, so the panel names the fix.

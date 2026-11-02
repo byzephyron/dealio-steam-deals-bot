@@ -9,7 +9,7 @@ import type { StatusV2Options } from './status-view-v2.js';
 import { sanitizeGameName } from './notification-messages.js';
 import { assertComponentsV2Limit, dealioFooter } from './ui/components-v2.js';
 import { dealioBrand } from './ui/brand.js';
-import { countryDisplay, dmBlockedFix, dmBlockedStatus, helpButton, hotPrefix, supportButton, voteButton, noPriceText, panelHeader, priceFetched, priceLine, recommendMessage, savingsLine, tabAccent, wishlistHidden, wishlistHiddenNotice } from './ui/design.js';
+import { countryDisplay, dmBlockedFix, dmBlockedStatus, helpButton, hotPrefix, supportButton, voteButton, noPriceText, panelHeader, priceFetched, priceLine, recommendMessage, savingsLine, smallWishlistHint, tabAccent, wishlistHidden, wishlistHiddenNotice } from './ui/design.js';
 import { buildTabBar } from './ui/tab-bar.js';
 import { localizer } from './i18n.js';
 import { staleTargetsNotice } from './assistant-view.js';
@@ -99,7 +99,9 @@ export function buildHomePanel(result: ReadyStatus, sessionId: string, options: 
     ' · ' + t({ tr: 'sonraki ', en: 'next ', de: 'nächste ', fr: 'prochaine ' }) + (config.enabled
       ? relative(checkState?.nextScheduledAt, t({ tr: 'planlanıyor', en: 'being scheduled', de: 'wird geplant', fr: 'en préparation' }))
       : t({ tr: 'takip duraklatıldı', en: 'tracking paused', de: 'Überwachung pausiert', fr: 'suivi en pause' }))));
+  const smallList = smallWishlistHint(options.trackedGameCount, language);
   if (wishlistHidden(checkState)) root.addTextDisplayComponents(display('> ' + wishlistHiddenNotice(language)));
+  else if (smallList && !failed && !partial) root.addTextDisplayComponents(display('-# ' + smallList));
   else if (failed || partial) root.addTextDisplayComponents(display('> ⚠️ ' + (failed
     ? t({
         tr: 'Son kontrol yarım kaldı; gördüğün fiyatlar bir önceki kontrolden.',

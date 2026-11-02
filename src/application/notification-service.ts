@@ -55,7 +55,15 @@ export interface NotificationSendOptions {
   /** Where a test alert's game came from: the user's wishlist, or a fixed example. */
   readonly testSource?: 'wishlist' | 'example';
   readonly digest?: boolean;
+  /** The user's first sale alert, which adds a one-time tip on target prices. */
+  readonly firstAlert?: boolean;
 }
+
+/**
+ * Sent alerts are pruned after 30 days, so only a user who signed up within that window
+ * has a complete history; older users are never told an alert is their first.
+ */
+const firstAlertWindowMs = 30 * 86_400_000;
 
 export class NotificationDeliveryCancelledError extends Error {
   public readonly name = 'NotificationDeliveryCancelledError';
@@ -394,6 +402,16 @@ export class NotificationService {
     } catch { return batch; }
   }
 
+  private isFirstAlert(discordUserId: string): boolean {
+    // Presentation only: a failed lookup sends the alert without the tip.
+    try {
+      const config = this.userConfigRepository.findByDiscordUserId(discordUserId);
+      return config !== null
+        && this.now().getTime() - Date.parse(config.createdAt) < firstAlertWindowMs
+        && !this.wishlistStateRepository.hasDeliveredNotification(discordUserId);
+    } catch { return false; }
+  }
+
   private async withPriceHistory(batch: DurableNotificationBatch): Promise<DurableNotificationBatch> {
     // Like artwork, price history is optional context and must never block delivery.
     if (!this.priceHistory) return batch;
@@ -426,7 +444,10 @@ export class NotificationService {
       const digest = preferenceMode === 'digest';
       deliveryMode = preferenceMode === 'instant' ? 'immediate' : preferenceMode;
       const renderedBatch = await this.withPriceHistory(this.withArtwork(batch));
-      receipt = digest ? await this.sender.send(renderedBatch,batch.language,{digest:true}) : await this.sender.send(renderedBatch,batch.language);
+      const firstAlert = this.isFirstAlert(user);
+      receipt = digest || firstAlert
+        ? await this.sender.send(renderedBatch,batch.language,{...(digest ? {digest:true} : {}),...(firstAlert ? {firstAlert:true} : {})})
+        : await this.sender.send(renderedBatch,batch.language);
     } catch (error: unknown) {
       if (error instanceof NotificationDeliveryCancelledError) {
         return { sentCount: 0, failedCount: 0, cancelled: true };
