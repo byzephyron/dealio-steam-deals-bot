@@ -10,7 +10,7 @@ import { isDiscordRateLimit } from '../application/notification-service.js';
 import { safeLogger } from '../application/safe-logger.js';
 import { setupCommand } from './commands/setup.js';
 import { deleteDataCommand } from './commands/delete-data.js';
-import { dealioCommand } from './commands/dealio.js';
+import { dealioCommand, helpCommand } from './commands/dealio.js';
 
 /**
  * Everything else (wishlist, alerts, settings, region, test DM, a check) lives in
@@ -20,6 +20,7 @@ export const commands = [
   dealioCommand,
   setupCommand,
   deleteDataCommand,
+  helpCommand,
 ];
 
 type CommandRegistrationRest = Pick<REST, 'get' | 'put'>;

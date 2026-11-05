@@ -252,12 +252,14 @@ async function handleInteraction(
         ui,
       );
       return;
+    case 'help':
     case 'region':
     case 'status':
     case 'check':
     case 'wishlist':
     case 'test-notification':
-      // Retired shortcuts: a Discord client that still lists them opens the panel instead.
+      // /help is an alias of the panel. The others are retired shortcuts: a Discord
+      // client that still lists them opens the panel instead.
       await handleDealio(interaction, { ...services, lifecycleSignal }, ui);
       return;
     case 'delete-data':

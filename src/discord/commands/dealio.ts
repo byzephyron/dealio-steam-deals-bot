@@ -46,6 +46,16 @@ export const dealioCommand = new SlashCommandBuilder()
     fr: 'Ouvrir ton panneau Dealio : bons plans, liste de souhaits, alertes et réglages',
   });
 
+/** An alias of /dealio for people who look for help first; the panel holds the help link. */
+export const helpCommand = new SlashCommandBuilder()
+  .setName('help')
+  .setDescription('Get help: opens your Dealio panel with the help link')
+  .setDescriptionLocalizations({
+    tr: 'Yardım al: yardım bağlantısıyla birlikte Dealio panelini açar',
+    de: 'Hilfe bekommen: öffnet dein Dealio-Panel mit dem Hilfe-Link',
+    fr: 'Obtenir de l’aide : ouvre ton panneau Dealio avec le lien d’aide',
+  });
+
 export interface DealioCommandServices {
   readonly setupService: SetupService;
   readonly statusService: StatusService;
