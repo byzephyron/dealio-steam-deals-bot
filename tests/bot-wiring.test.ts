@@ -277,8 +277,8 @@ describe('bot wiring', () => {
     expect(handler).toHaveBeenCalledWith(input, ...dependencies);
   });
 
-  it.each(['region', 'status', 'check', 'wishlist', 'test-notification'])(
-    'opens the Dealio panel for the retired /%s shortcut', async (name) => {
+  it.each(['help', 'region', 'status', 'check', 'wishlist', 'test-notification'])(
+    'opens the Dealio panel for /%s', async (name) => {
       const { client } = await launch();
       const input = interaction({ commandName: name });
       client.emit(Events.InteractionCreate, input);

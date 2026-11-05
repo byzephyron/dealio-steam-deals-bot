@@ -121,6 +121,7 @@ Dealio, her tarama bittikten **30 dakika sonra** ve Steam'in fiyatları her gün
 | `/dealio` | Panelin: 🏠 Ana sayfa, 🎮 İstek listem, 🔔 Bildirimler ve ⚙️ Ayarlar |
 | `/setup` | Steam profilini bağla, tercihlerini belirle |
 | `/delete-data` | Onayından sonra aktif hesap verilerini sil |
+| `/help` | Aynı paneli açar; 🛟 yardım bağlantısı Ana sayfada |
 
 Geri kalan her şey `/dealio` panelinde: istek listende gezin ve ara, hedef koy ya da oyun sustur, bildirimlerin ne zaman geleceğini seç, Steam’de hemen kontrol et, deneme DM’i gönder; bölgeni, dilini ya da Steam hesabını ⚙️ Ayarlar’dan değiştir (orada *Verilerimi sil* butonu da var).
 

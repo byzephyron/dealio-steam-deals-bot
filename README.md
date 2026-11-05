@@ -121,6 +121,7 @@ Initial setup may send a summary of existing discounts, rather than a new-sale a
 | `/dealio` | Your panel: 🏠 Home, 🎮 Wishlist, 🔔 Alerts and ⚙️ Settings |
 | `/setup` | Connect your Steam profile and choose your preferences |
 | `/delete-data` | Delete your active account data after confirmation |
+| `/help` | Opens the same panel, with the 🛟 help link on Home |
 
 Everything else is in the `/dealio` panel: browse and search your wishlist, set targets or mute games, choose when alerts arrive, check Steam now, send a test DM, and change your region, language or Steam account in ⚙️ Settings (which also has *Delete my data*).
 

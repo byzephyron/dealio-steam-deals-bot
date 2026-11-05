@@ -18,6 +18,7 @@ describe('Discord slash commands', () => {
       'dealio',
       'setup',
       'delete-data',
+      'help',
     ]);
   });
 
